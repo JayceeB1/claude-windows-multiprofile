@@ -38,10 +38,14 @@ Claude.exe --user-data-dir="C:\Users\<you>\ClaudeProfiles\personal"
 
 That's the whole trick. No patching, no copying the app, no admin rights.
 
-> **Credit:** the `--user-data-dir` technique for Claude is from
-> [Zoltak-Dev/ai-multi-instance](https://github.com/Zoltak-Dev/ai-multi-instance).
-> This repo is a small, native (PowerShell + VBScript) reimplementation focused
-> on Claude only, with desktop shortcuts and a one-command setup.
+> **Credits:** the `--user-data-dir` technique for Claude, and the prior art for
+> computing a valid Windows `UserChoice` hash (see the login router below), are
+> both from [Zoltak-Dev/ai-multi-instance](https://github.com/Zoltak-Dev/ai-multi-instance).
+> This repo began as a fork of
+> [vodongha/claude-desktop-clone](https://github.com/vodongha/claude-desktop-clone)
+> — a small, native (PowerShell + VBScript) reimplementation focused on Claude
+> only, with desktop shortcuts and a one-command setup — and adds the `claude://`
+> login router.
 
 ---
 
@@ -57,21 +61,28 @@ That's the whole trick. No patching, no copying the app, no admin rights.
 ## Quick start
 
 ```powershell
-git clone https://github.com/vodongha/claude-desktop-clone.git
-cd claude-desktop-clone
+git clone https://github.com/fredless/claude-windows-multiprofile.git
+cd claude-windows-multiprofile
 
-# Create "Claude (Work)" + "Claude (Personal)" shortcuts on your Desktop.
-# -ReuseDefaultForWork keeps your already-signed-in account for "Work".
-powershell -ExecutionPolicy Bypass -File scripts\Setup.ps1 -ReuseDefaultForWork
+# Create "Claude (Personal)" + "Claude (Work)" shortcuts on your Desktop.
+# -DefaultProfile Personal keeps your already-signed-in account for Personal;
+# every other profile gets its own isolated login.
+powershell -ExecutionPolicy Bypass -File scripts\Setup.ps1 -Profile Personal,Work -DefaultProfile Personal
 ```
 
 Then:
 
-1. Double-click **Claude (Work)** → your existing account (no re-login).
-2. Double-click **Claude (Personal)** → a fresh window; sign in to the other
+1. Double-click **Claude (Personal)** → your existing account (no re-login).
+2. Double-click **Claude (Work)** → a fresh window; sign in to the other
    account.
 
 Both windows now run at the same time, fully isolated.
+
+> **Which profile owns the stock login?** `-DefaultProfile <name>` names the one
+> profile that reuses the app's stock paths (`%APPDATA%\Claude` + the default
+> `~\.claude`); everything else is isolated. Use `-DefaultProfile None` (the
+> default) to isolate *every* profile. No assumption is baked in about which
+> account is "primary."
 
 ### Custom profiles
 
@@ -109,6 +120,57 @@ wscript.exe launch.vbs "<profile-data-dir>" "<claude-config-dir>"
 
 ---
 
+## Enterprise SSO / login routing
+
+Browser-based SSO returns to the app through a `claude://` deep link. With two
+profiles running, Windows delivers that callback to whichever profile owns the
+protocol — so a **work** SSO token can land in the **personal** profile. Older
+guides work around this by telling you to log in one account at a time with the
+others closed.
+
+This repo instead installs a small **login router**: a `claude://` handler that
+sends the next callback to the profile you choose. The flow is **setup → one
+Settings pick → arm → log in**:
+
+1. **Setup** (from Quick start) registers the router. It then prints one manual
+   step you do **once**:
+
+   > Settings → Apps → Default apps → *Choose defaults by link type* → search
+   > `claude` → select **Console Window Host**.
+
+   (It's labelled "Console Window Host" because Windows names a handler after the
+   first program in its command; it *is* the Claude login router. If `claude`
+   doesn't appear, close and reopen Settings.)
+
+2. **Arm** the profile you're about to log into, then log in:
+
+   ```powershell
+   # Route the NEXT claude:// login to the "Work" profile and open it:
+   & "$env:USERPROFILE\ClaudeProfiles\bin\Arm-ClaudeLogin.ps1" -Profile Work -Launch
+   ```
+
+   Arming is a one-shot statement of intent: after the callback fires, the router
+   resets to the safe default profile, so a later personal re-auth can't silently
+   land in the work profile. (Add `-LoginShortcuts` to `Setup.ps1` to get a
+   "Claude (\<name\>) - Sign in" desktop shortcut that arms + launches in one
+   click.)
+
+3. **Verify** anytime:
+
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File scripts\Test-ClaudeRouting.ps1
+   ```
+
+Prefer to sequence logins manually instead? Run `Setup.ps1 -NoProtocolRouting`
+and log in one account at a time.
+
+**Full mechanics** — the UserChoice > MSIX-manifest > classic-key delivery
+chain, the Squirrel-leftover login-loop trap, the arm/disarm model and
+`route.log` triage — are documented in
+**[docs/PROTOCOL-ROUTING.md](docs/PROTOCOL-ROUTING.md)**.
+
+---
+
 ## What gets created
 
 ```
@@ -116,15 +178,23 @@ wscript.exe launch.vbs "<profile-data-dir>" "<claude-config-dir>"
 └── bin\
     ├── Launch-Claude.ps1     # resolves the MSIX exe, launches with --user-data-dir
     ├── launch.vbs            # runs the .ps1 hidden (no console flash)
+    ├── ClaudeOpenShim.ps1    # claude:// login router (reads target.txt)
+    ├── Arm-ClaudeLogin.ps1   # arms the router for the next login
+    ├── profiles.json         # profile → data/config dir map (shared by the scripts)
+    ├── target.txt            # one-shot routing marker (created on first arm)
+    ├── route.log             # routing tripwire log (created on first activation)
     └── claude.ico            # icon extracted to a STABLE path (survives updates)
 
 %APPDATA%\                     # profile DATA lives here (required for Cowork VM)
-├── Personal\                 # isolated Chromium profile (login, history, cache, VM)
-└── Work\                     # (only if not reusing the default login)
+├── Claude\                    # the stock login (used by -DefaultProfile <name>)
+└── Claude-Work\               # isolated Chromium profile (login, history, cache, VM)
+
+%USERPROFILE%\
+└── .claude-work\              # isolated Claude Code config/memory for that profile
 
 Desktop\
-├── Claude (Work).lnk
-└── Claude (Personal).lnk
+├── Claude (Personal).lnk
+└── Claude (Work).lnk
 ```
 
 The shortcuts point at the copied `bin\` scripts, so you can delete the cloned
@@ -147,8 +217,11 @@ repo afterwards and everything keeps working. Profile *data* lives under
   would go blank after the next update deletes that folder — which is why the
   icon is copied out to a fixed location instead.
 - **Switching the "main" app:** the regular Start-menu Claude icon still uses
-  `%APPDATA%\Claude`, i.e. the same login as a "Work" profile created with
-  `-ReuseDefaultForWork`.
+  `%APPDATA%\Claude`, i.e. the same login as the profile you named with
+  `-DefaultProfile`.
+- **Enterprise SSO** returning to the wrong profile? See
+  [Enterprise SSO / login routing](#enterprise-sso--login-routing) above and
+  [docs/PROTOCOL-ROUTING.md](docs/PROTOCOL-ROUTING.md).
 
 ---
 
@@ -177,6 +250,11 @@ powershell -ExecutionPolicy Bypass -File scripts\Uninstall.ps1
 powershell -ExecutionPolicy Bypass -File scripts\Uninstall.ps1 -RemoveData
 ```
 
+`Uninstall.ps1` also removes the `claude://` login router (registry entries +
+`bin\` router files) and restores stock protocol handling — Windows falls back
+to the Claude app's own registration automatically, and any Settings default-app
+choice self-clears. Pass `-KeepRouting` to leave the router in place.
+
 ---
 
 ## Troubleshooting
@@ -199,10 +277,10 @@ artifact storage) runs inside a per-machine **Hyper-V VM**, not just an Electron
 window. Two consequences for multi-profile use:
 
 1. **Profile data must live under `%APPDATA%`.** The native VM service resolves
-   the VM image (`rootfs.vhdx`) at `%APPDATA%\<profile-name>\vm_bundles`,
-   *ignoring* `--user-data-dir`. `Setup.ps1` therefore places isolated profiles
-   under `%APPDATA%\<name>` (the `Work`/`-ReuseDefaultForWork` profile already
-   uses `%APPDATA%\Claude`, which is why it works out of the box). A data dir
+   the VM image (`rootfs.vhdx`) at `%APPDATA%\<dir-name>\vm_bundles`,
+   *ignoring* `--user-data-dir`. `Setup.ps1` therefore derives isolated profiles
+   as `%APPDATA%\Claude-<name>` (and the `-DefaultProfile` profile uses the stock
+   `%APPDATA%\Claude`, which is why it works out of the box). A data dir
    anywhere else makes Cowork fail with `VHDX file not found`.
 
 2. **Only one Cowork VM can run at a time.** The Hyper-V compute system is *not*
@@ -242,15 +320,18 @@ bằng cờ `--user-data-dir` của Chromium: mỗi thư mục dữ liệu khác
 instance riêng = một cửa sổ + một tài khoản chạy song song.
 
 ```powershell
-git clone https://github.com/vodongha/claude-desktop-clone.git
-cd claude-desktop-clone
-powershell -ExecutionPolicy Bypass -File scripts\Setup.ps1 -ReuseDefaultForWork
+git clone https://github.com/fredless/claude-windows-multiprofile.git
+cd claude-windows-multiprofile
+powershell -ExecutionPolicy Bypass -File scripts\Setup.ps1 -Profile Personal,Work -DefaultProfile Personal
 ```
 
-- Tạo 2 icon trên Desktop: **Claude (Work)** và **Claude (Personal)**.
-- `-ReuseDefaultForWork`: icon Work dùng lại tài khoản đang đăng nhập (khỏi
-  login lại). Icon Personal mở cửa sổ mới để đăng nhập tài khoản còn lại.
+- Tạo 2 icon trên Desktop: **Claude (Personal)** và **Claude (Work)**.
+- `-DefaultProfile Personal`: icon Personal dùng lại tài khoản đang đăng nhập
+  (khỏi login lại). Icon Work mở cửa sổ mới để đăng nhập tài khoản còn lại.
 - Bấm lại icon → focus đúng cửa sổ của tài khoản đó (không mở trùng).
+- Đăng nhập SSO (doanh nghiệp) bị nhầm profile? Xem phần
+  [Enterprise SSO / login routing](#enterprise-sso--login-routing) và
+  [docs/PROTOCOL-ROUTING.md](docs/PROTOCOL-ROUTING.md).
 
 Muốn tách riêng cả **bộ nhớ Claude Code / Cowork** cho từng profile (mặc định
 chỉ tách login, còn `~/.claude` thì dùng chung), trỏ `CLAUDE_CONFIG_DIR` qua

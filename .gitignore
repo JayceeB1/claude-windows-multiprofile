@@ -11,3 +11,7 @@ desktop.ini
 
 # Local profile data should never be committed
 ClaudeProfiles/
+
+# Machine-specific local notes and the private handoff (never pushed)
+*.local.md
+HANDOFF-claude-desktop-clone-fork.md

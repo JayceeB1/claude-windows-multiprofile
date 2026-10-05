@@ -1,366 +1,128 @@
-# claude-desktop-clone
+# Claude Windows multiprofile
 
-Run **multiple isolated instances of the Claude Desktop app on Windows** — one
-per account (e.g. *Work* and *Personal*) — side by side, each with its own
-login, history, and settings.
+This fork prepares two official Claude Desktop windows with separate account data
+and Code configuration roots, using the same existing project folders and
+explicitly selected project memory. Preserve the working account A in place;
+add account B without migrating projects or requiring worktrees.
 
-The official Claude Desktop app (installed from the Microsoft Store / claude.ai)
-only supports **one account at a time** and refuses to open a second window.
-This repo works around that with a tiny, dependency-free launcher.
+**Delivery status:** routing and the passive diagnostic are qualified on fixtures.
+Safe additive installation, memory adoption and two-Desktop acceptance remain
+unfinished. Follow the [ledger](docs/SHARED-WORKSPACE-LEDGER.md) and
+[roadmap](docs/SHARED-WORKSPACE-ROADMAP.md). Do not run the current Setup or
+Uninstall against the working installation before the corresponding ownership,
+preview and rollback gates are delivered and the local operation is authorized.
 
-> 🇻🇳 Bản tóm tắt tiếng Việt ở [cuối README](#tiếng-việt--quickstart).
+## Existing mechanism
 
----
+The launcher resolves the official installed MSIX executable dynamically through
+`Get-AppxPackage`, then uses a distinct `--user-data-dir` for each profile.
+`CLAUDE_CONFIG_DIR` is passed to the child process for a configured Code root;
+the parent environment is preserved. Running Desktop processes retain their
+existing environment. Effective loading and identity must be observed in each
+Desktop window, not inferred from launcher arguments.
 
-## How it works
+Project folders stay where they are. Existing project instructions and settings
+are already common on disk. Selected project memory requires an explicit mapping;
+credentials, account logins, connectors and complete config roots stay separate.
+There is no cloud conversation merge, account rotation or global root sharing.
 
-The Claude Desktop app is an **Electron / Chromium** application. Chromium
-accepts the standard `--user-data-dir` flag, and it keys its *single-instance
-lock* on that directory. So:
+## Routing an explicitly selected login
 
-> **Different `--user-data-dir` → different lock → a second instance runs,
-> signed into a different account.**
-
-The only Windows-specific wrinkle is that the app is shipped as an **MSIX
-package**, so its executable lives under a versioned, permission-restricted
-path:
-
-```
-C:\Program Files\WindowsApps\Claude_<version>_x64__<hash>\app\Claude.exe
-```
-
-The launcher resolves that path at runtime via `Get-AppxPackage` (so it survives
-app updates) and starts it with a chosen data directory:
-
-```powershell
-Claude.exe --user-data-dir="C:\Users\<you>\ClaudeProfiles\personal"
-```
-
-That's the whole trick. No patching, no copying the app, no admin rights.
-
-> **Credits:** the `--user-data-dir` technique for Claude, and the prior art for
-> computing a valid Windows `UserChoice` hash (see the login router below), are
-> both from [Zoltak-Dev/ai-multi-instance](https://github.com/Zoltak-Dev/ai-multi-instance).
-> This repo began as a fork of
-> [vodongha/claude-desktop-clone](https://github.com/vodongha/claude-desktop-clone)
-> — a small, native (PowerShell + VBScript) reimplementation focused on Claude
-> only, with desktop shortcuts and a one-command setup — and adds the `claude://`
-> login router.
-
----
-
-## Requirements
-
-- Windows 10/11
-- The official **Claude Desktop app** installed
-  ([claude.ai/download](https://claude.ai/download) or Microsoft Store)
-- No admin rights, no Python, no extra dependencies
-
----
-
-## Quick start
+The [routing guide](docs/PROTOCOL-ROUTING.md) describes the current v2 contract.
+The following examples are for an already inventoried and authorized installation
+whose manifest declares the names A and B. They are not an installation recipe.
 
 ```powershell
-git clone https://github.com/fredless/claude-windows-multiprofile.git
-cd claude-windows-multiprofile
+# One deliberate B login. Verify the browser account; close stale login tabs.
+& "$env:USERPROFILE\ClaudeProfiles\bin\Arm-ClaudeLogin.ps1" -Profile B -Launch
 
-# Create "Claude (Personal)" + "Claude (Work)" shortcuts on your Desktop.
-# -DefaultProfile Personal keeps your already-signed-in account for Personal;
-# every other profile gets its own isolated login.
-powershell -ExecutionPolicy Bypass -File scripts\Setup.ps1 -Profile Personal,Work -DefaultProfile Personal
+# To intentionally route A, use its declared name. Never use default as A.
+& "$env:USERPROFILE\ClaudeProfiles\bin\Arm-ClaudeLogin.ps1" -Profile A
+
+# Explicitly disarm; this does not select or launch A.
+& "$env:USERPROFILE\ClaudeProfiles\bin\Arm-ClaudeLogin.ps1" -Profile default
 ```
 
-Then:
+Choose only ONE arm for ONE login flow. An intent expires after five minutes and
+is bound to the exact manifest. It is consumed before discovery or launch.
+Missing, legacy, expired, consumed or inconsistent intent refuses dispatch;
+there is no fallback account. An expired outstanding intent must be explicitly
+disarmed before a new named arm. A consumed intent permits deliberate new named
+arming. Neither path automatically retries a callback.
 
-1. Double-click **Claude (Personal)** → your existing account (no re-login).
-2. Double-click **Claude (Work)** → a fresh window; sign in to the other
-   account.
+Arming does not change protocol registration. The intent is not correlated to
+the outgoing OAuth request: a delayed old callback may consume a new arm.
+Browser focus is a hypothesis to test, not account selection or state/PKCE proof.
+Consumption and launch-request events do not establish authentication success.
 
-Both windows now run at the same time, fully isolated.
-
-> **Which profile owns the stock login?** `-DefaultProfile <name>` names the one
-> profile that reuses the app's stock paths (`%APPDATA%\Claude` + the default
-> `~\.claude`); everything else is isolated. Use `-DefaultProfile None` (the
-> default) to isolate *every* profile. No assumption is baked in about which
-> account is "primary."
-
-### Custom profiles
+## Passive diagnosis
 
 ```powershell
-# Any names you like; each gets its own isolated login + shortcut.
-powershell -ExecutionPolicy Bypass -File scripts\Setup.ps1 -Profile Personal,ClientA,ClientB
+# Review the script first; this command observes only, with no live activation.
+powershell -NoProfile -File scripts\Test-ClaudeRouting.ps1
+# Optional: specify a previously inventoried metadata parent.
+powershell -NoProfile -File scripts\Test-ClaudeRouting.ps1 -InstallDir 'D:\ClaudeProfiles'
 ```
 
-### Different install location
+The default emits one expurgated `DIAGNOSTIC_PASSIVE` JSON event. `-NoPing` remains
+accepted for compatibility; both forms are passive. There is no live-probe option.
+No process command lines, old logs, raw registry values or personal paths are
+printed. Missing/busy locks and unavailable metadata remain unknown.
+`dispatch=not_probed` always applies. Package presence, UserChoice classification
+and readable metadata do not prove which running Desktop receives a callback.
+
+New route.log lines contain fixed event codes and target kinds only. Historical
+logs and OS/Claude command-line telemetry may contain secrets; do not publish
+old logs or use raw process dumps for diagnosis. See the guide for event meanings.
+
+## Setup and removal boundaries
+
+Current Setup supports `-Profile`, `-DefaultProfile`, per-profile `-DataDir` and
+`-ConfigDir`, `-InstallDir`, `-LoginShortcuts` and `-NoProtocolRouting`. These are
+existing implementation parameters, not proof of safe adoption of A.
+`-DefaultProfile` selects stock-path construction at setup time; it does not
+identify A's actual data/config provenance and is unrelated to armer disarming.
+Setup currently replaces files, manifests and shortcuts. Its registration writes
+need explicit scope and backups. Do not rerun it as a routing repair shortcut.
+
+Current Uninstall is not ownership-qualified for custom A or shared memory.
+Do not infer safe deletion from a folder name or use `-RemoveData` as cleanup.
+The planned removal retains data by default and checks ownership and conflicts.
+No forced logout/restart, profile migration, blanket config link or app copying.
+
+Historical upstream observations concern Cowork VM placement and shared-HOME
+collisions. Requalify on the installed build before relying on them. Two
+simultaneous Cowork VMs are outside this fork's acceptance scope.
+
+## Development and evidence
+
+PowerShell launch/routing scripts target Windows PS5.1 and PS7 without admin
+rights. Python 3.12+ runs the process fixture harness; the future reviewed bridge
+may have its own prerequisites. Existing runtime scripts do not install dependencies.
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\Setup.ps1 -InstallDir "D:\ClaudeProfiles"
+python tests/Test-RoutingProcesses.py
+powershell -NoProfile -File tests\Test-RoutingDiagnostic.ps1
+pwsh -NoProfile -File tests\Test-RoutingDiagnostic.ps1
 ```
 
-### Isolate Claude Code / Cowork memory per profile
-
-By default, instances only isolate the **login** (Chromium `--user-data-dir`).
-The embedded **Claude Code / Cowork** still uses the shared `~/.claude` config
-(memory, settings). To give a profile its *own* memory store too, point its
-`CLAUDE_CONFIG_DIR` at a dedicated directory via `-ConfigDir`:
-
-```powershell
-# NOTE: a real hashtable -> call the script directly (not via -File):
-& .\scripts\Setup.ps1 -ConfigDir @{ Personal = "$env:USERPROFILE\.claude-personal" }
-```
-
-Now the **Personal** instance's Claude Code memory lives in
-`~/.claude-personal\projects\<dir>\memory\`, fully separate from the work
-account — and it's the same store the `claude-personal` CLI uses (if you set one
-up). Manual equivalent for any launcher:
-
-```text
-wscript.exe launch.vbs "<profile-data-dir>" "<claude-config-dir>"
-```
-
----
-
-## Enterprise SSO / login routing
-
-Browser-based SSO returns to the app through a `claude://` deep link. With two
-profiles running, Windows delivers that callback to whichever profile owns the
-protocol — so a **work** SSO token can land in the **personal** profile. Older
-guides work around this by telling you to log in one account at a time with the
-others closed.
-
-This repo instead installs a small **login router**: a `claude://` handler that
-sends the next callback to the profile you choose. The flow is **setup → one
-Settings pick → arm → log in**:
-
-1. **Setup** (from Quick start) registers the router. It then prints one manual
-   step you do **once**:
-
-   > Settings → Apps → Default apps → *Choose defaults by link type* → search
-   > `claude` → select **Console Window Host**.
-
-   (It's labelled "Console Window Host" because Windows names a handler after the
-   first program in its command; it *is* the Claude login router. If `claude`
-   doesn't appear, close and reopen Settings.)
-
-2. **Arm** the profile you're about to log into, then log in:
-
-   ```powershell
-   # Route the NEXT claude:// login to the "Work" profile and open it:
-   & "$env:USERPROFILE\ClaudeProfiles\bin\Arm-ClaudeLogin.ps1" -Profile Work -Launch
-   ```
-
-   Arming is a one-shot statement of intent: after the callback fires, the router
-   resets to the safe default profile, so a later personal re-auth can't silently
-   land in the work profile. (Add `-LoginShortcuts` to `Setup.ps1` to get a
-   "Claude (\<name\>) - Sign in" desktop shortcut that arms + launches in one
-   click.)
-
-3. **Verify** anytime:
-
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File scripts\Test-ClaudeRouting.ps1
-   ```
-
-Prefer to sequence logins manually instead? Run `Setup.ps1 -NoProtocolRouting`
-and log in one account at a time.
-
-**Full mechanics** — the UserChoice > MSIX-manifest > classic-key delivery
-chain, the Squirrel-leftover login-loop trap, the arm/disarm model and
-`route.log` triage — are documented in
-**[docs/PROTOCOL-ROUTING.md](docs/PROTOCOL-ROUTING.md)**.
-
----
-
-## What gets created
-
-```
-%USERPROFILE%\ClaudeProfiles\
-└── bin\
-    ├── Launch-Claude.ps1     # resolves the MSIX exe, launches with --user-data-dir
-    ├── launch.vbs            # runs the .ps1 hidden (no console flash)
-    ├── ClaudeOpenShim.ps1    # claude:// login router (reads target.txt)
-    ├── Arm-ClaudeLogin.ps1   # arms the router for the next login
-    ├── profiles.json         # profile → data/config dir map (shared by the scripts)
-    ├── target.txt            # one-shot routing marker (created on first arm)
-    ├── route.log             # routing tripwire log (created on first activation)
-    └── claude.ico            # icon extracted to a STABLE path (survives updates)
-
-%APPDATA%\                     # profile DATA lives here (required for Cowork VM)
-├── Claude\                    # the stock login (used by -DefaultProfile <name>)
-└── Claude-Work\               # isolated Chromium profile (login, history, cache, VM)
-
-%USERPROFILE%\
-└── .claude-work\              # isolated Claude Code config/memory for that profile
-
-Desktop\
-├── Claude (Personal).lnk
-└── Claude (Work).lnk
-```
-
-The shortcuts point at the copied `bin\` scripts, so you can delete the cloned
-repo afterwards and everything keeps working. Profile *data* lives under
-`%APPDATA%\<name>` (not under `ClaudeProfiles\`) — this is required so Claude's
-**Cowork** VM can start; see [Cowork limitations](#cowork-vm-limitations) below.
-
----
-
-## Usage notes
-
-- **Re-clicking a shortcut** focuses that profile's existing window instead of
-  opening a duplicate — exactly the normal single-instance behaviour, but scoped
-  per profile.
-- **App updates** are handled automatically: the launcher re-resolves the exe
-  path each time via `Get-AppxPackage`.
-- **Shortcut icons survive updates.** `Setup.ps1` extracts the Claude icon once
-  to `bin\claude.ico` (a stable path) and points every shortcut there. Pointing a
-  shortcut straight at the versioned `WindowsApps\Claude_<version>\...\Claude.exe`
-  would go blank after the next update deletes that folder — which is why the
-  icon is copied out to a fixed location instead.
-- **Switching the "main" app:** the regular Start-menu Claude icon still uses
-  `%APPDATA%\Claude`, i.e. the same login as the profile you named with
-  `-DefaultProfile`.
-- **Enterprise SSO** returning to the wrong profile? See
-  [Enterprise SSO / login routing](#enterprise-sso--login-routing) above and
-  [docs/PROTOCOL-ROUTING.md](docs/PROTOCOL-ROUTING.md).
-
----
-
-## Optional: build a real `.exe`
-
-If you'd rather have a single executable than a `.vbs`:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\Build-Exe.ps1
-# -> dist\ClaudeLauncher.exe  (takes -ProfileDir "<path>")
-```
-
-This uses [`ps2exe`](https://github.com/MScholtes/PS2EXE). Note that unsigned
-ps2exe binaries can trip SmartScreen / antivirus heuristics — the `.vbs`
-launcher created by `Setup.ps1` is the recommended, friction-free option.
-
----
-
-## Uninstall
-
-```powershell
-# Remove the shortcuts only:
-powershell -ExecutionPolicy Bypass -File scripts\Uninstall.ps1
-
-# Remove shortcuts AND the isolated profile data (signs you out, clears history):
-powershell -ExecutionPolicy Bypass -File scripts\Uninstall.ps1 -RemoveData
-```
-
-`Uninstall.ps1` also removes the `claude://` login router (registry entries +
-`bin\` router files) and restores stock protocol handling — Windows falls back
-to the Claude app's own registration automatically, and any Settings default-app
-choice self-clears. Pass `-KeepRouting` to leave the router in place.
-
----
-
-## Troubleshooting
-
-| Symptom | Fix |
-|---|---|
-| "Claude Desktop app not found" | Install it from [claude.ai/download](https://claude.ai/download) and run `Setup.ps1` again. |
-| Shortcut does nothing | Run `scripts\Launch-Claude.ps1 -ProfileDir <dir>` directly in PowerShell to see the error. |
-| Second window won't open | Make sure the two shortcuts use **different** `--user-data-dir` paths (check shortcut *Target*). |
-| Icon is blank or grey | Re-run `Setup.ps1` (current versions extract the icon to a stable `bin\claude.ico`, so it survives updates). If a stale thumbnail lingers, clear the icon cache: `ie4uinit.exe -show`, or `Stop-Process -Name explorer -Force; Start-Process explorer`. |
-| **"Failed to start Claude's workspace" / `VHDX file not found`** in a cloned profile | The profile's data dir is **outside `%APPDATA%`**, so the Cowork VM service can't find `rootfs.vhdx`. Re-run `Setup.ps1` (current version puts profiles under `%APPDATA%`). To migrate an existing profile without re-login, move `ClaudeProfiles\<name>` → `%APPDATA%\<name>` and update the shortcut's first argument to `%APPDATA%\<name>`. Do **not** use a junction/symlink for `vm_bundles` — the VM service refuses to open reparse points. |
-| **Cowork won't start in one profile while another is open** (`HYPERVISOR_SERVICE_ERROR`, *"a virtual machine … with the specified identifier already exists"*) | Expected — see [Cowork VM limitations](#cowork-vm-limitations). Only one profile can run the Cowork VM at a time; quit the other profile (or reboot to clear a stale VM) before launching. |
-
----
-
-## Cowork VM limitations
-
-Claude Desktop's **Cowork** feature (the agentic workspace, scheduled tasks, and
-artifact storage) runs inside a per-machine **Hyper-V VM**, not just an Electron
-window. Two consequences for multi-profile use:
-
-1. **Profile data must live under `%APPDATA%`.** The native VM service resolves
-   the VM image (`rootfs.vhdx`) at `%APPDATA%\<dir-name>\vm_bundles`,
-   *ignoring* `--user-data-dir`. `Setup.ps1` therefore derives isolated profiles
-   as `%APPDATA%\Claude-<name>` (and the `-DefaultProfile` profile uses the stock
-   `%APPDATA%\Claude`, which is why it works out of the box). A data dir
-   anywhere else makes Cowork fail with `VHDX file not found`.
-
-2. **Only one Cowork VM can run at a time.** The Hyper-V compute system is *not*
-   scoped per profile, so launching Cowork in a second profile while another's
-   VM is running fails with `HYPERVISOR_SERVICE_ERROR` /
-   *"identifier already exists"*. You can keep both **windows** open for chat, but
-   the VM-backed workspace only runs in one profile at a time — quit (or stop the
-   workspace of) the other profile first. The plain chat / login isolation that
-   this tool provides is unaffected.
-
----
-
-## How is this different from running the app twice?
-
-The app enforces a single instance via the Chromium singleton lock, which is
-tied to the data directory. Clicking the normal icon twice hits the same lock
-and just focuses the open window. Giving each instance its own data directory
-gives each its own lock — and its own account.
-
----
-
-## Disclaimer
-
-This is an unofficial community tool. It does not modify, repackage, or
-redistribute the Claude app — it only launches the official, installed app with
-a standard Chromium command-line flag. Use in accordance with Anthropic's terms.
-
----
-
-## Tiếng Việt — Quickstart
-
-Chạy **nhiều cửa sổ Claude Desktop cùng lúc trên Windows**, mỗi cái một tài
-khoản (ví dụ *Công việc* và *Cá nhân*), đăng nhập/lịch sử/cài đặt tách biệt.
-
-App chính thức chỉ cho 1 tài khoản và không mở cửa sổ thứ hai. Repo này lách
-bằng cờ `--user-data-dir` của Chromium: mỗi thư mục dữ liệu khác nhau = một khoá
-instance riêng = một cửa sổ + một tài khoản chạy song song.
-
-```powershell
-git clone https://github.com/fredless/claude-windows-multiprofile.git
-cd claude-windows-multiprofile
-powershell -ExecutionPolicy Bypass -File scripts\Setup.ps1 -Profile Personal,Work -DefaultProfile Personal
-```
-
-- Tạo 2 icon trên Desktop: **Claude (Personal)** và **Claude (Work)**.
-- `-DefaultProfile Personal`: icon Personal dùng lại tài khoản đang đăng nhập
-  (khỏi login lại). Icon Work mở cửa sổ mới để đăng nhập tài khoản còn lại.
-- Bấm lại icon → focus đúng cửa sổ của tài khoản đó (không mở trùng).
-- Đăng nhập SSO (doanh nghiệp) bị nhầm profile? Xem phần
-  [Enterprise SSO / login routing](#enterprise-sso--login-routing) và
-  [docs/PROTOCOL-ROUTING.md](docs/PROTOCOL-ROUTING.md).
-
-Muốn tách riêng cả **bộ nhớ Claude Code / Cowork** cho từng profile (mặc định
-chỉ tách login, còn `~/.claude` thì dùng chung), trỏ `CLAUDE_CONFIG_DIR` qua
-`-ConfigDir`:
-
-```powershell
-& .\scripts\Setup.ps1 -ConfigDir @{ Personal = "$env:USERPROFILE\.claude-personal" }
-```
-
-Gỡ: `scripts\Uninstall.ps1` (thêm `-RemoveData` để xoá luôn dữ liệu/đăng nhập).
-
-Yêu cầu: Windows 10/11 + đã cài app Claude Desktop. Không cần quyền admin,
-không cần Python.
-
----
-
-## Contributing
-
-`develop` is the integration branch; `master` is the stable, published state. Branch `feature/*`
-or `bug/*` off `develop` and PR into `develop`; branch `hotfix/*` off `master` for urgent fixes.
-Merging `develop → master` releases, and `sync-develop.yml` merges `master` back into `develop`.
-CI runs PSScriptAnalyzer on every PR. See [CLAUDE.md](CLAUDE.md#git-workflow) for details.
-
-## License
-
-[MIT](LICENSE)
-
----
-
-## Built with
-
-[Claude Code](https://claude.ai/code) by Anthropic. 🤖
+These tests use synthetic accounts and owned TEMP metadata. They do not launch
+Claude. CI runs its existing parser, analyzer and routing regressions; it does
+not yet execute either new fixture matrix. Actual A/B identity, configuration,
+shared memory and removal remain local acceptance gates. PR #1 stays draft.
+
+## Credits and license
+
+Forked from [vodongha/claude-desktop-clone](https://github.com/vodongha/claude-desktop-clone).
+The `--user-data-dir` technique and prior UserChoice-hash work are credited to
+[Zoltak-Dev/ai-multi-instance](https://github.com/Zoltak-Dev/ai-multi-instance).
+This fork does not implement UserChoice-hash automation. See [MIT](LICENSE).
+It does not modify, repackage or redistribute Claude binaries.
+
+## Tiếng Việt — trạng thái
+
+Bản fork đang kiểm thử định tuyến và chẩn đoán thụ động. Chưa xác minh cài đặt
+an toàn hoặc hai tài khoản Desktop thực tế. Giữ nguyên tài khoản A và thư mục
+project; không chạy Setup/Uninstall để sửa nhanh. Chỉ định tên profile khi đăng
+nhập; `-Profile default` chỉ huỷ kích hoạt định tuyến. Xem ledger và hướng dẫn
+định tuyến trước khi thao tác trên cài đặt thật.

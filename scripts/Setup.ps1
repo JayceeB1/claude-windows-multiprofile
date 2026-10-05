@@ -305,7 +305,7 @@ if ($NoProtocolRouting) {
     $cmd = "conhost --headless powershell -NoProfile -ExecutionPolicy Bypass -File `"$shimPath`" -Url `"%1`""
 
     # Back up any pre-existing classic-key command ONCE, before it can be
-    # overwritten later by Arm-ClaudeLogin.ps1. This preserves (e.g.) a leftover
+    # overwritten by a later Setup run. This preserves (e.g.) a leftover
     # Squirrel registration so Uninstall.ps1 can restore it. Idempotent: only
     # writes 'backup' if it isn't already present.
     $classicCmdKey = 'HKCU:\Software\Classes\claude\shell\open\command'
@@ -351,10 +351,15 @@ if ($NoProtocolRouting) {
     Write-Host " If 'claude' doesn't appear, close and reopen Settings"
     Write-Host " (it caches the registered-applications list)."
     Write-Host ""
-    Write-Host " Then verify with:  scripts\Test-ClaudeRouting.ps1" -ForegroundColor Cyan
+    Write-Host " Passive observations only: scripts\Test-ClaudeRouting.ps1" -ForegroundColor Cyan
+    Write-Host " It does not activate a link or prove Desktop delivery/login."
+    Write-Host " Missing/busy metadata remains unknown; do not publish old logs."
     Write-Host "============================================================" -ForegroundColor Yellow
     Write-Host ""
     Write-Host " To route a login:  bin\Arm-ClaudeLogin.ps1 -Profile <name> -Launch"
+    Write-Host " Choose the explicit A/B name for one login; verify the browser account."
+    Write-Host " Five-minute intent; consumed before launch; no fallback account."
+    Write-Host " -Profile default disarms only. Arming does not change registration."
 }
 
 Write-Host ""

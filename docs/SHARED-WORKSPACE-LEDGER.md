@@ -1,6 +1,6 @@
 # Shared workspace fork - implementation ledger
 
-Updated 2026-10-06 (Q1 delivery). Delivery order, file budgets, dependencies and stop gates:
+Updated 2026-10-06 (D2 delivery; user-authorized chained slices). Delivery order and dependencies:
 [Shared workspace roadmap](SHARED-WORKSPACE-ROADMAP.md). This is the sole ledger.
 Requirements below are separate from implementation and evidence statuses.
 
@@ -200,11 +200,11 @@ implementation; the separately authorized Q1 delivery is recorded below.
 | S2b | VERIFIED_SYNTHETIC | S2a | `f4ef960`, test repair `f6ea7a9`; Windows CI, Test-Launcher / Test-ArgBuilder | Current run; no real process/environment-loading proof | Preserve child-only environment |
 | A-PRESERVE | TODO | S4a-S5b | Requirement recorded in `3546ddb`; no installation receipt | User reports A already works; not locally observed this turn | Inventory then acceptance |
 | S2c1 | VERIFIED_SYNTHETIC | S2b | `5c908a7`; Windows CI, Test-ShimLogging | Closed new-log schema; old logs not sanitized | Preserve schema |
-| S2c2 | VERIFIED_SYNTHETIC | S2c1 | Initial `81da85e`, actual-null repair `794148f`; cross-shell CI and local PS7 Test-ShimLogging | Current receipts above; real TEMP IO, same-process contention and simulated interleaving | Q1 |
-| S2c2-Q1 | VERIFIED_SYNTHETIC | S2c2 | Production `794148f`; harness/worker in this Q1 delivery commit; native PS5.1/7 + Python | `python tests/Test-RoutingProcesses.py`: 8 cases PASS; details below; no Desktop launch | Q2 crash/expiry recovery |
-| S2c2-Q2 | VERIFIED_SYNTHETIC | Q1 | Parent `1497f48`; three-file Q2 delivery below; native PS5.1/7 + Python | 12 Q2 cases PASS, plus 8 Q1 regressions; four expiry mutants detected; no Desktop launch | D1 passive diagnostic |
-| S2c2-D1 | VERIFIED_SYNTHETIC | Q2 | Parent `8b8431b`; three-file D1 delivery below; native PS5.1/7 | 33 fixture cases / 959 assertions per shell; six unsafe/leaking mutants detected; no installed invocation | D2 current routing guidance |
-| S2c2-D2 | TODO | D1 | None; source review only | README/guide still claim legacy default reset and armer registry writes | Align v2 examples/guidance |
+| S2c2 | VERIFIED_SYNTHETIC | S2c1 | Initial `81da85e`, actual-null repair `794148f`; cross-shell CI and local PS7 Test-ShimLogging | Current receipts above; real TEMP IO, same-process contention and simulated interleaving | Preserve |
+| S2c2-Q1 | VERIFIED_SYNTHETIC | S2c2 | Production `794148f`; harness/worker in this Q1 delivery commit; native PS5.1/7 + Python | `python tests/Test-RoutingProcesses.py`: 8 cases PASS; details below; no Desktop launch | Preserve |
+| S2c2-Q2 | VERIFIED_SYNTHETIC | Q1 | Parent `1497f48`; three-file Q2 delivery below; native PS5.1/7 + Python | 12 Q2 cases PASS, plus 8 Q1 regressions; four expiry mutants detected; no Desktop launch | Preserve |
+| S2c2-D1 | VERIFIED_SYNTHETIC | Q2 | Parent `8b8431b`; three-file D1 delivery below; native PS5.1/7 | 33 fixture cases / 959 assertions per shell; six unsafe/leaking mutants detected; no installed invocation | Preserve |
+| S2c2-D2 | VERIFIED_SYNTHETIC | D1 | Parent `c96402f`; four-file D2 delivery below | Docs/examples match v2 and D1; Setup non-guidance tokens unchanged | S4a inventory; S3a needs ZIP |
 | S3a | BLOCKED | D2 + supplied ZIP | None; filename search only in supplied workspace | **ARTEFACT_MANQUANT**; reported 40 tests unverified, no import | Obtain actual artifact, review before import |
 | S4a | TODO | D2 | None | A paths/config provenance and physical ownership unobserved | Read-only inventory; can proceed while ZIP missing |
 | S3b | TODO | S3a + S4a | None; official docs read, not runtime proof | Import/plan gated by missing ZIP | Requalify reviewed no-write bridge |
@@ -416,6 +416,22 @@ covered the CLI compatibility boundary, fixed output, read-only modes, rejected
 aliases and missing/busy lock semantics; no probabilistic approval is claimed.
 PR #1 remains draft with Desktop acceptance pending.
 
+## S2c2-D2 — Current routing instructions (2026-10-06)
+The user now authorizes chaining ready slices, retaining separate atomic commits.
+Parent `c96402f884ca325ca0303a6f47a1fbc232ff2e54`; files: README, routing guide,
+Setup printed guidance/comment and this ledger. Resolve commit with
+`git log -1 --format=%H -- docs/PROTOCOL-ROUTING.md`.
+Docs now describe named A/B intent, disarm, five-minute expiry, pre-launch
+consumption, failure/recovery, fixed-log meanings and D1's passive JSON schema.
+Removed live ping/raw process dumps, default-as-A/reset, armer-registry claims,
+unsafe installation/removal repairs and unsupported authentication-success claims.
+Historical Windows/Cowork behavior is identified as upstream evidence to requalify;
+fork lineage, prior-art credits and MIT are preserved. Setup changed only printed
+guidance and one stale comment. Setup parses under PS5.1/7; line comparison excludes
+Write-Host/comments only and all other lines match the parent. Local links and fenced
+examples reviewed; no Setup or installed diagnostic invocation. Existing D1 fixture
+tests remain PASS in both shells. S4a proceeds independently of missing bridge ZIP.
+
 ## Decisions and planning evidence
 
 - Projects stay where they are; no migration or mandatory worktrees. The user
@@ -474,9 +490,8 @@ two-document diff was reviewed; application, test and CI files are unchanged.
 
 ## NEXT SLICE
 
-**S2c2-D2 — Current routing instructions.**
-Four files: `docs/PROTOCOL-ROUTING.md`, `README.md`, `scripts/Setup.ps1` (printed
-diagnostic guidance only) and this ledger. Replace legacy fallback/log/registry
-claims and unsafe probe recommendations with v2 procedure, passive diagnostic
-semantics and known limits. D1 is VERIFIED_SYNTHETIC; D2 remains TODO pending
-the user's next slice instruction. No Setup or installed diagnostic invocation.
+**S4a — Read-only A inventory and physical ownership model.**
+Three files: `scripts/Inspect-SharedWorkspace.py`, `tests/test_workspace_inventory.py`
+and this ledger. Chain fixture qualification and bounded private inventory;
+uncertain A provenance/effective Desktop config blocks apply. S3a remains blocked
+by the missing ZIP. No account/project writes, installation, login or forced restart.

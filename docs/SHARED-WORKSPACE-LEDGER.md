@@ -11,6 +11,42 @@ Do not share/copy credentials, cookies, complete config roots, internal Desktop
 stores, or cloud conversations. No automatic account/quota rotation. Preserve
 upstream licensing; do not modify or redistribute Claude binaries.
 
+### Existing session preservation - mandatory acceptance gate
+
+The user explicitly confirmed on 2026-10-05 that a working session already
+exists. Treat that session as account A, to preserve in place, NOT as a disposable
+test profile or a fresh login. The exact local paths and effective configuration
+have not been inspected on the user's machine. These are requirements to
+implement and qualify, not protections already proven by the current code.
+
+- Start with a read-only inventory of paths/config provenance and existing
+  launcher/routing metadata. Do not read, print, upload or clone auth tokens,
+  cookies or session databases. Do not assume A uses the stock data/config paths:
+  an existing custom CLAUDE_CONFIG_DIR must not be silently replaced by the
+  launcher's omitted/empty ConfigDir behavior. Ambiguity blocks configuration.
+- Keep A's data/config roots, conversations, projects and existing entry point
+  in place. No move, rename, reset, forced logout, account replacement or forced
+  process termination. Any needed orderly restart must be explicitly agreed,
+  after active work is saved; it is not a logout or a migration.
+- Add B using newly provisioned, distinct data/config roots. Refuse a collision
+  with any existing profile instead of adopting/overwriting it. Use explicit
+  labels identifying A as the existing session and B as the added account.
+  No whole-root links/copies, including through junctions or symlink aliases.
+- Share only selected project resources/memory after isolated tests. No blanket
+  rewrite of A's settings or memory. Each intended non-secret settings change
+  needs a preview, local backup and conflict-aware rollback. Do not introduce
+  shared memory inside a directory that B's uninstall is allowed to remove.
+- Login callbacks must have an unambiguous intended target; never silently send
+  B's callback to A as a fallback. Changes to existing protocol registration or
+  shortcuts require explicit approval, an ownership record and safe restoration.
+- Install/uninstall/rollback must preserve A and shared resources, including
+  when paths alias or nest. Delete only demonstrably owned additions, never a
+  pre-existing directory inferred from its name. Check conflicts before restore.
+- Qualification must show A remains usable before/after adding B and after
+  removal of B, including a user-approved restart where needed. Confirm the
+  effective accounts A/B locally without exporting secrets. Do not interpret
+  this as a guarantee against independent provider-side session expiry.
+
 ## Work rules
 
 One coherent micro-slice, 2-4 files, self-review, tests, atomic commit, draft PR,

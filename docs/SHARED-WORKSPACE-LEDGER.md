@@ -1,5 +1,9 @@
 # Shared workspace fork - implementation ledger
 
+Updated 2026-10-05. Delivery order, file budgets, dependencies and stop gates:
+[Shared workspace roadmap](SHARED-WORKSPACE-ROADMAP.md). This is the sole ledger.
+Requirements below are separate from implementation and evidence statuses.
+
 ## Contract
 
 Two Claude Desktop accounts with separate Desktop data directories and separate
@@ -71,12 +75,50 @@ Master base: `2ee03050185ace47581e9607341bd91cddd5ae9a`.
 | Existing A gate | `3546ddb2face6a5f4e922d46a73c268f817928c6` | Requirements above, not a machine qualification. |
 | S2c1 - secret-free logs | `5c908a795af7ee44e287d8528f4af4ed1c0272ea` | Fixed event/category fields; no callback or raw exception in explicit outputs. |
 
-[Run #5](https://github.com/JayceeB1/claude-windows-multiprofile/actions/runs/37372078960):
-Windows PowerShell 5.1 job `111971465212` succeeded: 11 scripts parsed, 153 setup
-assertions, 3 argument cases, 126 launcher assertions, 25 logging scenarios / 271
-assertions. At S2c2 entry the pwsh and lint jobs were **cancelled without running**,
-not passed. Earlier run #2 failed in the absent-environment test; #3 passed the
-Windows PowerShell job. No complete cross-shell CI PASS has yet been observed.
+## Verified repository and CI snapshot
+
+Read-only fetch confirmed remote `JayceeB1/claude-windows-multiprofile`.
+The clean local checkout started on master and was switched normally to the
+tracking PR branch; no reset, clean, stash, forced checkout, merge or rebase.
+Code HEAD is `794148f4072a59b4ca146b5199f5e7cea8fe8bb6`; master remains at
+`2ee03050185ace47581e9607341bd91cddd5ae9a`. No delta from the supplied code HEAD.
+[PR #1](https://github.com/JayceeB1/claude-windows-multiprofile/pull/1) was OPEN,
+draft, seven commits and nine cumulative files at inspection, before this
+additional two-document commit. No merge performed. Local user's configured Git
+identity is used without changes or assistant attribution; upstream licence and
+credits remain intact. Inherited CLAUDE.md identity/branch and old test guidance
+are superseded by the user's explicit instructions and actual branch/tests.
+
+[Run 37375728981](https://github.com/JayceeB1/claude-windows-multiprofile/actions/runs/37375728981)
+was reread with `gh run view 37375728981 --json url,status,conclusion,headSha,jobs`
+and each job's own `gh run view 37375728981 --job <id> --log`.
+All three jobs are completed/success. The workflow tests the temporary PR merge
+ref `5fed29786c087fd9d53d8bce0d9755dc9488936a`, combining the code HEAD and base;
+this is NOT a merge into master. Historical cancelled/pending runs are not the
+current gate. This evidence predates the documentary commit.
+
+| Job / receipt | Environment | Observed result |
+| --- | --- | --- |
+| [111983866240](https://github.com/JayceeB1/claude-windows-multiprofile/actions/runs/37375728981/job/111983866240) | Windows runner, PS7 7.6.6 | 11 scripts parsed; 153 profile assertions; 3 argument cases; **129** launcher assertions; 39 dispatch scenarios / 521 assertions |
+| [111983866371](https://github.com/JayceeB1/claude-windows-multiprofile/actions/runs/37375728981/job/111983866371) | Windows runner, PS5.1 5.1.26100.33438 | 11 scripts parsed; 153 profile assertions; 3 argument cases; **126** launcher assertions; 39 dispatch scenarios / 521 assertions |
+| [111983866006](https://github.com/JayceeB1/claude-windows-multiprofile/actions/runs/37375728981/job/111983866006) | Ubuntu runner, pwsh, PSScriptAnalyzer | Errors-only scan succeeded: “No PSScriptAnalyzer errors.” Warnings were not qualified. |
+
+Local environment checked: Windows native PowerShell 7.6.6, Windows PowerShell
+5.1.26100.9549 and Python 3.14.7. No WSL execution or dependency installation.
+After reading the test and guarded imports, parser preflight inspected all
+11 scripts/tests with `Parser::ParseFile`, then `./tests/Test-ShimLogging.ps1`
+ran once under native PS7: 39 scenarios / 521 assertions PASS. Only newly owned
+random TEMP metadata files/locks and launch doubles were exercised and cleaned;
+no real Claude process, profile, registry, account or OAuth flow.
+The PS5.1 suite was NOT rerun locally; its evidence above is its own CI log.
+No local lint run, broader campaign, installer, uninstall, arming entry point,
+live diagnostic or protocol link execution was performed.
+
+Exploration: jCodeMunch list/index/outline returned 13 files but zero PowerShell
+symbols. GitNexus list was queried; local index-only analysis did not complete
+and was interrupted through its owned command session. Direct source reads
+covered the required scripts, four tests, CI, README, routing guide and ledger.
+No graph result is used as architecture proof. No application/test/CI edits.
 
 ## S2c2 - explicit callback routing and one-shot intent
 
@@ -118,9 +160,9 @@ boundaries. They exercise the real planner, start-info builder and dispatcher,
 plus real file locking and atomic marker writes in an owned random TEMP directory.
 Reentrant callback tests model a contender; they are NOT a multi-process stress
 campaign. No Claude process, account, credential or existing profile is exercised.
-No local Windows/PowerShell runtime is available. Source review and size/encoding
-checks are not runtime PASS; actual new CI results must be read and recorded in
-PR #1. This ledger summarizes older slices; their full details remain in Git.
+Native Windows PS7 and current cross-shell CI evidence are recorded above.
+This remains synthetic qualification, not real Desktop acceptance. Full older
+slice details remain in Git; no historical PASS is promoted to a local gate.
 
 The intent is NOT cryptographic correlation with the outgoing OAuth request.
 Only Claude owns/verifies its state/PKCE. A delayed callback from a previous
@@ -142,25 +184,100 @@ PROTOCOL-ROUTING.md and routing diagnostic still describe the legacy marker/log
 behavior: update them before packaging. New route.lock and any orphan temporary
 metadata need ownership-aware handling in S4; never delete a held lock file.
 
-## Remaining ledger / exact next work
+## Implementation and evidence register
 
-1. Read S2c2 CI results on its exact HEAD; repair this slice if needed, then STOP.
-   No inference from old PASS results or pending/cancelled jobs.
-2. S2c2 qualification follow-up: update routing guide/diagnostic, exercise the
-   real Windows armer/dispatcher metadata boundary across processes, and keep
-   the single-browser-flow limitation explicit. No account test on A.
-3. S3: re-review/import the separate Python memory bridge (40 tests previously
-   reported in `claude-shared-memory-slice1.zip`, not integrated). Verify current
-   autoMemoryDirectory support and actual Desktop loading. Share selected project
-   memory only, not whole config/auth roots or cloud conversations.
-4. S4: read-only inventory of actual A, ownership manifest, new B paths, preview,
-   local non-secret backups, safe rollback/uninstall, one-command packaging.
-   Existing Uninstall.ps1 -RemoveData is NOT qualified for shared paths.
-5. S5: disposable-project real-machine qualification of A/B identities, memory
-   A->B and B->A, approved restart, and B removal leaving A/shared memory intact.
-   Session/cloud-history merging and simultaneous Cowork VMs remain out of scope.
+Status vocabulary: TODO / IN_PROGRESS / BLOCKED / IMPLEMENTED /
+VERIFIED_SYNTHETIC / VERIFIED_LOCAL. Synthetic qualification can use a native
+Windows host; VERIFIED_LOCAL is reserved here for the actual user installation.
+A passing implementation test does not satisfy the user acceptance requirements.
+Each future slice must add its exact commit, environment, command and receipt
+before changing its evidence status. No remaining implementation is started.
+
+| ID | Status | Dependencies | Commit / evidence environment and command | Receipt / limit | Next action |
+| --- | --- | --- | --- | --- | --- |
+| S2a | VERIFIED_SYNTHETIC | baseline | `973fc155`; Windows CI, Test-SetupProfiles with pinned baseline | Current run above; profile loop doubles only | Preserve repair |
+| S2b | VERIFIED_SYNTHETIC | S2a | `f4ef960`, test repair `f6ea7a9`; Windows CI, Test-Launcher / Test-ArgBuilder | Current run; no real process/environment-loading proof | Preserve child-only environment |
+| A-PRESERVE | TODO | S4a-S5b | Requirement recorded in `3546ddb`; no installation receipt | User reports A already works; not locally observed this turn | Inventory then acceptance |
+| S2c1 | VERIFIED_SYNTHETIC | S2b | `5c908a7`; Windows CI, Test-ShimLogging | Closed new-log schema; old logs not sanitized | Preserve schema |
+| S2c2 | VERIFIED_SYNTHETIC | S2c1 | Initial `81da85e`, actual-null repair `794148f`; cross-shell CI and local PS7 Test-ShimLogging | Current receipts above; real TEMP IO, same-process contention and simulated interleaving | Q1 |
+| S2c2-Q1 | TODO | S2c2 | None; future native PS5.1/7 + Python harness | No multi-process receipt | One-arm/two-callback, concurrent arm, occupied lock |
+| S2c2-Q2 | TODO | Q1 | None | Crash/expiry recovery not qualified across processes | Barrier-driven death and explicit recovery |
+| S2c2-D1 | TODO | Q2 | None; source review only | Current default ping can consume intent; raw command lines/old logs exposed | Passive expurgated diagnostic |
+| S2c2-D2 | TODO | D1 | None; source review only | README/guide still claim legacy default reset and armer registry writes | Align v2 examples/guidance |
+| S3a | BLOCKED | D2 + supplied ZIP | None; filename search only in supplied workspace | **ARTEFACT_MANQUANT**; reported 40 tests unverified, no import | Obtain actual artifact, review before import |
+| S4a | TODO | D2 | None | A paths/config provenance and physical ownership unobserved | Read-only inventory; can proceed while ZIP missing |
+| S3b | TODO | S3a + S4a | None; official docs read, not runtime proof | Import/plan gated by missing ZIP | Requalify reviewed no-write bridge |
+| S3c | TODO | S3b | None | No apply/rollback receipts | Minimal selected-key changes on fixtures |
+| S3g | TODO | S3c + selected list | None; optional | No global sharing requested by default | Defer or qualify explicit allowlist |
+| S4b | TODO | S4a + S3b | None | Setup lacks complete collision/ownership preview | Additive no-write plan |
+| S4c | TODO | S4b + S3c | None | Full Setup not fixture-qualified for preserving A | Additive execution/rollback on fixtures |
+| S4d | TODO | S4c | None; Uninstall source reviewed | Name-derived fallback and unchecked custom config deletion; route.lock/temp not cleaned; no ownership/conflict protection | Owned B removal, retain data by default |
+| S4e | TODO | S4d + D2 | None | No qualified one-command package | Preview-first entry and guide |
+| S5a | TODO | S4e + explicit local approval | None | Browser focus is **HYPOTHESIS TO TEST** | Observe HTTPS/profile identity/claude:// separately |
+| S5b | TODO | S5a + all required synthetic gates + approval | None | Two Desktop identities, memory and removal unobserved | Real disposable-project acceptance |
+
+## Decisions and planning evidence
+
+- Projects stay where they are; no migration or mandatory worktrees. The user
+  owns the one-writer-per-project rule. Two agents may use different projects.
+- Login/data and config roots stay distinct. Existing project instructions,
+  project skills, settings and tool definitions are already common on disk;
+  effective loading remains a gate. Selected non-secret global resources are
+  optional; credentials/connectors/account preferences remain account-specific.
+- Keep A's existing entry point. Two clear shortcuts must not silently replace
+  it or infer A's paths/config from stock conventions or a terminal variable.
+- Setup currently force-copies launcher assets, rewrites profiles.json and
+  creates shortcuts; S2a does not prove additive install safety. Uninstall's
+  stock-name/isDefault checks do not prove ownership or physical separation.
+- Protocol changes require separate consent, a local ownership/backup record
+  and conflict-aware restoration. Removal retains data by default. Any deletion
+  is a distinct explicit action restricted to proven-owned B additions, never
+  A/shared memory. Never delete a held lock; inspect orphan temporary sidecars.
+- Browser focus idea is neither accepted as fact nor rejected. The future trial, subject to explicit approval,
+  observes (1) HTTPS destination window/profile, (2) its account,
+  (3) returned claude:// target independently. Choose B, verify browser account,
+  close stale login tabs, one login at a time. Two open Desktop windows do not
+  require concurrent logins. Focus cannot justify automatic A fallback.
+- Current intent does not correlate the outgoing OAuth request: a delayed
+  callback can consume a new arm. Preserve state/PKCE; no unsupported origin
+  recognition promise. Consumed-without-launch requires deliberate recovery.
+- ZIP lookup was restricted to the repository (including untracked/hidden file
+  names) and the supplied visualization workspace. Neither contained the ZIP;
+  no other drive search or invented Windows equivalent of a sandbox path.
+  Missing artifact blocks S3 import, not these documents or Q1.
+- Official sources reread on 2026-10-05:
+  [memory storage](https://code.claude.com/docs/en/memory#storage-location),
+  [precedence](https://code.claude.com/docs/en/settings#settings-precedence),
+  [Desktop configuration](https://code.claude.com/docs/en/desktop#shared-configuration).
+  autoMemoryDirectory is documented in every settings scope with absolute/~/
+  paths, project/local trust and a blockReadsOutsideWorkingDirectories caveat.
+  Managed > CLI > local > shared project > user; environment rules vary by key.
+  Desktop reads shared configuration, with MCP surface-specific precedence.
+  Installed embedded-version support, config-root isolation and actual memory
+  loading remain unverified. No global memory path that mixes projects.
+- Bridge proof and Desktop A->B/B->A proof are separate. Adopt only chosen
+  existing project memory, minimal edits, non-secret backups, idempotence and
+  conflict-aware rollback. Personal paths/sensitive evidence stay local/ignored;
+  public receipts use placeholders. No complete account-root copies/links.
+- No automatic merge. Future implementation slices are 2-4 files, bounded
+  preflight/tests, diff review, atomic commit, report, STOP. Any A restart needs
+  saved work and explicit agreement; no forced stop/logout/replacement.
 
 References checked for the locking/IO contract:
 [FileShare.None](https://learn.microsoft.com/en-us/dotnet/api/system.io.fileshare?view=netframework-4.8.1),
 [File.Move no-overwrite behavior](https://learn.microsoft.com/en-us/dotnet/api/system.io.file.move?view=netframework-4.8.1),
 [native-app OAuth flow boundaries](https://www.rfc-editor.org/rfc/rfc8252.html).
+
+Document validation: both files are below 500 lines; relative links resolve;
+UTF-8 readback, one NEXT SLICE and staged `git diff --check` pass. The complete
+two-document diff was reviewed; application, test and CI files are unchanged.
+
+## NEXT SLICE
+
+**S2c2-Q1 — Windows multi-process synthetic lock and one-shot qualification.**
+Use exactly the Q1 budget in the roadmap: Python harness, guarded PowerShell
+fixture worker and this ledger (three files). Prove two callbacks for one arm,
+concurrent arming and occupied-lock refusal with barriers, bounded deadlines,
+recorded child ownership and a launch double. No real installation/login.
+This is TODO, not authorization to start: wait for the user's go-ahead, then
+complete that slice alone, report its evidence and STOP.

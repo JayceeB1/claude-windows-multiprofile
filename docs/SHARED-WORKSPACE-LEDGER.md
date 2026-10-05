@@ -47,6 +47,10 @@ implement and qualify, not protections already proven by the current code.
   effective accounts A/B locally without exporting secrets. Do not interpret
   this as a guarantee against independent provider-side session expiry.
 
+User clarification for S4: project folders remain at their existing locations;
+there is no planned move or project deletion. Local verification must confirm
+that adding/removing B only affects its owned additions, not shared resources.
+
 ## Work rules
 
 One coherent micro-slice, 2-4 files, self-review, tests, atomic commit, draft PR,
@@ -54,164 +58,109 @@ then STOP. No merge without explicit approval. Keep files below approximately
 500 lines. Use the connected user's Git identity; do not copy upstream's author
 or add assistant/co-author attribution. Keep master unchanged until approval.
 
-## S2a - installer parameter collision
+## Published baseline
 
-Base: `2ee03050185ace47581e9607341bd91cddd5ae9a` (upstream/fork master).
-Branch: `fix/setup-profile-path-collision` (fork has no develop branch).
+Branch: `fix/setup-profile-path-collision`; draft PR #1.
+Master base: `2ee03050185ace47581e9607341bd91cddd5ae9a`.
 
-`Setup.ps1` reused `$dataDir` / `$configDir` for paths while `$DataDir` /
-`$ConfigDir` are typed hashtable parameters. PowerShell variable names ignore
-case. Assigning a path therefore attempts to replace a hashtable parameter.
-The fix renames only the per-profile values to `$profileDataDir` /
-`$profileConfigDir`. Public parameters, overrides, manifest keys, shortcuts,
-stock-profile behavior and router registration remain unchanged.
+| Slice | Commit | Evidence / scope |
+| --- | --- | --- |
+| S2a - installer map collision | `973fc1550ec3d1ca0f2c1f9ab474972f4ade3ce5` | Separate resolved path variables from case-insensitive hashtable parameters; unchanged public contract. |
+| S2b - launcher | `f4ef9603188cdba7d28c876893bef8d820188521` | Child-only environment, quoted paths, validation before IO; no parent environment mutation. |
+| S2b test repair | `f6ea7a99976427343f780f8c963fab63bdafac76` | Distinguish empty vs absent environment variable; no production change. |
+| Existing A gate | `3546ddb2face6a5f4e922d46a73c268f817928c6` | Requirements above, not a machine qualification. |
+| S2c1 - secret-free logs | `5c908a795af7ee44e287d8528f4af4ed1c0272ea` | Fixed event/category fields; no callback or raw exception in explicit outputs. |
 
-`tests/Test-SetupProfiles.ps1` parses the real installer, extracts its parameter
-block and profile loop, and runs only those fragments with in-memory directory
-and shortcut doubles. It never invokes Setup.ps1 as an installer. It covers
-stock-first/last, both isolated defaults, independent/partial overrides,
-case-insensitive map keys, explicit empty config, map preservation, repeat
-invocation, and ordinary/sign-in shortcut arguments including spaces.
-The pinned original must fail specifically on hashtable conversion. Separate
-DataDir and ConfigDir mutants must fail as well: an arbitrary exception is not
-a passing negative test.
+[Run #5](https://github.com/JayceeB1/claude-windows-multiprofile/actions/runs/37372078960):
+Windows PowerShell 5.1 job `111971465212` succeeded: 11 scripts parsed, 153 setup
+assertions, 3 argument cases, 126 launcher assertions, 25 logging scenarios / 271
+assertions. At S2c2 entry the pwsh and lint jobs were **cancelled without running**,
+not passed. Earlier run #2 failed in the absent-environment test; #3 passed the
+Windows PowerShell job. No complete cross-shell CI PASS has yet been observed.
 
-CI parses every PowerShell script before executing tests and runs the profile
-suite plus the existing argument-builder suite on Windows PowerShell 5.1 and
-PowerShell 7. The existing PSScriptAnalyzer job remains enabled.
+## S2c2 - explicit callback routing and one-shot intent
 
-### Evidence boundaries
+Parent: `5c908a795af7ee44e287d8528f4af4ed1c0272ea`; same branch/PR, four files:
+`ClaudeOpenShim.ps1`, `Arm-ClaudeLogin.ps1`, `Test-ShimLogging.ps1`, this ledger.
+Existing CI already executes that test file in both Windows jobs after parsing.
 
-The publication environment has Python but no PowerShell/Windows runtime and
-cannot clone GitHub directly. Source was read through the GitHub connector;
-local reconstruction of Setup.ps1 was verified against its exact Git blob SHA
-`3f713a77ca90cbd1456d9b9a215970f9b0ea08ef` before editing. Static review and
-source-diff checks are not a runtime PASS. CI run links and actual results belong
-in the draft PR after execution. A workflow definition is not proof of a run.
+- Arming resolves a declared profile in `profiles.json`. Data/config paths are
+  explicit; no dispatch inference from `defaultProfile`, `isDefault`, or parent
+  environment. A custom A config is preserved; empty config explicitly means
+  stock behavior and strips the inherited variable. S4 must verify this mapping
+  against the actual existing session before any real use.
+- `target.txt` now contains a schema-v2 intent: named profile, hash of manifest
+  text, creation/expiry timestamps (integer milliseconds, five-minute lifetime).
+  Missing/legacy/default/malformed/expired/consumed markers and changed manifests
+  fail closed. Unknown profiles and lexical root overlap/nesting also block.
+- Arming, disarming and dispatch share `route.lock`, opened with FileShare.None.
+  A contender fails immediately. Arming never overwrites an outstanding intent,
+  including expired/legacy metadata. `-Profile default` is deliberate DISARM,
+  never a stock-account selection; `default -Launch` is rejected. To target A,
+  its actual declared name must be selected.
+- A valid intent is flushed/replaced with a consumed tombstone BEFORE discovery
+  or launch. The lock remains held through dispatch. No post-launch reset can
+  erase a later arm; a repeat callback cannot reuse the consumed intent.
+  Prerequisite/launch failures do not retry or fall back. Optional window-launch
+  failure during arming attempts to disarm; if that write fails, report failure
+  and require explicit disarm before any subsequent login attempt.
+- Callback dispatch uses the existing launcher's real ProcessStartInfo builder,
+  forwarding the profile/config and unmodified validated link. Only installed
+  MSIX discovery is used. The armer no longer rewrites protocol registry keys.
+  Setup/explicit consent owns registration, not a routine account launch.
+- Logs retain S2c1's closed event schema. No paths, links, args or exception text.
+  DISPATCH_COMPLETE means dispatch returned, NOT a successful account login.
 
-No installation, login, MSIX resolution, real shortcut creation, Desktop memory
-sharing or user-machine qualification is claimed by this slice.
+### Evidence boundaries and known residual risks
 
-## S2b - explicit child configuration and quoted launch paths
+The new tests use synthetic manifests/callbacks and doubles for dispatch/OS
+boundaries. They exercise the real planner, start-info builder and dispatcher,
+plus real file locking and atomic marker writes in an owned random TEMP directory.
+Reentrant callback tests model a contender; they are NOT a multi-process stress
+campaign. No Claude process, account, credential or existing profile is exercised.
+No local Windows/PowerShell runtime is available. Source review and size/encoding
+checks are not runtime PASS; actual new CI results must be read and recorded in
+PR #1. This ledger summarizes older slices; their full details remain in Git.
 
-Parent: `973fc1550ec3d1ca0f2c1f9ab474972f4ade3ce5`; same branch and draft PR #1.
-Four files in this slice: launcher, launcher tests, CI, and this ledger.
+The intent is NOT cryptographic correlation with the outgoing OAuth request.
+Only Claude owns/verifies its state/PKCE. A delayed callback from a previous
+browser flow can consume a newly armed intent. Close stale login tabs, initiate
+only ONE login flow at a time, verify the browser account, and do not claim
+arbitrary simultaneous-login safety. State-bound routing would require an
+additional supported source of outgoing-request correlation; not implemented.
 
-`Launch-Claude.ps1` builds a .NET `ProcessStartInfo` using `UseShellExecute=false`
-and an independently materialized child environment. An explicit `ConfigDir`
-sets only the child's `CLAUDE_CONFIG_DIR`; omitted/empty removes that variable
-from the child and selects stock behavior. The caller's process/user/machine
-settings are never mutated. Other inherited variables are intentionally left
-unchanged; this is config-path isolation, not proof of effective account identity.
+Validation of root independence here is lexical, not proof against junctions,
+short names, hard-link aliases or another noncooperating process. Physical path
+identity and metadata ownership belong to S4's local inventory. Full installers,
+Desktop runtime and actual identity/memory A<->B remain UNQUALIFIED. A running
+Desktop retains its environment; refocusing does not reconfigure it.
 
-Paths are validated before discovery or writes. The profile is one quoted
-argument; trailing backslashes are doubled before the closing quote. Directory
-creation uses literal .NET paths. Dot-sourcing is inert. Discovery/creation/start
-failures propagate; no start follows a failed prerequisite. Successful directory
-creation is not rolled back if a later step fails (avoid deleting existing data).
+Historical route.log contents, PowerShell debugging/transcripts/in-memory errors,
+OS process command-line telemetry and Claude internal logs are NOT sanitized.
+The URL remains in the child command line. Do not publish old logs. The older
+PROTOCOL-ROUTING.md and routing diagnostic still describe the legacy marker/log
+behavior: update them before packaging. New route.lock and any orphan temporary
+metadata need ownership-aware handling in S4; never delete a held lock file.
 
-Tests exercise the real start-info builder and launcher orchestration using
-in-memory OS-boundary doubles: spaces/brackets/Unicode/UNC/trailing separators,
-A/B/stock configs, parent preservation, independent child copies, invalid input,
-MSIX selection/fallback/missing app, and failures at discovery/creation/start.
-No Desktop, process or real directory is created by the tests. CI runs the new
-suite after parser preflight in both existing Windows shell jobs. Runtime results
-must be recorded in PR #1 from actual logs, not inferred from this implementation.
-The publication environment still has no PowerShell and cannot clone GitHub.
-The three baseline files were verified against their exact Git blob hashes.
+## Remaining ledger / exact next work
 
-### Known boundaries after source review
+1. Read S2c2 CI results on its exact HEAD; repair this slice if needed, then STOP.
+   No inference from old PASS results or pending/cancelled jobs.
+2. S2c2 qualification follow-up: update routing guide/diagnostic, exercise the
+   real Windows armer/dispatcher metadata boundary across processes, and keep
+   the single-browser-flow limitation explicit. No account test on A.
+3. S3: re-review/import the separate Python memory bridge (40 tests previously
+   reported in `claude-shared-memory-slice1.zip`, not integrated). Verify current
+   autoMemoryDirectory support and actual Desktop loading. Share selected project
+   memory only, not whole config/auth roots or cloud conversations.
+4. S4: read-only inventory of actual A, ownership manifest, new B paths, preview,
+   local non-secret backups, safe rollback/uninstall, one-command packaging.
+   Existing Uninstall.ps1 -RemoveData is NOT qualified for shared paths.
+5. S5: disposable-project real-machine qualification of A/B identities, memory
+   A->B and B->A, approved restart, and B removal leaving A/shared memory intact.
+   Session/cloud-history merging and simultaneous Cowork VMs remain out of scope.
 
-`Arm-ClaudeLogin.ps1 -Launch` already forwards the recorded config into this
-launcher. However, `ClaudeOpenShim.ps1` starts the executable directly and does
-not read that config: a callback that cold-starts a profile can bypass S2b.
-Therefore the whole login chain remains UNQUALIFIED until S2c fixes/tests it.
-An existing Desktop instance retains its old environment: exit that profile
-fully and reopen after a config change. Do not claim that refocusing fixes it.
-No API/provider credential variables are changed or logged; check effective
-account identity in the later real-machine gate. No memory bridge integration.
-
-### References checked for this design
-
-- Microsoft: [child environment and UseShellExecute](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.processstartinfo.environmentvariables?view=netframework-4.8.1).
-- Microsoft: [Windows argument quoting](https://learn.microsoft.com/en-us/cpp/c-language/parsing-c-command-line-arguments?view=msvc-170).
-- Anthropic: [per-account config directories](https://code.claude.com/docs/en/authentication#log-in-with-multiple-accounts).
-
-## S2c1 - callback-safe logging and failure reporting
-
-Parent: `3546ddb2face6a5f4e922d46a73c268f817928c6`; same branch and draft PR #1.
-Four files: shim, synthetic logging tests, CI, ledger. No installation or change
-to the existing session A, its profile paths, shortcuts or protocol registration.
-
-`route.log` now records only timestamp, allowlisted event code, and target kind
-(`unknown`, `stock`, `profile`). No URL/query/fragment, target path, arguments or
-raw exception is interpolated, even on MSIX lookup, process start or IO failures.
-The full callback is still forwarded unchanged to Claude. `LAUNCH_REQUESTED`
-means dispatch was attempted; `DISPATCH_COMPLETE` means launch and marker reset
-returned successfully, NOT that authentication succeeded.
-
-All dispatch failures return status 1, propagated by the entry point. Failures
-before dispatch cannot start a process. A failed log write cannot print its raw
-exception or recursively log elsewhere. Failure of the pre-dispatch log blocks
-launch. Post-launch reset/log failures return failure without retrying or killing
-the app. The tests capture all explicit PowerShell streams and fake log writes;
-they verify exact event sequences, full callback forwarding and process/reset
-counts. Synthetic query/fragment/custom-field/path sentinels and raw exception
-messages cover success, missing input/app/marker, discovery, read, builder,
-launch, reset and log-write failures. Both throw and nonterminating Write-Error
-are exercised. A strict closed-schema guard also rejects deliberate fake leaks.
-
-### Limits and next gate
-
-Only NEW shim log entries and explicit dispatch output are covered. Historical
-logs are neither read nor deleted. Windows command-line telemetry, PowerShell
-transcription/debugging and in-memory error records, and Claude's own logs are
-not sanitized by this patch. The callback necessarily remains in launch args.
-Do not publish an old route.log. The existing protocol document's examples with
-`target <- URL` describe the OLD format, not the patched log; this section is the
-current contract until that guide is refreshed with the routing slice.
-
-Routing/default selection and the post-launch marker reset ordering are retained,
-not qualified. Cold-start profile config propagation, ambiguous-target fallback,
-marker races and safe behavior for existing session A still block real logins.
-S2c2 must address these before adoption; this slice does not claim account safety
-or shared-memory functionality. No whole profile or credential is copied.
-
-### Evidence
-
-At slice entry, run #3 (`37368772382`, code `f6ea7a9`) had its Windows PowerShell
-job completed successfully; the pwsh/lint jobs were cancelled. Run #4 at the
-parent was still queued. Do not infer a full cross-shell qualification.
-CI includes the new suite after parser preflight in both Windows jobs. Read the
-new commit's results before claiming runtime PASS. No local Windows/PowerShell
-runtime is available; local source/YAML checks are not runtime proof.
-
-References checked: [OWASP logging exclusions](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html#data-to-exclude)
-and [PowerShell terminating-error handling](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_try_catch_finally?view=powershell-7.5).
-
-## Prior prototype
-
-The earlier `claude-shared-memory-slice1.zip` contains a standalone Python memory
-bridge and 40 previously reported Linux tests. It is NOT integrated in this
-commit. Re-review it and rerun its tests before importing it; do not turn the
-previous report into a Windows/Desktop claim.
-
-## Next slices / known debt
-
-1. S2a/S2b: recheck cross-shell CI at the current HEAD; evidence above.
-2. S2c1: new log/output contract above; close only against current CI evidence.
-   S2c2: propagate config through callbacks and fail closed on ambiguous targets,
-   including the existing session A. Qualify arming/reset behavior without logins.
-3. S3: import/revalidate the Python memory bridge, then integrate explicit
-   project-memory sharing without merging profile config roots. Check current
-   `autoMemoryDirectory` support and actual Desktop loading before adoption.
-4. S4: one-command packaging, reversible changes, safe handling of existing
-   profiles, and protection of shared memory during uninstall. The upstream
-   `Uninstall.ps1 -RemoveData` is not yet qualified for shared paths.
-5. S5: user-machine qualification on a disposable project: verify accounts A/B,
-   memory A -> B and B -> A, restart, and rollback. Session history/cloud memory
-   and simultaneous Cowork VMs remain out of scope.
-
-NEXT: read current CI evidence and STOP. Then S2c2 only: profile config and
-unambiguous callback routing, preserving session A. No real account test or memory
-migration until routing and uninstall are qualified. No merge without approval.
+References checked for the locking/IO contract:
+[FileShare.None](https://learn.microsoft.com/en-us/dotnet/api/system.io.fileshare?view=netframework-4.8.1),
+[File.Move no-overwrite behavior](https://learn.microsoft.com/en-us/dotnet/api/system.io.file.move?view=netframework-4.8.1),
+[native-app OAuth flow boundaries](https://www.rfc-editor.org/rfc/rfc8252.html).

@@ -56,6 +56,51 @@ in the draft PR after execution. A workflow definition is not proof of a run.
 No installation, login, MSIX resolution, real shortcut creation, Desktop memory
 sharing or user-machine qualification is claimed by this slice.
 
+## S2b - explicit child configuration and quoted launch paths
+
+Parent: `973fc1550ec3d1ca0f2c1f9ab474972f4ade3ce5`; same branch and draft PR #1.
+Four files in this slice: launcher, launcher tests, CI, and this ledger.
+
+`Launch-Claude.ps1` builds a .NET `ProcessStartInfo` using `UseShellExecute=false`
+and an independently materialized child environment. An explicit `ConfigDir`
+sets only the child's `CLAUDE_CONFIG_DIR`; omitted/empty removes that variable
+from the child and selects stock behavior. The caller's process/user/machine
+settings are never mutated. Other inherited variables are intentionally left
+unchanged; this is config-path isolation, not proof of effective account identity.
+
+Paths are validated before discovery or writes. The profile is one quoted
+argument; trailing backslashes are doubled before the closing quote. Directory
+creation uses literal .NET paths. Dot-sourcing is inert. Discovery/creation/start
+failures propagate; no start follows a failed prerequisite. Successful directory
+creation is not rolled back if a later step fails (avoid deleting existing data).
+
+Tests exercise the real start-info builder and launcher orchestration using
+in-memory OS-boundary doubles: spaces/brackets/Unicode/UNC/trailing separators,
+A/B/stock configs, parent preservation, independent child copies, invalid input,
+MSIX selection/fallback/missing app, and failures at discovery/creation/start.
+No Desktop, process or real directory is created by the tests. CI runs the new
+suite after parser preflight in both existing Windows shell jobs. Runtime results
+must be recorded in PR #1 from actual logs, not inferred from this implementation.
+The publication environment still has no PowerShell and cannot clone GitHub.
+The three baseline files were verified against their exact Git blob hashes.
+
+### Known boundaries after source review
+
+`Arm-ClaudeLogin.ps1 -Launch` already forwards the recorded config into this
+launcher. However, `ClaudeOpenShim.ps1` starts the executable directly and does
+not read that config: a callback that cold-starts a profile can bypass S2b.
+Therefore the whole login chain remains UNQUALIFIED until S2c fixes/tests it.
+An existing Desktop instance retains its old environment: exit that profile
+fully and reopen after a config change. Do not claim that refocusing fixes it.
+No API/provider credential variables are changed or logged; check effective
+account identity in the later real-machine gate. No memory bridge integration.
+
+### References checked for this design
+
+- Microsoft: [child environment and UseShellExecute](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.processstartinfo.environmentvariables?view=netframework-4.8.1).
+- Microsoft: [Windows argument quoting](https://learn.microsoft.com/en-us/cpp/c-language/parsing-c-command-line-arguments?view=msvc-170).
+- Anthropic: [per-account config directories](https://code.claude.com/docs/en/authentication#log-in-with-multiple-accounts).
+
 ## Prior prototype
 
 The earlier `claude-shared-memory-slice1.zip` contains a standalone Python memory
@@ -65,9 +110,9 @@ previous report into a Windows/Desktop claim.
 
 ## Next slices / known debt
 
-1. S2b: fix quoted launch paths and inherited `CLAUDE_CONFIG_DIR` behavior in
-   `Launch-Claude.ps1`, with no-process-launch regression tests. Validate how
-   the login router propagates that environment before claiming isolation.
+1. S2b: implementation added above; close only against actual CI evidence.
+   S2a: PowerShell 7 previously PASS; the other two jobs were still queued
+   when this slice started. Do not infer a complete S2a PASS.
 2. S2c: harden login routing. `ClaudeOpenShim.ps1` currently logs complete OAuth
    callback URLs (also on failure); never publish those logs. Remove token-bearing
    URLs from logging and qualify routing/env behavior before real account tests.
@@ -81,5 +126,6 @@ previous report into a Windows/Desktop claim.
    memory A -> B and B -> A, restart, and rollback. Session history/cloud memory
    and simultaneous Cowork VMs remain out of scope.
 
-NEXT: close S2a with actual CI evidence; STOP. Then S2b only. Do not execute
-Setup.ps1 on the user's real profiles as a test of this first fix.
+NEXT: read current CI evidence and STOP. Next code slice is S2c: remove OAuth
+URLs from logs and propagate profile config through the callback route. No real
+account test or memory migration until those paths and uninstall are qualified.

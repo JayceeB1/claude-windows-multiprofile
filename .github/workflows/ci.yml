@@ -73,3 +73,8 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           & .\tests\Test-ArgBuilder.ps1
+
+      - name: Launcher arguments and child environment regression
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & .\tests\Test-Launcher.ps1

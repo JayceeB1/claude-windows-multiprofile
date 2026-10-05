@@ -208,6 +208,46 @@ conflict-aware restore instead of wholesale settings snapshots/deletion.
 No original archive document/ledger is imported as current guidance.
 S3b still requires completed S4a provenance and selected-memory evidence.
 
+#### Read-only MSIX complement to this review — 2026-10-06
+
+Registered package: Claude, x64, publisher Anthropic, PBC, version 2.19675.0.0
+before/after the read; PackageFullName remained stable. AppxManifest.xml SHA-256:
+`eab8b235a718c86e8715ed78fa8e62f91daff6266099fdae0db5a004dc817571`.
+Read-only package/manifest observations are retained in ignored private receipts.
+No cookies, credential files, session DBs or profile contents were read.
+Host build observed: 26300.9550 / 26H2; do not reuse this snapshot after updates.
+
+Applications Claude, SshAskpass and SshProxy declare respectively
+`app\Claude.exe`, `app\resources\claude-ssh-askpass.exe` and
+`app\resources\claude-ssh-proxy.exe`, all with `Windows.FullTrustApplication`.
+RuntimeBehavior/TrustLevel attributes are not explicit. Microsoft's
+[Application schema](https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-application)
+maps that EntryPoint to packagedClassicApp/mediumIL; this is schema interpretation,
+not observation of actual activation, elevation, child processes or data-root use.
+
+Manifest declares `desktop6:RegistryWriteVirtualization=disabled`, plus the newer
+virtualization namespace with 12 excluded HKCU keys for browser integration/Office.
+Four excluded filesystem directories are declared under KnownFolder:LocalAppData:
+Microsoft/Office/16.0/WEF, Claude-3p, Claude-Data and Claude/logs. Capabilities include
+runFullTrust, localSystemServices, packagedServices, unvirtualizedResources and
+internetClient. No desktop6 FileSystemWriteVirtualization scalar is declared.
+[Microsoft flexible virtualization](https://learn.microsoft.com/en-us/windows/msix/desktop/flexible-virtualization)
+documents version-dependent precedence for old/new declarations. Do not collapse
+these namespaces into a universal claim that virtualization is disabled everywhere.
+
+Physical presence of the user's two A candidates, declared MSIX virtualization
+and actual Desktop/Code usage are independent axes. Neither duplication nor
+redirection of those candidates was established. Actual effective use stays unknown.
+For qualification, capture registered package identity/version and observed running
+UI version before/after; flag automatic updates and requalify affected gates rather
+than reuse old receipts. UI differences alone are not account/isolation proof;
+consider the user's reported possibility of server-side progressive feature rollout.
+Removing B must preserve the official Claude package; package uninstall is never
+a profile-cleanup operation. Source/fixture checks must exclude package removal.
+S3 must eventually prove effective loading of autoMemoryDirectory in each Code
+window and independent read/write-back; mere settings-key presence is insufficient.
+S3b/S3c fixture results remain separate from that Desktop gate. Native 8.3 stays NOT_RUN.
+
 ### S4a — Read-only A inventory and physical ownership model
 
 - Objective: inventory actual A data/config provenance, installed package version,
@@ -295,6 +335,7 @@ S3b still requires completed S4a provenance and selected-memory evidence.
 - Tests: alias/nesting, custom A, shared memory, partial install, modified protocol
   registration and shortcut conflicts; occupied route.lock refusal; released
   orphan route.lock/temp cleanup only when ownership and inactivity are proven.
+  Preserve the installed official Claude package; never uninstall it to remove B.
 - Exit: rollback checks current values before restore; never delete a held lock,
   A or shared memory. Removing B must not remove routing still needed by A.
 - Stop: fixtures only, no actual Uninstall or data deletion.
@@ -342,6 +383,8 @@ S3b still requires completed S4a provenance and selected-memory evidence.
   paths or a bridge PASS. Two windows do not require concurrent login flows.
 - Exit: local receipts expurgated for publication, each gate independently marked;
   absent evidence stays unverified. Do not promise provider session permanence.
+  Record versions before/after, handle automatic updates and require actual
+  autoMemoryDirectory loading/read-write evidence, not only a settings-key match.
 - Stop: delivery decision and report; no automatic merge, deployment or restart.
 
 ## Current continuation boundary

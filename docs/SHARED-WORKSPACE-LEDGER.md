@@ -137,6 +137,58 @@ account identity in the later real-machine gate. No memory bridge integration.
 - Microsoft: [Windows argument quoting](https://learn.microsoft.com/en-us/cpp/c-language/parsing-c-command-line-arguments?view=msvc-170).
 - Anthropic: [per-account config directories](https://code.claude.com/docs/en/authentication#log-in-with-multiple-accounts).
 
+## S2c1 - callback-safe logging and failure reporting
+
+Parent: `3546ddb2face6a5f4e922d46a73c268f817928c6`; same branch and draft PR #1.
+Four files: shim, synthetic logging tests, CI, ledger. No installation or change
+to the existing session A, its profile paths, shortcuts or protocol registration.
+
+`route.log` now records only timestamp, allowlisted event code, and target kind
+(`unknown`, `stock`, `profile`). No URL/query/fragment, target path, arguments or
+raw exception is interpolated, even on MSIX lookup, process start or IO failures.
+The full callback is still forwarded unchanged to Claude. `LAUNCH_REQUESTED`
+means dispatch was attempted; `DISPATCH_COMPLETE` means launch and marker reset
+returned successfully, NOT that authentication succeeded.
+
+All dispatch failures return status 1, propagated by the entry point. Failures
+before dispatch cannot start a process. A failed log write cannot print its raw
+exception or recursively log elsewhere. Failure of the pre-dispatch log blocks
+launch. Post-launch reset/log failures return failure without retrying or killing
+the app. The tests capture all explicit PowerShell streams and fake log writes;
+they verify exact event sequences, full callback forwarding and process/reset
+counts. Synthetic query/fragment/custom-field/path sentinels and raw exception
+messages cover success, missing input/app/marker, discovery, read, builder,
+launch, reset and log-write failures. Both throw and nonterminating Write-Error
+are exercised. A strict closed-schema guard also rejects deliberate fake leaks.
+
+### Limits and next gate
+
+Only NEW shim log entries and explicit dispatch output are covered. Historical
+logs are neither read nor deleted. Windows command-line telemetry, PowerShell
+transcription/debugging and in-memory error records, and Claude's own logs are
+not sanitized by this patch. The callback necessarily remains in launch args.
+Do not publish an old route.log. The existing protocol document's examples with
+`target <- URL` describe the OLD format, not the patched log; this section is the
+current contract until that guide is refreshed with the routing slice.
+
+Routing/default selection and the post-launch marker reset ordering are retained,
+not qualified. Cold-start profile config propagation, ambiguous-target fallback,
+marker races and safe behavior for existing session A still block real logins.
+S2c2 must address these before adoption; this slice does not claim account safety
+or shared-memory functionality. No whole profile or credential is copied.
+
+### Evidence
+
+At slice entry, run #3 (`37368772382`, code `f6ea7a9`) had its Windows PowerShell
+job completed successfully; the pwsh/lint jobs were cancelled. Run #4 at the
+parent was still queued. Do not infer a full cross-shell qualification.
+CI includes the new suite after parser preflight in both Windows jobs. Read the
+new commit's results before claiming runtime PASS. No local Windows/PowerShell
+runtime is available; local source/YAML checks are not runtime proof.
+
+References checked: [OWASP logging exclusions](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html#data-to-exclude)
+and [PowerShell terminating-error handling](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_try_catch_finally?view=powershell-7.5).
+
 ## Prior prototype
 
 The earlier `claude-shared-memory-slice1.zip` contains a standalone Python memory
@@ -146,12 +198,10 @@ previous report into a Windows/Desktop claim.
 
 ## Next slices / known debt
 
-1. S2b: implementation added above; close only against actual CI evidence.
-   S2a: PowerShell 7 previously PASS; the other two jobs were still queued
-   when this slice started. Do not infer a complete S2a PASS.
-2. S2c: harden login routing. `ClaudeOpenShim.ps1` currently logs complete OAuth
-   callback URLs (also on failure); never publish those logs. Remove token-bearing
-   URLs from logging and qualify routing/env behavior before real account tests.
+1. S2a/S2b: recheck cross-shell CI at the current HEAD; evidence above.
+2. S2c1: new log/output contract above; close only against current CI evidence.
+   S2c2: propagate config through callbacks and fail closed on ambiguous targets,
+   including the existing session A. Qualify arming/reset behavior without logins.
 3. S3: import/revalidate the Python memory bridge, then integrate explicit
    project-memory sharing without merging profile config roots. Check current
    `autoMemoryDirectory` support and actual Desktop loading before adoption.
@@ -162,6 +212,6 @@ previous report into a Windows/Desktop claim.
    memory A -> B and B -> A, restart, and rollback. Session history/cloud memory
    and simultaneous Cowork VMs remain out of scope.
 
-NEXT: read current CI evidence and STOP. Next code slice is S2c: remove OAuth
-URLs from logs and propagate profile config through the callback route. No real
-account test or memory migration until those paths and uninstall are qualified.
+NEXT: read current CI evidence and STOP. Then S2c2 only: profile config and
+unambiguous callback routing, preserving session A. No real account test or memory
+migration until routing and uninstall are qualified. No merge without approval.

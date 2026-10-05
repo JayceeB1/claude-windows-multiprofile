@@ -78,3 +78,8 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           & .\tests\Test-Launcher.ps1
+
+      - name: OAuth callback logging regression (synthetic data only)
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & .\tests\Test-ShimLogging.ps1

@@ -202,7 +202,7 @@ implementation; the separately authorized Q1 delivery is recorded below.
 | S2c1 | VERIFIED_SYNTHETIC | S2b | `5c908a7`; Windows CI, Test-ShimLogging | Closed new-log schema; old logs not sanitized | Preserve schema |
 | S2c2 | VERIFIED_SYNTHETIC | S2c1 | Initial `81da85e`, actual-null repair `794148f`; cross-shell CI and local PS7 Test-ShimLogging | Current receipts above; real TEMP IO, same-process contention and simulated interleaving | Q1 |
 | S2c2-Q1 | VERIFIED_SYNTHETIC | S2c2 | Production `794148f`; harness/worker in this Q1 delivery commit; native PS5.1/7 + Python | `python tests/Test-RoutingProcesses.py`: 8 cases PASS; details below; no Desktop launch | Q2 crash/expiry recovery |
-| S2c2-Q2 | TODO | Q1 | None | Crash/expiry recovery not qualified across processes | Barrier-driven death and explicit recovery |
+| S2c2-Q2 | VERIFIED_SYNTHETIC | Q1 | Parent `1497f48`; three-file Q2 delivery below; native PS5.1/7 + Python | 12 Q2 cases PASS, plus 8 Q1 regressions; four expiry mutants detected; no Desktop launch | D1 passive diagnostic |
 | S2c2-D1 | TODO | Q2 | None; source review only | Current default ping can consume intent; raw command lines/old logs exposed | Passive expurgated diagnostic |
 | S2c2-D2 | TODO | D1 | None; source review only | README/guide still claim legacy default reset and armer registry writes | Align v2 examples/guidance |
 | S3a | BLOCKED | D2 + supplied ZIP | None; filename search only in supplied workspace | **ARTEFACT_MANQUANT**; reported 40 tests unverified, no import | Obtain actual artifact, review before import |
@@ -295,6 +295,75 @@ Validated Q1 source SHA-256 (resolve the delivery commit with the command above)
 The user's requested deep local structure analysis remains in S4a when repository
 facts leave gaps. It has not been run against the actual installation this turn.
 
+## S2c2-Q2 — Crash, expiration and explicit recovery (2026-10-06)
+
+Q2 alone is authorized by the user's NEXT SLICE instruction. Parent:
+`1497f482e6764c7467b07277c7f63f708acf9120`; production remains `794148f`.
+Owned files: `tests/Test-RoutingProcesses.py`, `tests/fixtures/RouteWorker.ps1`
+and this ledger. Resolve this atomic delivery commit with
+`git log -1 --format=%H -- tests/Test-RoutingProcesses.py`.
+No application, roadmap or CI implementation changed; PR #1 remains draft
+because its installation and Desktop acceptance criteria remain unqualified.
+
+Command: `python tests/Test-RoutingProcesses.py`. Native Windows environment:
+Python 3.14.7, Windows PowerShell 5.1.26100.9549 and PowerShell 7.6.6.
+Final receipt: **PASS Q1/Q2: 20 cases; owned fixtures removed; no Desktop
+qualification**. Eight Q1 regressions and twelve new Q2 cases passed, within
+the existing 15-second case / 120-second suite deadlines.
+
+| New case | PS5.1 | PS7 | Observable receipt / assertion |
+| --- | --- | --- | --- |
+| death-before-consume | PASS | PASS | Real lock acquired through the retained production scriptblock; PID-checked barrier before returning it to the dispatcher; forced death leaves exact armed bytes, no launch, outstanding arm refusal; unchanged lock file identity and new-process probe succeed |
+| death-after-consume | PASS | PASS | Discovery barrier verifies consumed tombstone before any launch; forced death leaves it intact; replay refuses, no launch; same lock recovered |
+| death-after-launch | PASS | PASS | Launch double flushes CreateNew B receipt, then pauses before launch-recorded/result/DISPATCH_COMPLETE; death leaves exactly one receipt and consumed tombstone; replay adds no receipt |
+| discovery-failure | PASS | PASS | Double acknowledges injected discovery exception; result/exit 1, APP_DISCOVERY_FAILED, consumed bytes survive replay; deliberate new named A arm and callback succeed |
+| launch-failure | PASS | PASS | Double acknowledges exception before creating receipt; result/exit 1, LAUNCH_REQUESTED then LAUNCH_FAILED; consumed bytes survive replay, no implicit launch; new named A arm succeeds |
+| expiration-recovery | PASS | PASS | Real locked writer uses production intent constructor with time six minutes earlier, keeping the exact five-minute interval and manifest binding; callback and both A/B re-arm refuse without changing expired bytes; explicit default disarm then new A arm succeeds |
+
+Each death case and expiry also verifies default disarm launches nothing,
+callback while disarmed refuses, new named A arm launches nothing implicitly,
+one explicitly submitted callback records A, and its replay refuses without
+changing tombstone/receipt bytes. Successful cases check exact fixed event
+sequences, unchanged manifest, no temporary write sidecars, no data/config
+root creation, and an independent new-process lock probe.
+
+Important semantic distinction: expired armed intent requires explicit disarm
+before re-arm; consumed intent already permits deliberate new named arming.
+Q2 qualifies the existing behavior and does not add a mandatory disarm gate
+for consumed state. Before-consumption death can leave a valid old intent;
+this harness chooses explicit disarm rather than automatically replaying it.
+
+Death injection targets only the parent's retained Popen/Windows handle after
+the acknowledged phase and independent proof that the lock is held. A nonzero
+termination exit, EOF without a result, released exclusive lock and unchanged
+file identity are required. No process scan, Claude termination, sleep-based
+PASS or held-lock deletion. Q1 ownership-token, TEMP scope, alias rejection,
+bounded cleanup and safe import checks remain in force.
+
+Limits: controlled process death at these three barriers does not cover power
+loss or every instruction inside file replacement. No orphan temp was observed
+at these phases; mid-write orphan admission/removal remains outside this test.
+If real process launch precedes holder death but its acknowledgment is lost,
+consumed state alone cannot prove whether launch occurred or authentication
+succeeded. The synthetic durable receipt demonstrates this ambiguity only;
+there is no exactly-once Desktop activation claim and no automatic retry.
+
+Additional validation: 12 PowerShell files parsed under PS7; installed
+PSScriptAnalyzer 1.25.0 tests scan passed at Error severity. Four controlled
+fixture-copy mutation checks, two per shell, disabled dispatcher expiration
+or allowed outstanding armed-state overwrite. The expiry case rejected them
+with UNEXPECTED_WORKER_EVENT / RESULT_CODE_MISMATCH respectively; all mutant
+fixtures were removed. Production sources were untouched. Complete diff and
+guarded imports reviewed; file sizes remain below 500 lines. GitNexus has no
+resolved PowerShell execution flows here; direct source and native receipts
+establish behavior. CI still does not execute the Python matrix; synthetic Q2
+runtime proof is local. Jev's advisory gate verified all three supplied claims
+but escalated patch confidence (safe_to_apply 0.37, limiting rubric test_gap).
+Manual review covered retained handles, death-phase ordering, lock identity,
+receipt preservation, expiry-only timestamp changes, imports and start doubles;
+no probabilistic automatic approval is claimed. Real installation, browser
+login, accounts and memory remain unqualified. Next slice is D1 only.
+
 ## Decisions and planning evidence
 
 - Projects stay where they are; no migration or mandatory worktrees. The user
@@ -353,10 +422,10 @@ two-document diff was reviewed; application, test and CI files are unchanged.
 
 ## NEXT SLICE
 
-**S2c2-Q2 — Windows synthetic crash, expiration and explicit recovery.**
-Three files: the Q1 Python harness, its guarded PowerShell worker and this ledger.
-Qualify holder death before/after consumption, consumed-without-launch state,
-expiry and deliberate disarm/new named arm with acknowledged phases, bounded
-waits and termination only through retained test-owned handles. No Claude
-termination, installation or real login. Q2 is TODO: wait for the user's next
-go-ahead, complete that slice alone, report its evidence and STOP.
+**S2c2-D1 — Passive diagnostic.**
+Three files: `scripts/Test-ClaudeRouting.ps1`, `tests/Test-RoutingDiagnostic.ps1`
+and this ledger. Make diagnosis effect-free by default, with expurgated v2 state
+and fixed-schema events. Qualify on fixtures under both shells; no activation,
+arming, process launch or writes by default, no raw URL/command line/exception/
+personal path/old-log output. Q2 is VERIFIED_SYNTHETIC; D1 remains TODO pending
+the user's next slice instruction. No installed diagnostic invocation.

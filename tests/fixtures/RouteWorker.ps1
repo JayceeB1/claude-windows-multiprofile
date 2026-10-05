@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Q1 worker: real routing metadata IO, synthetic discovery/launch only.
+    Q1/Q2 worker: real routing metadata IO, synthetic discovery/launch only.
 .DESCRIPTION
     The Python parent owns the TEMP root and all child process handles. JSON
     stdout events and stdin commands provide barriers; no sleeps or live links.
@@ -11,9 +11,11 @@ param(
     [Parameter(Mandatory)][string]$FixtureRoot,
     [Parameter(Mandatory)][string]$Token,
     [Parameter(Mandatory)]
-    [ValidateSet('Preflight', 'Arm', 'Callback', 'Lock', 'Probe')][string]$Mode,
-    [ValidateSet('A', 'B')][string]$Profile = 'B',
-    [switch]$Hold
+    [ValidateSet('Preflight', 'Arm', 'Callback', 'Lock', 'Probe', 'Expire')][string]$Mode,
+    [ValidateSet('A', 'B', 'default')][string]$Profile = 'B',
+    [switch]$Hold,
+    [ValidateSet('None', 'BeforeConsume', 'AfterConsume', 'AfterLaunch')][string]$PauseAt = 'None',
+    [ValidateSet('None', 'Discovery', 'Launch')][string]$FailAt = 'None'
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 2.0
@@ -87,21 +89,41 @@ try {
     $parentConfig = [Environment]::GetEnvironmentVariable('CLAUDE_CONFIG_DIR', 'Process')
     $callback = 'claude://oauth/callback?code=Q1_SYNTHETIC&state=Q1_SYNTHETIC'
 
+    # Wrap the real lock acquisition only to pause BEFORE marker consumption.
+    # Killing this owned worker skips finally; Windows must release its handle.
+    $realOpenLock = ${function:Open-ClaudeRouteLock}
+    function Open-ClaudeRouteLock {
+        $held = & $realOpenLock
+        if ($PauseAt -ceq 'BeforeConsume') {
+            Send-Event 'before-consume'
+            Receive-Command 'release'
+        }
+        return $held
+    }
+
     # Keep planner/dispatcher/lock/read/write/logger/builder real. Only package
     # discovery and the two actual process-start boundaries are replaced.
     function Get-AppxPackage {
         [CmdletBinding()]param([string]$Name)
         if ($Name -cne '*Claude*') { throw 'UNEXPECTED_DISCOVERY' }
-        if ($Hold) {
+        if ($Hold -or $PauseAt -ceq 'AfterConsume') {
             $marker = Read-ClaudeRouteText 'target.txt' | ConvertFrom-Json
             if ($marker.status -cne 'consumed') { throw 'NOT_CONSUMED_BEFORE_DISCOVERY' }
             Send-Event 'consumed'
             Receive-Command 'release'
         }
+        if ($FailAt -ceq 'Discovery') {
+            Send-Event 'discovery-failed'
+            throw 'SYNTHETIC_DISCOVERY_FAILURE'
+        }
         [pscustomobject]@{ Version = [version]'1.0'; InstallLocation = (Join-Path $root 'package') }
     }
     function Start-ClaudeCallbackProcess {
         param([Diagnostics.ProcessStartInfo]$StartInfo)
+        if ($FailAt -ceq 'Launch') {
+            Send-Event 'launch-failed'
+            throw 'SYNTHETIC_LAUNCH_FAILURE'
+        }
         $plan = Get-ClaudeRoutePlan (Read-ClaudeRouteText 'profiles.json') $Profile
         . $launcher
         $expected = New-ClaudeStartInfo $fakeExe $plan.DataDir $plan.ConfigDir
@@ -121,6 +143,12 @@ try {
             [IO.FileAccess]::Write, [IO.FileShare]::None)
         try { $stream.Write($bytes, 0, $bytes.Length); $stream.Flush($true) }
         finally { $stream.Dispose() }
+        if ($PauseAt -ceq 'AfterLaunch') {
+            # Durable launch-double receipt exists, but dispatch acknowledgment
+            # has not happened. This is not evidence of real Claude activation.
+            Send-Event 'launch-unacknowledged'
+            Receive-Command 'release'
+        }
         Send-Event 'launch-recorded' @{ profile = $Profile }
     }
     function Open-ClaudeArmedWindow {
@@ -143,6 +171,14 @@ try {
             finally { $lock.Dispose() }
         }
         'Probe' { $lock = Open-ClaudeRouteLock; $lock.Dispose() }
+        'Expire' {
+            $lock = Open-ClaudeRouteLock
+            try {
+                $plan = Get-ClaudeRoutePlan (Read-ClaudeRouteText 'profiles.json') $Profile
+                Set-ClaudeRouteText (New-ClaudeRouteIntent -Plan $plan -Now ([datetimeoffset]::UtcNow.AddMinutes(-6)))
+                Send-Event 'expired'
+            } finally { $lock.Dispose() }
+        }
     }
     Send-Event 'result' @{ code = [int]$code }
     exit $code

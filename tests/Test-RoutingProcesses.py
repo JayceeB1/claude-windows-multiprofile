@@ -1,4 +1,4 @@
-"""Bounded native Windows Q1 qualification; no installed profiles or real launch.
+"""Bounded native Windows Q1/Q2 qualification; no installed profiles or real launch.
 
 Usage (Python 3.12+): python tests/Test-RoutingProcesses.py [--shell powershell|pwsh|both]
 Each process parses guarded fixture copies before importing. IPC events prove
@@ -28,7 +28,8 @@ CASE_SECONDS = 15
 SUITE_SECONDS = 120
 WORKER = Path(__file__).resolve().parent / 'fixtures' / 'RouteWorker.ps1'
 SCRIPTS = Path(__file__).resolve().parent.parent / 'scripts'
-CALLBACK_EVENTS = {'ROUTE_BUSY', 'TARGET_READ_FAILED', 'LAUNCH_REQUESTED', 'DISPATCH_COMPLETE'}
+CALLBACK_EVENTS = {'ROUTE_BUSY', 'TARGET_READ_FAILED', 'LAUNCH_REQUESTED',
+                   'DISPATCH_COMPLETE', 'APP_DISCOVERY_FAILED', 'LAUNCH_FAILED'}
 
 
 class Failure(Exception):
@@ -41,13 +42,14 @@ def require(condition: bool, label: str) -> None:
 
 
 class Child:
-    def __init__(self, case: Case, mode: str, profile: str = 'B', hold: bool = False):
+    def __init__(self, case: Case, mode: str, profile: str = 'B', hold: bool = False,
+                 pause: str = 'None', fail: str = 'None'):
         self.case = case
         self.events: queue.Queue = queue.Queue()
         args = [case.shell, '-NoLogo', '-NoProfile', '-NonInteractive',
                 '-ExecutionPolicy', 'Bypass', '-File', str(WORKER),
                 '-FixtureRoot', str(case.root), '-Token', case.token,
-                '-Mode', mode, '-Profile', profile]
+                '-Mode', mode, '-Profile', profile, '-PauseAt', pause, '-FailAt', fail]
         if hold:
             args.append('-Hold')
         self.process = subprocess.Popen(
@@ -102,6 +104,21 @@ class Child:
         require(self.events.get(timeout=self.case.remaining()).get('event') == 'eof',
                 'OUTPUT_AFTER_RESULT')
 
+    def kill_at(self, event: str) -> None:
+        self.expect(event)  # PID-checked acknowledgment before death injection
+        try:
+            self.case.check_cleanup_lock()
+        except Failure as exc:
+            require(str(exc) == 'CLEANUP_LOCK_BUSY', 'WRONG_CRASH_LOCK_REFUSAL')
+        else:
+            raise Failure('CRASH_LOCK_NOT_HELD')
+        require(self.process.poll() is None, 'CRASH_CHILD_ALREADY_EXITED')
+        self.process.terminate()  # retained Windows handle, never PID discovery
+        require(self.process.wait(timeout=self.case.remaining()) != 0, 'CRASH_EXIT_ZERO')
+        require(self.events.get(timeout=self.case.remaining()).get('event') == 'eof',
+                'CRASH_UNEXPECTED_ACK')
+        self.case.check_cleanup_lock()
+
 
 class Case:
     def __init__(self, shell: str, suite_deadline: float):
@@ -131,9 +148,10 @@ class Case:
         require(value > 0, 'CASE_DEADLINE')
         return value
 
-    def child(self, mode: str, profile: str = 'B', hold: bool = False) -> Child:
+    def child(self, mode: str, profile: str = 'B', hold: bool = False,
+              pause: str = 'None', fail: str = 'None') -> Child:
         self.remaining()
-        return Child(self, mode, profile, hold)
+        return Child(self, mode, profile, hold, pause, fail)
 
     def run(self, mode: str, code: int = 0, profile: str = 'B') -> None:
         child = self.child(mode, profile)
@@ -151,6 +169,24 @@ class Case:
 
     def no_launch(self) -> None:
         require(not list(self.root.glob('launch-*.json')), 'UNEXPECTED_LAUNCH')
+
+    def receipts(self) -> dict[str, bytes]:
+        return {p.name: p.read_bytes() for p in self.root.glob('launch-*.json')}
+
+    def launch(self, profile: str) -> None:
+        previous = self.receipts()
+        child = self.child('Callback', profile)
+        child.send('go')
+        child.expect('launch-recorded')
+        child.finish(0)
+        current = self.receipts()
+        require(all(current.get(k) == v for k, v in previous.items()), 'RECEIPT_CHANGED')
+        added = set(current) - set(previous)
+        require(len(added) == 1, 'RECOVERY_LAUNCH_COUNT')
+        receipt = json.loads(current[added.pop()])
+        require(receipt == {'pid': child.process.pid, 'profile': profile,
+                            'configMatched': True, 'parentUnchanged': True}, 'RECOVERY_RECEIPT')
+        self.status('consumed')
 
     def stable_metadata(self) -> None:
         require((self.root / 'bin' / 'profiles.json').read_bytes() == self.manifest,
@@ -297,6 +333,106 @@ def timeout_control(case: Case) -> None:
     case.no_launch()
 
 
+def explicit_recovery(case: Case) -> None:
+    before = case.receipts()
+    case.run('Arm', profile='default')
+    case.status('disarmed')
+    disarmed = case.marker_bytes()
+    case.run('Callback', 1)
+    require(case.marker_bytes() == disarmed and case.receipts() == before, 'DISARM_LAUNCHED')
+    case.run('Arm', profile='A')
+    case.status('armed', 'A')
+    require(case.receipts() == before, 'ARM_IMPLICIT_LAUNCH')
+    case.launch('A')
+    consumed = case.marker_bytes()
+    launched = case.receipts()
+    case.run('Callback', 1)
+    require(case.marker_bytes() == consumed and case.receipts() == launched, 'RECOVERY_REPLAY')
+    case.run('Probe')
+
+
+def crash(case: Case, phase: str, event: str) -> None:
+    case.run('Arm')
+    armed = case.marker_bytes()
+    lock_id = (case.root / 'bin' / 'route.lock').stat().st_ino
+    victim = case.child('Callback', pause=phase)
+    victim.send('go')
+    victim.kill_at(event)
+    require((case.root / 'bin' / 'route.lock').stat().st_ino == lock_id, 'CRASH_LOCK_REPLACED')
+    case.run('Probe')  # new process acquires same lock after abrupt holder death
+    if phase == 'BeforeConsume':
+        require(case.marker_bytes() == armed, 'PRECONSUME_MARKER_CHANGED')
+        case.status('armed', 'B')
+        case.no_launch()
+        case.run('Arm', 1, 'A')
+        require(case.marker_bytes() == armed, 'CRASH_ARM_OVERWROTE')
+        events = []
+    else:
+        case.status('consumed')
+        consumed = case.marker_bytes()
+        receipts = case.receipts()
+        if phase == 'AfterLaunch':
+            require(len(receipts) == 1, 'UNACKNOWLEDGED_LAUNCH_COUNT')
+            require(json.loads(next(iter(receipts.values()))) == {
+                'pid': victim.process.pid, 'profile': 'B',
+                'configMatched': True, 'parentUnchanged': True}, 'UNACKNOWLEDGED_RECEIPT')
+        else:
+            case.no_launch()
+        case.run('Callback', 1)
+        require(case.marker_bytes() == consumed and case.receipts() == receipts, 'CRASH_REPLAY')
+        events = (['LAUNCH_REQUESTED'] if phase == 'AfterLaunch' else []) + ['TARGET_READ_FAILED']
+    case.stable_metadata()
+    explicit_recovery(case)
+    case.logs(events + ['TARGET_READ_FAILED', 'LAUNCH_REQUESTED',
+                        'DISPATCH_COMPLETE', 'TARGET_READ_FAILED'])
+
+
+def failed_dispatch(case: Case, phase: str) -> None:
+    case.run('Arm')
+    child = case.child('Callback', fail=phase)
+    child.send('go')
+    child.expect('discovery-failed' if phase == 'Discovery' else 'launch-failed')
+    child.finish(1)
+    case.status('consumed')
+    consumed = case.marker_bytes()
+    case.no_launch()
+    case.run('Probe')
+    case.run('Callback', 1)
+    require(case.marker_bytes() == consumed, 'FAILED_DISPATCH_REARMED')
+    case.no_launch()
+    # Production permits a deliberate new named arm directly from consumed.
+    case.run('Arm', profile='A')
+    case.status('armed', 'A')
+    case.no_launch()
+    case.launch('A')
+    events = ['APP_DISCOVERY_FAILED'] if phase == 'Discovery' else ['LAUNCH_REQUESTED', 'LAUNCH_FAILED']
+    case.logs(events + ['TARGET_READ_FAILED', 'LAUNCH_REQUESTED', 'DISPATCH_COMPLETE'])
+
+
+def expiration(case: Case) -> None:
+    case.run('Arm')
+    original = json.loads(case.marker_bytes())
+    child = case.child('Expire')
+    child.send('go')
+    child.expect('expired')
+    child.finish(0)
+    expired = case.marker_bytes()
+    marker = json.loads(expired)
+    require(set(marker) == set(original) and all(marker[k] == original[k] for k in
+            ('version', 'status', 'profile', 'manifestHash')), 'EXPIRY_FIXTURE_INVALID')
+    require(marker['expiresMs'] - marker['createdMs'] == 300000 and
+            marker['expiresMs'] < int(time.time() * 1000), 'EXPIRY_NOT_EXPIRED')
+    case.run('Callback', 1)
+    for profile in ('B', 'A'):
+        case.run('Arm', 1, profile)
+        require(case.marker_bytes() == expired, 'EXPIRED_INTENT_OVERWRITTEN')
+    case.no_launch()
+    case.run('Probe')
+    explicit_recovery(case)
+    case.logs(['TARGET_READ_FAILED', 'TARGET_READ_FAILED', 'LAUNCH_REQUESTED',
+               'DISPATCH_COMPLETE', 'TARGET_READ_FAILED'])
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--shell', choices=('powershell', 'pwsh', 'both'), default='both')
@@ -310,7 +446,13 @@ def main() -> int:
     total = 0
     for name, shell in shells:
         for label, test in (('callbacks', callbacks), ('concurrent-arm', concurrent_arm),
-                            ('occupied-lock', occupied_lock), ('timeout-control', timeout_control)):
+                            ('occupied-lock', occupied_lock), ('timeout-control', timeout_control),
+                            ('death-before-consume', lambda c: crash(c, 'BeforeConsume', 'before-consume')),
+                            ('death-after-consume', lambda c: crash(c, 'AfterConsume', 'consumed')),
+                            ('death-after-launch', lambda c: crash(c, 'AfterLaunch', 'launch-unacknowledged')),
+                            ('discovery-failure', lambda c: failed_dispatch(c, 'Discovery')),
+                            ('launch-failure', lambda c: failed_dispatch(c, 'Launch')),
+                            ('expiration-recovery', expiration)):
             case = Case(shell, suite_deadline)
             try:
                 case.run('Preflight')
@@ -321,7 +463,7 @@ def main() -> int:
             total += 1
             print(f'PASS {name} {label}: real metadata IO / synthetic launch only', flush=True)
     require(time.monotonic() <= suite_deadline, 'SUITE_DEADLINE')
-    print(f'PASS Q1: {total} cases; owned fixtures removed; no Desktop qualification', flush=True)
+    print(f'PASS Q1/Q2: {total} cases; owned fixtures removed; no Desktop qualification', flush=True)
     return 0
 
 
@@ -331,5 +473,5 @@ if __name__ == '__main__':
     except (Failure, OSError, subprocess.SubprocessError, ValueError, KeyError) as exc:
         # Do not dump child output, inherited environment or caller paths.
         label = str(exc) if isinstance(exc, Failure) else type(exc).__name__
-        print('FAIL Q1: ' + label, file=sys.stderr)
+        print('FAIL Q1/Q2: ' + label, file=sys.stderr)
         sys.exit(1)

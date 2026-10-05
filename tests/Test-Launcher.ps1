@@ -202,7 +202,17 @@ try {
             Assert-Equal 'missing app is an explicit error' $true ($result.Error.Exception.Message -like '*not found*')
         }
     }
-    [Environment]::SetEnvironmentVariable('CLAUDE_CONFIG_DIR', $null, 'Process')
+    # PowerShell 7.5+ permits an empty environment value. The .NET setter with
+    # $null creates that empty value; use the Env: variable syntax to REMOVE it.
+    if ($PSVersionTable.PSVersion -ge [version]'7.5') {
+        $env:CLAUDE_CONFIG_DIR = ''
+        $info = New-ClaudeStartInfo $exe 'C:\Profiles\Stock'
+        Assert-Equal 'empty parent is still present' $true (Test-Path -LiteralPath Env:CLAUDE_CONFIG_DIR)
+        Assert-Equal 'empty parent stays empty' '' $env:CLAUDE_CONFIG_DIR
+        Assert-Equal 'empty parent config excluded from child' $false $info.EnvironmentVariables.ContainsKey('CLAUDE_CONFIG_DIR')
+    }
+    $env:CLAUDE_CONFIG_DIR = $null
+    Assert-Equal 'absent-parent fixture is actually absent' $false (Test-Path -LiteralPath Env:CLAUDE_CONFIG_DIR)
     $info = New-ClaudeStartInfo $exe 'C:\Profiles\Stock'
     Assert-Equal 'absent parent config stays absent in child' $false $info.EnvironmentVariables.ContainsKey('CLAUDE_CONFIG_DIR')
     $info = New-ClaudeStartInfo $exe 'C:\Profiles\A' 'C:\Config\A'
@@ -210,6 +220,8 @@ try {
     Assert-Equal 'absent parent is not populated' $null ([Environment]::GetEnvironmentVariable('CLAUDE_CONFIG_DIR', 'Process'))
     Write-Host "PASS: $script:assertions launcher assertions; no real process, profile or Desktop runtime tested."
 } finally {
-    [Environment]::SetEnvironmentVariable('CLAUDE_CONFIG_DIR', $originalConfig, 'Process')
-    [Environment]::SetEnvironmentVariable($probeName, $originalProbe, 'Process')
+    # Variable assignment preserves both absence ($null) and an existing empty
+    # value on the supporting PowerShell versions; no persistent scope is used.
+    $env:CLAUDE_CONFIG_DIR = $originalConfig
+    $env:CLAUDE_LAUNCHER_TEST_SENTINEL = $originalProbe
 }

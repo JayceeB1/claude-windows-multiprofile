@@ -4,7 +4,8 @@ Planning baseline: 2026-10-05; branch `fix/setup-profile-path-collision`, code
 HEAD `794148f4072a59b4ca146b5199f5e7cea8fe8bb6`, base `master`
 `2ee03050185ace47581e9607341bd91cddd5ae9a`. See the
 [existing ledger](SHARED-WORKSPACE-LEDGER.md) for statuses and evidence.
-This is the remaining delivery plan, not authorization to install or implement.
+This is the delivery plan. The user's 2026-10-06 instruction authorizes chaining
+ready slices; actual installation/apply on real profiles still requires separate consent.
 
 ## Result and boundaries
 
@@ -79,9 +80,10 @@ config root or memory directory. CLI PASS is insufficient for that gate.
 
 ## Delivery sequence
 
-All slices below are required unless marked optional. Each ends with diff review,
-bounded tests, an atomic commit and a short evidence report, then STOP for the
-next user instruction. No automatic merge. Anticipated paths are planning names,
+All slices below are required unless marked optional. Each retains diff review,
+bounded tests, an atomic commit and evidence. Chain satisfied prerequisites under
+the user's current authorization; stop at actual unresolved gates. No automatic merge.
+Anticipated paths are planning names,
 not files created this turn. Keep each file around 500 lines; prefer Python for
 new orchestration, retaining the existing PowerShell implementation.
 
@@ -155,14 +157,56 @@ S4 protections and separate user approval. Optional S3g can be deferred.
 - Objective: review `claude-shared-memory-slice1.zip` before any import; record
   actual module layout, licence, safe IO and requalification commands.
 - Files (2): roadmap and ledger; no import in this review slice.
-- Prerequisites: actual supplied local ZIP. Currently **ARTEFACT_MANQUANT**: absent
-  from the repository and supplied visualization workspace; no attachment path
-  was supplied. A ChatGPT sandbox path is not a Windows local path.
+- Prerequisites: actual supplied local ZIP, now supplied and reviewed on 2026-10-06.
+  Frozen archive SHA-256: `654c158ae9f506d422a66cab688c79888e966adc9a46d34985d759e7c8de7d60`.
+  Its historical ledger/NEXT SLICE does not supersede this fork's current state.
 - Tests: inspect archive members without unsafe extraction; verify claimed
   40 tests and bounded fixture behavior by reading, not trusting the report.
 - Exit: artifact/source identified and import file budget recorded; otherwise
   BLOCKED for import only. Do not invent/rewrite the missing implementation.
-- Stop: review report; S4a can proceed independently while artifact is missing.
+- Stop: review report; import waits for S4a provenance and the recorded adaptations.
+
+#### S3a source admission review — 2026-10-06
+
+Four actual members under `claude-shared-memory-slice1/`: `shared_memory.py`
+(333 lines), `tests/test_shared_memory.py` (322), `SHARED_MEMORY.md` (204) and
+`QUALIFICATION.json`. Normalized names are unique, with no traversal, encrypted
+or symlink members; each is below 64 KiB. Python parses, and all three source/doc
+SHA-256 and line counts match the historical qualification receipt. No LICENSE
+member or explicit license grant is present; the document calls the additions
+original. Preserve authorship/lineage and record license disposition at admission.
+
+The receipt's 40 Linux tests are historical. After reading the complete source
+and test suite, the original two Python members were copied individually into
+owned TEMP for Windows requalification, without repository import. Python 3.14.7,
+isolated interpreter, redirected HOME/USERPROFILE/TEMP, 60-second deadline:
+`python -B -I -m unittest discover -s <owned-fixture>/tests -v` passed **40/40,
+zero skips**, including actual symlinks and hard links. Quarantines were removed;
+private output receipt is ignored by Git. No actual profile/project apply/restore.
+
+Confirmed on synthetic fixtures: `make_plan` accepts memory underneath B's config
+root, contrary to the outside-B-deletion-root requirement; `apply_plan` backs up
+the entire prior settings JSON, including a synthetic env secret. These are
+required adaptations, not regressions to ignore because the original tests pass.
+Additional source gaps: lexical nesting/transaction identity misses Windows
+short-name equivalence; configDir empty defaults to home/.claude without effective
+A provenance; disabled memory is checked only in project-local settings; no
+distinct-project memory map or trust/managed-policy evidence is established.
+`read_optional` stats size then reads all bytes, leaving a growth race in the
+claimed bound. Atomic replacement is expressly not CAS against live editors.
+
+S3b admission budget: three files, planned `scripts/SharedMemoryPlan.py`,
+`tests/test_shared_memory_plan.py`, ledger; optional usage document makes four.
+Adapt only reviewed parsing/path/profile/memory helpers, Plan and make_plan.
+Use a genuinely bounded reader, observed physical identity and explicit protected
+A/B roles, per-project mapping, effective-scope/trust refusal and path-free public
+output. Original plan tests must be retained/requalified or explicitly disposed;
+apply/restore tests remain baseline evidence for S3c, not S3b qualification.
+Exclude atomic_write, transaction_paths, locked, apply_plan, restore and the
+action-switching CLI from S3b. S3c must use selected-key non-secret backups and
+conflict-aware restore instead of wholesale settings snapshots/deletion.
+No original archive document/ledger is imported as current guidance.
+S3b still requires completed S4a provenance and selected-memory evidence.
 
 ### S4a — Read-only A inventory and physical ownership model
 
@@ -300,8 +344,10 @@ S4 protections and separate user approval. Optional S3g can be deferred.
   absent evidence stays unverified. Do not promise provider session permanence.
 - Stop: delivery decision and report; no automatic merge, deployment or restart.
 
-## Immediate stop boundary
+## Current continuation boundary
 
-This turn changes only this roadmap and the existing ledger. The next proposed
-implementation candidate is **S2c2-Q1**, the bounded Windows multi-process
-synthetic qualification. Wait for the user's go-ahead before implementing it.
+S2 through D2, S4a's implementation and S3a's archive review are delivered; do not
+replay them because of historical archive guidance. S4a actual effective-A and
+selected-memory provenance remains partial. Complete that evidence before S3b's
+planner-only admission. Ready slices may chain without routine approval; real
+installation, project/profile apply/restore, login or restart remains separately scoped.

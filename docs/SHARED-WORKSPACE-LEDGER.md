@@ -1,6 +1,6 @@
 # Shared workspace fork - implementation ledger
 
-Updated 2026-10-06 (S4a implementation; partial local evidence). Delivery order and dependencies: [Shared
+Updated 2026-10-06 (S3a archive review and Windows requalification). Delivery order and dependencies: [Shared
 workspace roadmap](SHARED-WORKSPACE-ROADMAP.md). This is the sole ledger. Requirements below are separate from
 implementation and evidence statuses.
 
@@ -187,10 +187,10 @@ started no remaining implementation; the separately authorized Q1 delivery is re
 | S2c2-Q1 | VERIFIED_SYNTHETIC | S2c2 | Production `794148f`; harness/worker in this Q1 delivery commit; native PS5.1/7 + Python | `python tests/Test-RoutingProcesses.py`: 8 cases PASS; details below; no Desktop launch | Preserve |
 | S2c2-Q2 | VERIFIED_SYNTHETIC | Q1 | Parent `1497f48`; three-file Q2 delivery below; native PS5.1/7 + Python | 12 Q2 cases PASS, plus 8 Q1 regressions; four expiry mutants detected; no Desktop launch | Preserve |
 | S2c2-D1 | VERIFIED_SYNTHETIC | Q2 | Parent `8b8431b`; three-file D1 delivery below; native PS5.1/7 | 33 fixture cases / 959 assertions per shell; six unsafe/leaking mutants detected; no installed invocation | Preserve |
-| S2c2-D2 | VERIFIED_SYNTHETIC | D1 | Parent `c96402f`; four-file D2 delivery below | Docs/examples match v2 and D1; Setup non-guidance tokens unchanged | S4a inventory; S3a needs ZIP |
-| S3a | BLOCKED | D2 + supplied ZIP | None; filename search only in supplied workspace | **ARTEFACT_MANQUANT**; reported 40 tests unverified, no import | Obtain actual artifact, review before import |
-| S4a | BLOCKED | D2 | Parent `ce2b7ba`; inventory module/tests delivered below | 22 native fixture tests PASS; 8.3 native alias NOT_RUN; local candidate/package inventory PARTIAL; effective Code config unconfirmed | Confirm effective A; ZIP also blocks S3b |
-| S3b | TODO | S3a + S4a | None; official docs read, not runtime proof | Import/plan gated by missing ZIP | Requalify reviewed no-write bridge |
+| S2c2-D2 | VERIFIED_SYNTHETIC | D1 | Parent `c96402f`; four-file D2 delivery below | Docs/examples match v2 and D1; Setup non-guidance tokens unchanged | Preserve; S3a now reviewed |
+| S3a | VERIFIED_SYNTHETIC | D2 + supplied ZIP | Parent `8804e5c`; archive receipt and review below | Original 40 Windows tests PASS, zero skips; two adaptation gaps confirmed; no repository import | S3b after S4a provenance |
+| S4a | BLOCKED | D2 | Parent `ce2b7ba`; inventory module/tests delivered below | 22 native fixture tests PASS; 8.3 native alias NOT_RUN; local candidate/package inventory PARTIAL; effective Code config unconfirmed | Confirm effective A for S3b |
+| S3b | BLOCKED | S3a + S4a | Source now reviewed; no import | Effective A/selected-memory provenance remains unconfirmed; admission adaptations listed in roadmap | Complete S4a, then planner-only import |
 | S3c | TODO | S3b | None | No apply/rollback receipts | Minimal selected-key changes on fixtures |
 | S3g | TODO | S3c + selected list | None; optional | No global sharing requested by default | Defer or qualify explicit allowlist |
 | S4b | TODO | S4a + S3b | None | Setup lacks complete collision/ownership preview | Additive no-write plan |
@@ -384,41 +384,55 @@ tests remain PASS in both shells. S4a proceeds independently of missing bridge Z
 
 ## S4a — Inventory implementation and partial local evidence (2026-10-06)
 
-Parent `ce2b7ba`; three files: `scripts/Inspect-SharedWorkspace.py`,
-`tests/test_workspace_inventory.py` and this ledger. Resolve atomic commit with
-`git log -1 --format=%H -- scripts/Inspect-SharedWorkspace.py`.
+Parent `ce2b7ba`; three files: `scripts/Inspect-SharedWorkspace.py`, `tests/test_workspace_inventory.py` and
+this ledger. Resolve atomic commit with `git log -1 --format=%H -- scripts/Inspect-SharedWorkspace.py`.
 
-Python uses read-attributes Windows handles, volume/file IDs and final paths for
-existing identity, projecting missing roots from an observed parent. Alias, case,
-junction, hard-link and nesting conflicts are surfaced; existing same-name
-additions remain unowned. Unknown observations refuse ownership. The model never
-permits apply. Identities are current snapshots, not race-proof future ownership.
-No account contents, credentials, session DBs, old logs or process command lines
-are read. Only bounded routing metadata, named-asset presence, explicit entry
-identity and the fixed package query are observed. No installed script executes.
+Python uses read-attributes Windows handles, volume/file IDs and final paths for existing identity, projecting
+missing roots from an observed parent. Alias, case, junction, hard-link and nesting conflicts are surfaced;
+existing same-name additions remain unowned. Unknown observations refuse ownership. The model never permits
+apply. Identities are current snapshots, not race-proof future ownership. No account contents, credentials,
+session DBs, old logs or process command lines are read. Only bounded routing metadata, named-asset presence,
+explicit entry identity and the fixed package query are observed. No installed script executes.
 
-`python tests/test_workspace_inventory.py`: 23 tests, 22 PASS, one SKIP: this volume
-does not provide a distinct 8.3 alias (native short-name gate NOT_RUN). Synthetic
-short-name ID equivalence is tested separately; it is not native 8.3 proof.
-Real junctions, hard links, case/nesting, malformed paths, unowned pre-existing
-folders, bounded metadata, output-alias refusal, create-once private reports,
-unchanged fixture bytes and no secret reads are qualified on native Windows.
-Python AST preflight passed before local inventory. The only optional write is a
-new private .local.md report outside protected roots; no overwrite is allowed.
+`python tests/test_workspace_inventory.py`: 23 tests, 22 PASS, one SKIP: this volume does not provide a
+distinct 8.3 alias (native short-name gate NOT_RUN). Synthetic short-name ID equivalence is tested separately;
+it is not native 8.3 proof. Real junctions, hard links, case/nesting, malformed paths, unowned pre-existing
+folders, bounded metadata, output-alias refusal, create-once private reports, unchanged fixture bytes and no
+secret reads are qualified on native Windows. Python AST preflight passed before local inventory. The only
+optional write is a new private .local.md report outside protected roots; no overwrite is allowed.
 
-Local read-only inventory used user-supplied A data/config candidates and a
-candidate fork-install parent. Both A candidates exist; fork-install parent and
-profiles.json are absent. Installed MSIX version 2.19675.0.0 was observed under
-WindowsApps; this does not establish the version/session currently running.
-The user reports opening A via its Start-menu/taskbar icon; no entry was changed.
-Private paths and receipts are in ignored local reports, not Git or PR output.
-Actual effective Code configuration and full A provenance remain UNCONFIRMED;
-S4a exit criteria are therefore BLOCKED/PARTIAL_LOCAL, despite implemented,
-fixture-qualified inventory. No mutation, installation or restart was attempted.
-The missing ZIP still blocks S3a/S3b; do not substitute an invented bridge.
-Jev's advisory combined gate escalated with truncated context; no approval is claimed.
-Manual review traced native handle access, metadata-only reads, private create-once
-output, unknown provenance and unchanged D2 non-guidance code before delivery.
+Local read-only inventory used user-supplied A data/config candidates and a candidate fork-install parent.
+Both A candidates exist; fork-install parent and profiles.json are absent. Installed MSIX version 2.19675.0.0
+was observed under WindowsApps; this does not establish the version/session currently running. The user
+reports opening A via its Start-menu/taskbar icon; no entry was changed. Private paths and receipts are in
+ignored local reports, not Git or PR output. Actual effective Code configuration and full A provenance remain
+UNCONFIRMED; S4a exit criteria are therefore BLOCKED/PARTIAL_LOCAL, despite implemented, fixture-qualified
+inventory. No mutation, installation or restart was attempted. The missing ZIP still blocks S3a/S3b; do not
+substitute an invented bridge. Jev's advisory combined gate escalated with truncated context; no approval is
+claimed. Manual review traced native handle access, metadata-only reads, private create-once output, unknown
+provenance and unchanged D2 non-guidance code before delivery.
+
+## S3a — Frozen archive review and Windows requalification (2026-10-06)
+
+Parent `8804e5c`; only roadmap and ledger change. Original ZIP remains unchanged; SHA-256 `654c158ae9f506d422a66cab688c79888e966adc9a46d34985d759e7c8de7d60`.
+Four bounded normalized members, no duplicate/traversal/encrypted/symlink members;
+source/doc hashes and line counts match QUALIFICATION.json. Python ASTs parse;
+40 actual test methods exist. No explicit LICENSE member/grant; the supplied
+document asserts originality. License disposition is recorded at admission.
+Historical SHARED_MEMORY.md/QUALIFICATION.json are evidence, not current workflow.
+
+After complete source/test reading, original Python members alone ran in owned
+TEMP under Python 3.14.7, isolated mode and redirected HOME/USERPROFILE/TEMP:
+40/40 Windows tests PASS, zero skips (including symlinks/hard links), exit 0,
+1.67 seconds wall time under a 60-second bound. Private receipt is Git-ignored.
+All quarantine paths were removed; apply/restore used synthetic fixtures only.
+Two fixture probes confirm memory-under-B-config acceptance and full-settings
+backup containing a synthetic env secret. Planner-only admission and
+required physical/provenance, bounded-read, scope/trust and selected-key backup
+adaptations are detailed in the roadmap. No original code imported into Git.
+No actual project/profile apply/restore or account/session changes. S3a is complete; S3b remains blocked.
+Resolve this review commit with
+`git log -1 --format=%H -- docs/SHARED-WORKSPACE-ROADMAP.md`.
 
 ## Decisions and planning evidence
 
@@ -448,7 +462,7 @@ output, unknown provenance and unchanged D2 non-guidance code before delivery.
 - ZIP lookup was restricted to the repository (including untracked/hidden file
   names) and the supplied visualization workspace. Neither contained the ZIP;
   no other drive search or invented Windows equivalent of a sandbox path.
-  Missing artifact blocks S3 import, not these documents or Q1.
+  That historical lookup is superseded by the supplied archive and S3a review below.
 - Official sources reread on 2026-10-05:
   [memory storage](https://code.claude.com/docs/en/memory#storage-location),
   [precedence](https://code.claude.com/docs/en/settings#settings-precedence),
@@ -479,9 +493,8 @@ application, test and CI files are unchanged.
 
 ## NEXT SLICE
 
-**Resolve S4a provenance and S3a artifact blockers.**
-D2 is delivered; S4a implementation and fixtures are delivered but local acceptance
-is partial. Confirm A's effective Code configuration/entry provenance and supply
-the actual bridge ZIP before S3b or any additive installation planning/apply.
-The user's chained-work authorization persists; proceed through satisfied
-prerequisites without routine approvals. No automatic installation/login/restart.
+**Complete S4a effective A and selected-memory provenance, then S3b planner-only admission.**
+The ZIP blocker is resolved. Current fork ledger/roadmap remain authoritative;
+archive NEXT SLICE is historical and must not replay completed S2 work.
+Chained-work authorization persists through satisfied prerequisites. Do not import
+apply/restore or run them on actual projects/profiles without separate user consent.

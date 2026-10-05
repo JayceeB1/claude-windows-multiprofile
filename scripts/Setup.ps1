@@ -220,9 +220,9 @@ foreach ($name in $Profile) {
     $isDefault = ($DefaultProfile -ne 'None' -and $name -ieq $DefaultProfile)
 
     if ($isDefault) {
-        $dataDir   = Join-Path $env:APPDATA 'Claude'
-        $configDir = ''   # stock ~\.claude; do NOT set CLAUDE_CONFIG_DIR
-        Write-Host "  [$name] reuses the stock login at $dataDir"
+        $profileDataDir   = Join-Path $env:APPDATA 'Claude'
+        $profileConfigDir = ''   # stock ~\.claude; do NOT set CLAUDE_CONFIG_DIR
+        Write-Host "  [$name] reuses the stock login at $profileDataDir"
     } else {
         # IMPORTANT: isolated profiles must live directly under %APPDATA% (NOT an
         # arbitrary folder such as -InstallDir). Claude Desktop's "Cowork" feature
@@ -232,24 +232,26 @@ foreach ($name in $Profile) {
         # provisions the VM under the data dir but the VM service looks under
         # %APPDATA% and dies with "VHDX file not found". Deriving
         # %APPDATA%\Claude-<name> satisfies this by construction.
-        $dataDir   = Join-Path $env:APPDATA "Claude-$name"
-        $configDir = Join-Path $env:USERPROFILE (".claude-" + $name.ToLower())
-        Write-Host "  [$name] isolated profile at $dataDir"
+        $profileDataDir   = Join-Path $env:APPDATA "Claude-$name"
+        $profileConfigDir = Join-Path $env:USERPROFILE (".claude-" + $name.ToLower())
+        Write-Host "  [$name] isolated profile at $profileDataDir"
     }
 
-    # Per-profile overrides.
-    if ($DataDir.ContainsKey($name))   { $dataDir   = $DataDir[$name] }
-    if ($ConfigDir.ContainsKey($name)) { $configDir = $ConfigDir[$name] }
+    # Keep per-profile paths distinct from the hashtable parameters: PowerShell
+    # variable names are case-insensitive ($DataDir and $dataDir are the same).
+    # Per-profile overrides; never overwrite the caller-supplied maps.
+    if ($DataDir.ContainsKey($name))   { $profileDataDir   = $DataDir[$name] }
+    if ($ConfigDir.ContainsKey($name)) { $profileConfigDir = $ConfigDir[$name] }
 
-    New-Item -ItemType Directory -Force -Path $dataDir | Out-Null
-    if ($configDir) {
-        New-Item -ItemType Directory -Force -Path $configDir | Out-Null
-        Write-Host "      memory/config dir: $configDir"
+    New-Item -ItemType Directory -Force -Path $profileDataDir | Out-Null
+    if ($profileConfigDir) {
+        New-Item -ItemType Directory -Force -Path $profileConfigDir | Out-Null
+        Write-Host "      memory/config dir: $profileConfigDir"
     }
 
     $profileMap[$name] = [ordered]@{
-        dataDir   = $dataDir
-        configDir = $configDir
+        dataDir   = $profileDataDir
+        configDir = $profileConfigDir
         isDefault = [bool]$isDefault
     }
 
@@ -257,10 +259,10 @@ foreach ($name in $Profile) {
     $lnkPath = Join-Path $desktop "Claude ($name).lnk"
     $sc = $wsh.CreateShortcut($lnkPath)
     $sc.TargetPath = Join-Path $env:WINDIR 'System32\wscript.exe'
-    if ($configDir) {
-        $sc.Arguments = '"{0}" "{1}" "{2}"' -f $vbs, $dataDir, $configDir
+    if ($profileConfigDir) {
+        $sc.Arguments = '"{0}" "{1}" "{2}"' -f $vbs, $profileDataDir, $profileConfigDir
     } else {
-        $sc.Arguments = '"{0}" "{1}"' -f $vbs, $dataDir
+        $sc.Arguments = '"{0}" "{1}"' -f $vbs, $profileDataDir
     }
     $sc.IconLocation = $iconLocation
     $sc.Description = "Claude Desktop - $name profile"

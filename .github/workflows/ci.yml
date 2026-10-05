@@ -6,12 +6,17 @@ on:
   pull_request:
     branches: [master]
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: PSScriptAnalyzer
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Analyze PowerShell scripts
         shell: pwsh
@@ -24,3 +29,47 @@ jobs:
             exit 1
           }
           Write-Host "No PSScriptAnalyzer errors."
+
+  profile-regression:
+    name: Profile regression (${{ matrix.shell }})
+    runs-on: windows-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        shell: [powershell, pwsh]
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: PowerShell preflight (parse before execution)
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSVersionTable | Format-Table -AutoSize
+          $files = @(Get-ChildItem scripts, tests -Filter *.ps1 -Recurse)
+          foreach ($file in $files) {
+            $tokens = $null; $parseErrors = $null
+            $null = [System.Management.Automation.Language.Parser]::ParseFile(
+              $file.FullName, [ref]$tokens, [ref]$parseErrors)
+            if ($parseErrors.Count) { throw ($parseErrors | Out-String) }
+          }
+          Write-Host "Preflight PASS: $($files.Count) scripts parsed."
+
+      - name: Reproduce upstream failure and verify profile fix
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $baseline = Join-Path $env:RUNNER_TEMP 'Setup.upstream.ps1'
+          $original = & git show '2ee03050185ace47581e9607341bd91cddd5ae9a:scripts/Setup.ps1'
+          if ($LASTEXITCODE -ne 0) { throw 'Could not read pinned upstream baseline.' }
+          $original | Set-Content -LiteralPath $baseline -Encoding UTF8
+          & .\tests\Test-SetupProfiles.ps1 -BaselinePath $baseline
+
+      - name: Existing login argument regression
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & .\tests\Test-ArgBuilder.ps1

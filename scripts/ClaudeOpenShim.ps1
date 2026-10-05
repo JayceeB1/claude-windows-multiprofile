@@ -81,7 +81,9 @@ function Set-ClaudeRouteText {
         if ([IO.File]::Exists($TargetFile)) {
             $existing = Get-Item -LiteralPath $TargetFile -Force -ErrorAction Stop
             if ($existing.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'ROUTE_MARKER_ALIAS' }
-            [IO.File]::Replace($temp, $TargetFile, $null)
+            # PowerShell coerces $null to an empty string for this .NET string
+            # parameter. NullString sends an actual null (no backup filename).
+            [IO.File]::Replace($temp, $TargetFile, [System.Management.Automation.Language.NullString]::Value)
         } else { [IO.File]::Move($temp, $TargetFile) }
     } finally {
         if ($null -ne $stream) { $stream.Dispose() }

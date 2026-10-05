@@ -1,6 +1,6 @@
 # Shared workspace fork - implementation ledger
 
-Updated 2026-10-05. Delivery order, file budgets, dependencies and stop gates:
+Updated 2026-10-06 (Q1 delivery). Delivery order, file budgets, dependencies and stop gates:
 [Shared workspace roadmap](SHARED-WORKSPACE-ROADMAP.md). This is the sole ledger.
 Requirements below are separate from implementation and evidence statuses.
 
@@ -191,7 +191,8 @@ VERIFIED_SYNTHETIC / VERIFIED_LOCAL. Synthetic qualification can use a native
 Windows host; VERIFIED_LOCAL is reserved here for the actual user installation.
 A passing implementation test does not satisfy the user acceptance requirements.
 Each future slice must add its exact commit, environment, command and receipt
-before changing its evidence status. No remaining implementation is started.
+before changing its evidence status. The roadmap-only turn started no remaining
+implementation; the separately authorized Q1 delivery is recorded below.
 
 | ID | Status | Dependencies | Commit / evidence environment and command | Receipt / limit | Next action |
 | --- | --- | --- | --- | --- | --- |
@@ -200,7 +201,7 @@ before changing its evidence status. No remaining implementation is started.
 | A-PRESERVE | TODO | S4a-S5b | Requirement recorded in `3546ddb`; no installation receipt | User reports A already works; not locally observed this turn | Inventory then acceptance |
 | S2c1 | VERIFIED_SYNTHETIC | S2b | `5c908a7`; Windows CI, Test-ShimLogging | Closed new-log schema; old logs not sanitized | Preserve schema |
 | S2c2 | VERIFIED_SYNTHETIC | S2c1 | Initial `81da85e`, actual-null repair `794148f`; cross-shell CI and local PS7 Test-ShimLogging | Current receipts above; real TEMP IO, same-process contention and simulated interleaving | Q1 |
-| S2c2-Q1 | TODO | S2c2 | None; future native PS5.1/7 + Python harness | No multi-process receipt | One-arm/two-callback, concurrent arm, occupied lock |
+| S2c2-Q1 | VERIFIED_SYNTHETIC | S2c2 | Production `794148f`; harness/worker in this Q1 delivery commit; native PS5.1/7 + Python | `python tests/Test-RoutingProcesses.py`: 8 cases PASS; details below; no Desktop launch | Q2 crash/expiry recovery |
 | S2c2-Q2 | TODO | Q1 | None | Crash/expiry recovery not qualified across processes | Barrier-driven death and explicit recovery |
 | S2c2-D1 | TODO | Q2 | None; source review only | Current default ping can consume intent; raw command lines/old logs exposed | Passive expurgated diagnostic |
 | S2c2-D2 | TODO | D1 | None; source review only | README/guide still claim legacy default reset and armer registry writes | Align v2 examples/guidance |
@@ -215,6 +216,84 @@ before changing its evidence status. No remaining implementation is started.
 | S4e | TODO | S4d + D2 | None | No qualified one-command package | Preview-first entry and guide |
 | S5a | TODO | S4e + explicit local approval | None | Browser focus is **HYPOTHESIS TO TEST** | Observe HTTPS/profile identity/claude:// separately |
 | S5b | TODO | S5a + all required synthetic gates + approval | None | Two Desktop identities, memory and removal unobserved | Real disposable-project acceptance |
+
+## S2c2-Q1 — Windows multi-process synthetic qualification (2026-10-06)
+
+User's subsequent go-ahead authorizes Q1 only. Parent documentary commit:
+`55ee33066fb5e31dbde7c8815e3d80b57ba7d909`; production routing source remains
+`794148f4072a59b4ca146b5199f5e7cea8fe8bb6`. Three owned delivery files:
+`tests/Test-RoutingProcesses.py`, `tests/fixtures/RouteWorker.ps1`, this ledger.
+Resolve the atomic Q1 commit with `git log -1 --format=%H -- tests/Test-RoutingProcesses.py`.
+No roadmap, application script or CI change; no merge.
+
+Command: `python tests/Test-RoutingProcesses.py` (both shells by default).
+Environment: native Windows, Python 3.14.7, Windows PowerShell 5.1.26100.9549,
+PowerShell 7.6.6. Worker startup receipts check actual PID, requested mode and
+shell major version. Each copied production source and worker is parsed before
+import; AST checks require the existing dot-source guards and exact shim
+assignments. No dependencies installed and no WSL execution.
+
+| Case | PS5.1 | PS7 | Observed assertion / receipt |
+| --- | --- | --- | --- |
+| callbacks | PASS | PASS | Two independent callback workers; first acknowledges consumed tombstone while holding the real lock, contender refuses with ROUTE_BUSY without changing bytes; release produces exactly one CreateNew launch receipt for B with exact args/config and parent environment unchanged; later replay refuses with TARGET_READ_FAILED |
+| concurrent-arm | PASS | PASS | B armer pauses after writing its actual v2 intent while retaining the lock; A contender refuses; marker bytes stay unchanged; A still refuses outstanding B after release |
+| occupied-lock | PASS | PASS | Separate holder acknowledges real FileShare.None lock; both arm and callback refuse; independent exclusive-open cleanup guard refuses the held lock; marker unchanged; release permits a new lock probe |
+| timeout-control | PASS | PASS | Parent deliberately withholds release; waiting for a result raises BARRIER_TIMEOUT within the configured 0.25-second wait instead of claiming success; explicit release then result/exit and lock probe succeed |
+
+Final summary: **8 cases PASS; owned fixtures removed; no Desktop qualification**.
+One initial PS5.1 run caught a fixture scope bug: dot-sourcing the armer's param
+block replaced the worker's selected profile. The worker now preserves/restores
+its fixture profile; no production repair or weakened assertion was required.
+The full matrix was rerun after final harness changes.
+
+Boundaries: Python owns each Popen/Windows handle from creation and never scans
+or terminates by process name/PID discovery. JSON stdout/stdin acknowledgments
+order the interleaving; no sleeps establish PASS. Per-case execution deadline
+15 seconds, overall execution deadline 120 seconds, bounded cleanup waits of
+2 seconds per retained child handle/reader. A missed barrier or timeout fails;
+only owned test workers may be terminated on failure. Cleanup waits for their
+exit, rejects aliases, checks the ownership token and resolved TEMP scope,
+refuses an exclusively held lock, then removes only that fixture. Successful
+cases also prove unchanged manifest bytes, no temporary write sidecars and no
+synthetic data/config directories created.
+
+The real planner, armer, dispatcher, lock, file replacement, marker reader,
+logger and callback start-info builder run on freshly copied sources and real
+TEMP metadata. Package discovery and both window/process-start boundaries are
+recording doubles; the fake executable is inert fixture text. Callbacks and
+A/B roots are synthetic. The installed application, protocol registration,
+accounts, credentials, memory, browser and existing A are not exercised.
+
+This is deterministic controlled cross-process contention, not a stress campaign
+or proof of arbitrary simultaneous browser logins. Process-death timing,
+consumed-without-launch failure recovery and expiry remain Q2. The worker's
+barrier can wait while the parent is alive; the parent enforces its deadline.
+CI currently does not invoke the new Python matrix: local receipts establish Q1;
+existing/new CI results must not be presented as Q1 runtime proof. CI integration
+is not added in this three-file slice.
+
+Additional Q1 validation: all 12 PowerShell scripts/tests parsed under PS7;
+Python AST parsed; local installed PSScriptAnalyzer 1.25.0 errors-only scan of
+`tests` passed (no warning-free claim). Relative ledger links, file sizes and
+single NEXT SLICE checked; full three-file diff reviewed.
+
+Four controlled mutation checks (two per shell) altered only owned fixture
+copies: FileShare.None -> FileShare.ReadWrite was rejected with LOG_EVENTS;
+replacing consumed tombstone writing with the original intent was rejected with
+UNEXPECTED_WORKER_EVENT before a launch receipt. Each failure was required,
+not counted as an unexplained PASS; production sources were untouched and all
+mutant fixtures were removed. These validate the harness's failure detection.
+Jev's advisory gate returned escalate despite verifying the supplied claims;
+manual review covered guarded imports, all real-launch doubles, fixture scope,
+retained process handles, alias refusal and exclusive-open cleanup. No automatic
+probabilistic approval or real-host proof is claimed.
+
+Validated Q1 source SHA-256 (resolve the delivery commit with the command above):
+- `tests/Test-RoutingProcesses.py`: `c503094365f1f15a999d1fddb488e0d50e5bfe2ddf049fc43a27b79ede2e9377`
+- `tests/fixtures/RouteWorker.ps1`: `f264d1e991255ed5380afb03bc90ff2f0c6de43344aaed757193bdf9ece3b844`
+
+The user's requested deep local structure analysis remains in S4a when repository
+facts leave gaps. It has not been run against the actual installation this turn.
 
 ## Decisions and planning evidence
 
@@ -268,16 +347,16 @@ References checked for the locking/IO contract:
 [File.Move no-overwrite behavior](https://learn.microsoft.com/en-us/dotnet/api/system.io.file.move?view=netframework-4.8.1),
 [native-app OAuth flow boundaries](https://www.rfc-editor.org/rfc/rfc8252.html).
 
-Document validation: both files are below 500 lines; relative links resolve;
+Document validation (roadmap-only turn): both files are below 500 lines; relative links resolve;
 UTF-8 readback, one NEXT SLICE and staged `git diff --check` pass. The complete
 two-document diff was reviewed; application, test and CI files are unchanged.
 
 ## NEXT SLICE
 
-**S2c2-Q1 — Windows multi-process synthetic lock and one-shot qualification.**
-Use exactly the Q1 budget in the roadmap: Python harness, guarded PowerShell
-fixture worker and this ledger (three files). Prove two callbacks for one arm,
-concurrent arming and occupied-lock refusal with barriers, bounded deadlines,
-recorded child ownership and a launch double. No real installation/login.
-This is TODO, not authorization to start: wait for the user's go-ahead, then
-complete that slice alone, report its evidence and STOP.
+**S2c2-Q2 — Windows synthetic crash, expiration and explicit recovery.**
+Three files: the Q1 Python harness, its guarded PowerShell worker and this ledger.
+Qualify holder death before/after consumption, consumed-without-launch state,
+expiry and deliberate disarm/new named arm with acknowledged phases, bounded
+waits and termination only through retained test-owned handles. No Claude
+termination, installation or real login. Q2 is TODO: wait for the user's next
+go-ahead, complete that slice alone, report its evidence and STOP.

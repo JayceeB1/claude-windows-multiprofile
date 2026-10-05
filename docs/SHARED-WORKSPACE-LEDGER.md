@@ -203,7 +203,7 @@ implementation; the separately authorized Q1 delivery is recorded below.
 | S2c2 | VERIFIED_SYNTHETIC | S2c1 | Initial `81da85e`, actual-null repair `794148f`; cross-shell CI and local PS7 Test-ShimLogging | Current receipts above; real TEMP IO, same-process contention and simulated interleaving | Q1 |
 | S2c2-Q1 | VERIFIED_SYNTHETIC | S2c2 | Production `794148f`; harness/worker in this Q1 delivery commit; native PS5.1/7 + Python | `python tests/Test-RoutingProcesses.py`: 8 cases PASS; details below; no Desktop launch | Q2 crash/expiry recovery |
 | S2c2-Q2 | VERIFIED_SYNTHETIC | Q1 | Parent `1497f48`; three-file Q2 delivery below; native PS5.1/7 + Python | 12 Q2 cases PASS, plus 8 Q1 regressions; four expiry mutants detected; no Desktop launch | D1 passive diagnostic |
-| S2c2-D1 | TODO | Q2 | None; source review only | Current default ping can consume intent; raw command lines/old logs exposed | Passive expurgated diagnostic |
+| S2c2-D1 | VERIFIED_SYNTHETIC | Q2 | Parent `8b8431b`; three-file D1 delivery below; native PS5.1/7 | 33 fixture cases / 959 assertions per shell; six unsafe/leaking mutants detected; no installed invocation | D2 current routing guidance |
 | S2c2-D2 | TODO | D1 | None; source review only | README/guide still claim legacy default reset and armer registry writes | Align v2 examples/guidance |
 | S3a | BLOCKED | D2 + supplied ZIP | None; filename search only in supplied workspace | **ARTEFACT_MANQUANT**; reported 40 tests unverified, no import | Obtain actual artifact, review before import |
 | S4a | TODO | D2 | None | A paths/config provenance and physical ownership unobserved | Read-only inventory; can proceed while ZIP missing |
@@ -364,6 +364,58 @@ receipt preservation, expiry-only timestamp changes, imports and start doubles;
 no probabilistic automatic approval is claimed. Real installation, browser
 login, accounts and memory remain unqualified. Next slice is D1 only.
 
+## S2c2-D1 — Passive diagnostic (2026-10-06)
+
+User-authorized D1 only; parent `8b8431bc82cfb47defcc26c33b386fd803556dbc`.
+Three files: `scripts/Test-ClaudeRouting.ps1`, `tests/Test-RoutingDiagnostic.ps1`
+and this ledger. Resolve the atomic delivery commit with
+`git log -1 --format=%H -- scripts/Test-ClaudeRouting.ps1`.
+The earlier diagnostic source observations above describe its pre-D1 state.
+
+Default output is one closed-schema JSON event `DIAGNOSTIC_PASSIVE`. Its fixed
+fields describe metadata snapshot availability, syntactic manifest readability,
+intent state, expiration and manifest hash binding, package presence and
+UserChoice classification. No paths, profile names, versions, raw registry
+values, URLs, command lines, exceptions or old log contents are emitted.
+`dispatch=not_probed` is invariant: neither package presence nor UserChoice
+router classification establishes OS activation, login, identity or Desktop
+configuration. Readable manifest/binding match is not full path-plan validation.
+
+`-NoPing` remains compatible and has no effect; all invocations are passive.
+There is no live-probe option, delay, process query, arming or launch. Installed
+routing scripts are never imported. Reads use bounded 64 KiB metadata and reject
+reparse ancestors. The snapshot takes a read-only exclusive handle to an existing
+route.lock only, briefly contending with cooperating writers; it creates/writes
+nothing. Missing/busy lock, unavailable path or inaccessible metadata remains
+unknown. File reads can affect filesystem access timestamps; bytes, file set and
+last-write timestamps are preserved. Noncooperating alias races/power-loss
+durability and physical installation ownership are not proven by D1.
+
+Commands: `powershell -NoProfile -File tests/Test-RoutingDiagnostic.ps1` and
+`pwsh -NoProfile -File tests/Test-RoutingDiagnostic.ps1`. Both passed **33 cases,
+959 assertions**, native PS5.1.26100.9549 / PS7.6.6. Cases cover missing, armed,
+consumed, disarmed, expired, future/invalid timestamps, malformed/legacy/oversize
+metadata, binding mismatch, missing manifest, read/lock refusal, junction alias,
+missing/invalid path, package/registry absence and failure, all-stream hostile
+messages, -NoPing compatibility and default path using a fixture USERPROFILE.
+Real TEMP IO is used; package/registry boundaries are doubles. Installed-script
+import bombs and secret-bearing old logs remain inert. All owned fixtures are
+removed after ownership, alias and lock checks; no installed invocation occurred.
+
+Six controlled mutation checks (activation command, file write and output leak,
+each under both shells) were rejected by UNSAFE_COMMAND_BOUNDARY,
+UNSAFE_MEMBER_BOUNDARY and OUTPUT_LEAK. Parser preflight passed for 13 PowerShell
+files; changed-script PSScriptAnalyzer 1.25.0 scan passed at Error severity.
+Complete three-file diff reviewed; application routing, Setup, guides and CI
+remain unchanged. GitNexus rebuilt after a buffer-pool failure but resolves no
+PowerShell flows; jCodeMunch reports no PowerShell symbols. Native fixture proof
+and direct boundary review establish D1. CI does not invoke this new test yet;
+runtime receipts are local. Jev verified all three supplied claims but escalated
+patch confidence (safe_to_apply 0.42; limiting rubric blast_radius). Manual review
+covered the CLI compatibility boundary, fixed output, read-only modes, rejected
+aliases and missing/busy lock semantics; no probabilistic approval is claimed.
+PR #1 remains draft with Desktop acceptance pending.
+
 ## Decisions and planning evidence
 
 - Projects stay where they are; no migration or mandatory worktrees. The user
@@ -422,10 +474,9 @@ two-document diff was reviewed; application, test and CI files are unchanged.
 
 ## NEXT SLICE
 
-**S2c2-D1 — Passive diagnostic.**
-Three files: `scripts/Test-ClaudeRouting.ps1`, `tests/Test-RoutingDiagnostic.ps1`
-and this ledger. Make diagnosis effect-free by default, with expurgated v2 state
-and fixed-schema events. Qualify on fixtures under both shells; no activation,
-arming, process launch or writes by default, no raw URL/command line/exception/
-personal path/old-log output. Q2 is VERIFIED_SYNTHETIC; D1 remains TODO pending
-the user's next slice instruction. No installed diagnostic invocation.
+**S2c2-D2 — Current routing instructions.**
+Four files: `docs/PROTOCOL-ROUTING.md`, `README.md`, `scripts/Setup.ps1` (printed
+diagnostic guidance only) and this ledger. Replace legacy fallback/log/registry
+claims and unsafe probe recommendations with v2 procedure, passive diagnostic
+semantics and known limits. D1 is VERIFIED_SYNTHETIC; D2 remains TODO pending
+the user's next slice instruction. No Setup or installed diagnostic invocation.

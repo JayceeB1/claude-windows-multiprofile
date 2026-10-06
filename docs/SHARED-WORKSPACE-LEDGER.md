@@ -473,7 +473,15 @@ Archive has no explicit license grant: no verbatim module redistribution; indepe
 Terminal/embedded Code versions differ; scratch projects have independent memory. No auth-storage/env-persistence inference.
 Native 8.3 remains NOT_RUN. No package/profile mutation, real install/share/apply/restore/login/restart performed.
 
+## S4c fixture installation (2026-10-06)
+
+FixtureWindows is restricted to owned TEMP paths; shortcut JSON and an in-memory protocol are explicit OS doubles,
+never native .lnk/registry proof. Additive copied assets/B roots have physical ownership and hash receipts; repeated
+install, partial failure and conflict-aware rollback retain B data and A/project/memory. Unknown sidecars/locks refuse
+cleanup. Legacy Setup now refuses full execution before OS IO; its profile-loop regression fragments remain intact.
+Native installation/shortcuts/registry remain NOT_RUN. 52 Windows tests PASS (40 prior + 12 install/guard cases), no skips.
+
 ## NEXT SLICE
 
-S3b/S3c/S4b are fixture-qualified. Chain S4c installation, S4d removal and S4e package/guide fixture slices. Real
+S4c is fixture-qualified; native installation is not admitted. Chain S4d removal and S4e package/guide fixture slices. Real
 install/share/apply/restore/login/restart remain separately scoped; keep A, projects and official Claude installed.

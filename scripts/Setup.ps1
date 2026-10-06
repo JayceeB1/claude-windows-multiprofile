@@ -91,6 +91,10 @@ param(
 $ErrorActionPreference = 'Stop'
 $scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 
+# The legacy installer below force-copies assets and cannot prove additive ownership.
+# Keep its fragments for regression tests, but refuse full invocation before any OS IO.
+throw 'NATIVE_INSTALL_NOT_ADMITTED: use python -B scripts/SharedWorkspace.py preview --spec <private-spec.json>.'
+
 # --- resolve the effective "default" (stock-paths) profile -----------------
 # -DefaultProfile wins; -ReuseDefaultForWork is a deprecated alias for 'Work'.
 if (-not $PSBoundParameters.ContainsKey('DefaultProfile') -and $ReuseDefaultForWork) {

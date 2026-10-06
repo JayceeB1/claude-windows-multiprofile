@@ -2,8 +2,11 @@
 from dataclasses import dataclass, field
 import json
 from pathlib import Path
+import os
+import tempfile
 
 import SharedMemoryPlan as bridge
+import SharedMemoryApply as transactions
 
 ASSETS = ('Launch-Claude.ps1', 'launch.vbs', 'ClaudeOpenShim.ps1',
           'Arm-ClaudeLogin.ps1', 'Test-ClaudeRouting.ps1')
@@ -99,3 +102,172 @@ def revalidate_workspace(plan):
     for name, raw in plan.assets:
         if bridge.read_optional(plan.source / name) != raw:
             raise bridge.BridgeError('ASSET_CHANGED')
+
+
+class FixtureWindows:
+    """OS double bounded to a TEMP fixture. It cannot touch a real profile/registry."""
+    surface = 'synthetic_fixture'
+
+    def __init__(self, root: Path):
+        self.root = bridge.safe_path(root, directory=True)
+        parent = bridge.identity(Path(tempfile.gettempdir()))['canonical'].rstrip('\\') + '\\'
+        if not bridge.identity(root)['canonical'].startswith(parent) or \
+                not root.name.startswith('shared-plan-fixture-'):
+            raise bridge.BridgeError('OWNED_TEMP_FIXTURE_REQUIRED')
+        self.protocol = None
+        self.fail_after = None
+        self.calls = 0
+
+    def check(self, path):
+        path = bridge.safe_path(path)
+        root = bridge.identity(self.root)['canonical'].rstrip('\\') + '\\'
+        if not bridge.identity(path)['canonical'].startswith(root):
+            raise bridge.BridgeError('FIXTURE_TARGET_ESCAPE')
+        return path
+
+    def shortcut_bytes(self, specification):
+        # This JSON is a double, never a valid native .lnk qualification receipt.
+        return transactions.encode({'fixture_shortcut': specification})
+
+    def before_operation(self):
+        self.calls += 1
+        if self.fail_after is not None and self.calls == self.fail_after:
+            raise bridge.BridgeError('INJECTED_FIXTURE_FAILURE')
+
+
+def receipt_bytes(record):
+    return transactions.encode({'record': record, 'sha256': bridge.digest(transactions.encode(record))})
+
+
+def read_receipt(path):
+    raw = bridge.read_optional(path)
+    if raw is None:
+        raise bridge.BridgeError('OWNERSHIP_RECEIPT_MISSING')
+    envelope = bridge.object_json(raw)
+    if set(envelope) != {'record', 'sha256'} or not isinstance(envelope['record'], dict) or \
+            envelope['sha256'] != bridge.digest(transactions.encode(envelope['record'])):
+        raise bridge.BridgeError('OWNERSHIP_RECEIPT_INTEGRITY')
+    return envelope['record'], raw
+
+
+def save_receipt(path, record):
+    before = bridge.read_optional(path)
+    transactions.replace_checked(path, receipt_bytes(record), before)
+
+
+def execute_fixture(plan: WorkspacePlan, adapter: FixtureWindows, *, writers_closed: bool):
+    """S4c execution qualification ONLY. No native Windows adapter is admitted yet."""
+    if writers_closed is not True or type(adapter) is not FixtureWindows:
+        raise bridge.BridgeError('FIXTURE_CLOSED_WRITERS_REQUIRED')
+    adapter.check(plan.install)
+    receipt = plan.install / 'ownership.json'
+    if plan.install.exists():
+        record, _ = read_receipt(receipt)
+        if record.get('phase') != 'installed' or record.get('manifest_sha256') != bridge.digest(plan.manifest):
+            raise bridge.BridgeError('INSTALL_RECOVERY_REQUIRED')
+        check_owned_record(record, adapter)
+        if record['protocol_change'] and adapter.protocol != record['protocol_written']:
+            raise bridge.BridgeError('PROTOCOL_CONFLICT')
+        return {'status': 'ALREADY_INSTALLED_FIXTURE', 'native_install': 'NOT_RUN'}
+    revalidate_workspace(plan)
+    protected = [str(p.project) for p in plan.memory_plans] + [str(p.memory) for p in plan.memory_plans]
+    protected += [str(p) for p in plan.memory_plans[0].profiles['A'].values()]
+    roots_b = list(plan.memory_plans[0].profiles['B'].values())
+    targets = [plan.install, plan.install / 'bin', *roots_b, *(p for p, _ in plan.shortcuts)]
+    for target in targets:
+        adapter.check(target)
+    if plan.protocol_change and adapter.protocol != plan.protocol_before:
+        raise bridge.BridgeError('PROTOCOL_CHANGED_SINCE_PLAN')
+    plan.install.mkdir()
+    record = {'schema': 1, 'surface': 'synthetic_fixture', 'phase': 'installing',
+              'install': str(plan.install), 'install_identity': bridge.identity(plan.install),
+              'manifest_sha256': bridge.digest(plan.manifest), 'protected': protected,
+              'b_roots': [str(p) for p in roots_b], 'directories': [], 'files': [],
+              'protocol_change': plan.protocol_change, 'protocol_before': plan.protocol_before,
+              'protocol_written': 'fixture-router:' + str(plan.install), 'protocol_applied': False}
+    transactions.create_once(receipt, receipt_bytes(record))
+    for directory in [plan.install / 'bin', *roots_b]:
+        adapter.before_operation()
+        directory.mkdir()
+        record['directories'].append({'path': str(directory), 'identity': bridge.identity(directory)})
+        save_receipt(receipt, record)
+    files = [(plan.install / 'bin' / name, raw) for name, raw in plan.assets]
+    files += [(plan.install / 'bin' / 'profiles.json', plan.manifest)]
+    files += [(path, adapter.shortcut_bytes(spec)) for path, spec in plan.shortcuts]
+    for path, raw in files:
+        adapter.before_operation()
+        transactions.create_once(path, raw)
+        record['files'].append({'path': str(path), 'sha256': bridge.digest(raw), 'identity': bridge.identity(path)})
+        save_receipt(receipt, record)
+    if plan.protocol_change:
+        adapter.before_operation()
+        adapter.protocol = record['protocol_written']
+        record['protocol_applied'] = True
+        save_receipt(receipt, record)
+    record['phase'] = 'installed'
+    save_receipt(receipt, record)
+    return {'status': 'INSTALLED_FIXTURE', 'native_install': 'NOT_RUN', 'official_package_removal': False}
+
+
+def check_owned_record(record, adapter):
+    fields = {'schema', 'surface', 'phase', 'install', 'install_identity', 'manifest_sha256', 'protected',
+              'b_roots', 'directories', 'files', 'protocol_change', 'protocol_before',
+              'protocol_written', 'protocol_applied'}
+    if set(record) != fields or record['schema'] != 1 or record['surface'] != 'synthetic_fixture' or \
+            record['phase'] not in ('installing', 'installed', 'b_removed'):
+        raise bridge.BridgeError('OWNERSHIP_SCHEMA')
+    install = adapter.check(Path(record['install']))
+    if bridge.identity(install) != record['install_identity']:
+        raise bridge.BridgeError('INSTALL_IDENTITY_CHANGED')
+    protected = [bridge.safe_path(p) for p in record['protected']]
+    for entry in record['directories']:
+        path = adapter.check(Path(entry['path']))
+        if bridge.identity(path) != entry['identity'] or any(bridge.overlap(path, p) for p in protected):
+            raise bridge.BridgeError('OWNED_DIRECTORY_CHANGED')
+    for entry in record['files']:
+        path = adapter.check(Path(entry['path']))
+        if any(bridge.overlap(path, p) for p in protected) or bridge.identity(path) != entry['identity'] or \
+                bridge.digest(bridge.read_optional(path)) != entry['sha256']:
+            raise bridge.BridgeError('OWNED_FILE_CHANGED')
+    return install
+
+
+def rollback_fixture(install: Path, adapter: FixtureWindows, *, writers_closed: bool):
+    if writers_closed is not True or type(adapter) is not FixtureWindows:
+        raise bridge.BridgeError('FIXTURE_CLOSED_WRITERS_REQUIRED')
+    install = adapter.check(install)
+    receipt = install / 'ownership.json'
+    record, _ = read_receipt(receipt)
+    check_owned_record(record, adapter)
+    if record['protocol_applied'] and adapter.protocol != record['protocol_written']:
+        raise bridge.BridgeError('PROTOCOL_CONFLICT')
+    if record['protocol_change'] and not record['protocol_applied'] and adapter.protocol != record['protocol_before']:
+        raise bridge.BridgeError('INTERRUPTED_PROTOCOL_CHANGE_REQUIRES_REVIEW')
+    recorded = {entry['path'] for entry in record['files']} | {entry['path'] for entry in record['directories']}
+    recorded.add(str(receipt))
+    for folder in (install, install / 'bin'):
+        if folder.exists() and any(str(path) not in recorded for path in folder.iterdir()):
+            raise bridge.BridgeError('UNRECORDED_ADDITION_PRESERVED')
+    lock = install / 'bin' / 'route.lock'
+    # Refuse every outstanding runtime sidecar before cleanup; no name-only ownership.
+    for name in ('target.txt', 'route.state.json', 'route.log'):
+        if (install / 'bin' / name).exists():
+            raise bridge.BridgeError('RUNTIME_SIDECAR_REQUIRES_REVIEW')
+    if lock.exists():
+        with transactions.locked(lock):
+            raise bridge.BridgeError('RUNTIME_LOCK_REQUIRES_REVIEW')
+    if record['protocol_applied']:
+        adapter.protocol = record['protocol_before']
+    for entry in reversed(record['files']):
+        adapter.check(Path(entry['path'])).unlink()
+    for entry in reversed(record['directories']):
+        path = adapter.check(Path(entry['path']))
+        # Retain B data/config by default, even if empty. Never recursively delete.
+        if str(path) not in record['b_roots']:
+            if any(path.iterdir()):
+                raise bridge.BridgeError('UNRECORDED_ADDITION_PRESERVED')
+            path.rmdir()
+    receipt.unlink()
+    if not any(install.iterdir()):
+        install.rmdir()
+    return {'status': 'ROLLED_BACK_FIXTURE', 'b_data_retained': True, 'official_package_removal': False}

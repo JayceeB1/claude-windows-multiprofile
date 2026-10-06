@@ -167,7 +167,7 @@ roadmap-only turn started no remaining implementation; the separately authorized
 | S2c2-D1 | VERIFIED_SYNTHETIC | Q2 | Parent `8b8431b`; three-file D1 delivery below; native PS5.1/7 | 33 fixture cases / 959 assertions per shell; six unsafe/leaking mutants detected; no installed invocation | Preserve |
 | S2c2-D2 | VERIFIED_SYNTHETIC | D1 | Parent `c96402f`; four-file D2 delivery below | Docs/examples match v2 and D1; Setup non-guidance tokens unchanged | Preserve; S3a now reviewed |
 | S3a | VERIFIED_SYNTHETIC | D2 + ZIP | `1664fa4`; frozen archive review | Original 40 Windows tests PASS; no verbatim import | Preserve lineage |
-| S4a | IMPLEMENTED | D2 | `8f0947d`; read-only inventory + Desktop operator report | PARTIAL_LOCAL; path/index report accepted for preparation; native data redirection unresolved | Native acceptance |
+| S4a | IMPLEMENTED | D2 | Inventory + A singleton metadata; operator pilot marker matched | PARTIAL_LOCAL; A/pilot startup loading reported; full data redirection unresolved | B admission |
 | S3b | VERIFIED_SYNTHETIC | S3a + S4a operator evidence | `6f22250`, namespace repair `e7dd6ee`; Run-SharedWorkspaceTests | 31 planner contracts; no writes, explicit scope/trust/policy refusal | Preserve preview |
 | S3c | VERIFIED_SYNTHETIC | S3b | `58e0fcb`; consolidated runner | 18 apply/recovery contracts plus planner; selected-key only; real apply NOT_RUN | Preserve fixture evidence |
 | S3g | TODO | S3c + explicit list | Optional, omitted | No selected global resources or whole-root sharing | Defer |
@@ -495,5 +495,6 @@ Commit/push/draft-PR/CI resume under test authorization; do not merge or promote
 
 ## NEXT SLICE
 
-Separately authorized S5 trials with confirmed A provenance and an exact reviewed private plan. Native 8.3 stays NOT_RUN;
-optional REA-A2 follows issue #3. Effective B memory/config and two-Desktop acceptance remain unqualified.
+A/pilot blinded startup marker matched; private native preview ready, zero memory-key edits, B not provisioned.
+Await explicit B installation/router consent, then manual B login and S5 proof. See [receipt](SHARED-WORKSPACE-QUALIFICATION.md).
+Native 8.3 stays NOT_RUN; optional REA-A2 follows #3. B config/loading and two-Desktop acceptance remain unqualified.

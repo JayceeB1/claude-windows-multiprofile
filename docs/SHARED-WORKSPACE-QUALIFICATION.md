@@ -177,3 +177,27 @@ and memory loading remain NOT_RUN. PSScriptAnalyzer Error severity remains clean
 Q1 source at 431d40c7e9d9214c0c87a1e3f3ea61e527a31f89 passed [CI 37508782528](https://github.com/JayceeB1/claude-windows-multiprofile/actions/runs/37508782528),
 all three jobs completed/success. Full logs read: both Windows jobs retain 164 executed / 163 PASS / 1 SKIP and
 native-Uninstall refusal; that receipt precedes Q2 and is not final-head Q2 proof. Current Q2 CI is recorded in PR #1.
+
+## S5 admission preflight — A pilot startup evidence (2026-10-06)
+
+The user confirms A is connected and running. Metadata identifies the official package executable and embedded
+Code version directory 2.1.288 (Desktop package 2.19675.1.0). A bounded read-only lookup matches the known logical
+A data-directory identifier to Chrome_MessageWindow owned by the package Desktop PID. No activation, messages,
+command-line/environment dumps or profile contents were read. This is an observed singleton identifier, not full
+physical MSIX-redirection proof. [Electron singleton source](https://raw.githubusercontent.com/electron/electron/main/shell/browser/api/electron_api_app.cc),
+[Chromium singleton source](https://chromium.googlesource.com/chromium/+/HEAD/chrome/browser/process_singleton_win.cc).
+
+A new independently owned disposable pilot contains one random index marker and a local autoMemoryDirectory
+setting; original projects and profile settings remain untouched. Instructed to use a fresh Desktop A Code session
+and no tools/files, the user relayed the exact previously undisclosed marker. It matches the private expected value;
+all four prepared pilot files retain their physical identities and hashes. This is OPERATOR_CONFIRMED startup
+loading for A/pilot, not an independently captured provider trace or B loading. The selected-settings inventory
+and successful runtime behavior support bounded A/pilot trust/policy admission; complete precedence and B policy
+are not claimed. A config-root provenance remains based on prior Desktop operator reports, not an environment dump.
+
+A real-path native preview is now saved privately with protocol change disabled: two new B roots, independent
+launcher, two new labeled shortcuts and ZERO selected memory-setting edits (pilot already configured). Router
+candidate namespaces were read-only checked empty; the exact additional registration proposal is kept in the private
+review, with consent NOT_GRANTED. Installation and protocol writes await the user's reserved explicit authorization.
+No B creation/login, real association change, A restart or package mutation performed. S5 browser/account/B memory
+and removal acceptance remain NOT_RUN. Native 8.3 stays NOT_RUN. No marker, personal paths or private receipts published.

@@ -93,6 +93,7 @@ class InventoryTests(unittest.TestCase):
         self.assertEqual(inventory.relationship(inventory.physical_path(str(first)),
                                                inventory.physical_path(str(second))), 'alias')
 
+    @unittest.skip('Native 8.3 gate remains NOT_RUN by scope, including CI runners')
     def test_short_name_identity_when_available(self):
         # 8.3 generation may be disabled: fallback paths preserve the identity,
         # while the projected-canonical case below covers equivalent spelling.

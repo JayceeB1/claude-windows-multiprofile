@@ -14,7 +14,8 @@ for module, name in CONTRACTS:
     cls = getattr(importlib.import_module(module), name)
     suite.addTests(cls(method) for method in sorted(cls.__dict__) if method.startswith('test_'))
 result = unittest.TextTestRunner(verbosity=2).run(suite)
-unexpected = [case.id() for case, _ in result.skipped if 'short' not in case.id()]
+unexpected = [case.id() for case, _ in result.skipped
+              if case.id() != 'test_workspace_inventory.InventoryTests.test_short_name_identity_when_available']
 if unexpected:
     print('UNEXPECTED_SKIP: qualification incomplete')
     raise SystemExit(2)

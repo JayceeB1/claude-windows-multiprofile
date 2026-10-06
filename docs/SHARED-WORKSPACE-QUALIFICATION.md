@@ -81,3 +81,7 @@ claim. Manual source/diff review checked the actual selected-key record construc
 no automatic review acceptance is claimed. The namespace pre-probe issue found during that review was repaired.
 Selected-key integrity hashes detect corruption, not hostile receipt authors; external-editor CAS and native Desktop
 proof are not claimed. Native API adapter admission remains unfinished; the CLI cannot perform native mutations.
+
+Final native 8.3 policy: the deferred test is explicitly skipped on every host, including CI even if its volume offers
+an alias. Synthetic equivalent-ID coverage remains separate. The earlier CI run at 67d1ded offered an alias and ran
+that fixture; it is not adopted as local/user qualification. All current receipts retain native 8.3 NOT_RUN by scope.

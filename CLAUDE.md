@@ -63,7 +63,28 @@ scripts/
   Setup.ps1           # installer: copies scripts to %USERPROFILE%\ClaudeProfiles\bin, extracts a stable bin\claude.ico, makes profiles + desktop shortcuts; -ConfigDir hashtable maps a profile to its own memory store
   Uninstall.ps1       # removes shortcuts (and optionally profile data)
   Build-Exe.ps1       # optional: wrap Launch-Claude.ps1 into an .exe via ps2exe
+  Set-ClaudeWindowIdentity.ps1 / Launch-ClaudeIdentity.ps1 / launch-identity.vbs / Install-ClaudeIdentity.ps1
+                      # separate taskbar button + icon for one profile (explicit AppUserModelID + WM_SETICON from a hidden watcher)
+  Repair-ClaudeProfiles.ps1 / Connect-ClaudeProfile.ps1 / Install-ClaudeTools.ps1
+                      # check + repair after an update, guided re-login of B, desktop shortcuts for both
+  Link-SharedConfig.py  # junction/symlink sharing of config between profiles; never credentials or identity
+  Apply-RouterRegistration.py, NativeWindowsIO.py, SharedWorkspace*.py, ...  # native shared-workspace candidate (see README)
+docs/MODE-OPERATOIRE.md  # French operator manual: shortcuts, locations, after an update, re-login, rollback
 ```
+
+## Gotchas learned the hard way
+
+- **MSIX virtualization.** HKCU and AppData writes made by a packaged process (Codex, Claude Desktop) and by *all its
+  descendants* are redirected to a private per-package store that Windows Settings never reads. Descendants report no
+  package identity themselves, so `NativeWindowsIO.require_unpackaged_process()` walks the ancestor chain. Native writes and
+  the Python helpers must run from a normal shell or a shortcut; from inside Claude Code they refuse by design (and three
+  subprocess-entry tests skip with an explicit reason, so run `tests/Run-SharedWorkspaceTests.py` from a normal shell).
+- **PowerShell 5.1 and accents.** Scripts containing non-ASCII text must be saved as UTF-8 **with BOM**; without it 5.1 reads
+  them as ANSI and mangles text and shortcut names. Native stderr inside `$ErrorActionPreference = 'Stop'` aborts 5.1: wrap
+  native calls with a local `Continue`.
+- **Pinning.** Pinning a running window's button creates a generic pin with the app icon. Pin the shortcut created by
+  `Install-ClaudeIdentity.ps1` instead. A pinned shortcut owns the button only if its AppUserModelID equals the window's.
+- **Commits.** Follow the user's global instruction: no AI attribution in commits or PRs.
 
 ## Conventions
 

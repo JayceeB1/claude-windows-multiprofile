@@ -138,10 +138,14 @@ if (-not $Apply) { Write-Host 'Preview only. Re-run with -Apply to install.'; re
 New-Item -ItemType Directory -Force -Path $identityDir | Out-Null
 $recorded = [ordered]@{}
 foreach ($item in $plan) {
-    Copy-Item -LiteralPath $item.Source -Destination $item.Dest -Force
+    # A repair re-installs from the installed icon: never copy a file onto itself.
+    if ([IO.Path]::GetFullPath($item.Source) -ine [IO.Path]::GetFullPath($item.Dest)) {
+        Copy-Item -LiteralPath $item.Source -Destination $item.Dest -Force
+    }
     $recorded[(Split-Path -Leaf $item.Dest)] = $item.Hash
 }
-[ordered]@{ schema = 1; appId = $AppId; name = $Name; shortcut = $shortcutPath; files = $recorded } |
+[ordered]@{ schema = 1; appId = $AppId; name = $Name; shortcut = $shortcutPath; profileDir = $ProfileDir.TrimEnd('\', '/')
+                configDir = $ConfigDir.TrimEnd('\', '/'); icon = $iconTarget; shortcutName = $ShortcutName; files = $recorded } |
     ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $manifestPath -Encoding UTF8
 
 . (Join-Path $identityDir 'Set-ClaudeWindowIdentity.ps1')

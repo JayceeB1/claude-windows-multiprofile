@@ -134,6 +134,37 @@ afterwards launching it needs no script. Verified on owned TEMP fixtures under P
 (`tests/Test-ClaudeIdentity.ps1`, real COM and a throwaway window, not run in CI because it needs
 an interactive desktop) and by the operator on the real B window.
 
+## Sharing the same setup in both profiles
+
+`scripts/Link-SharedConfig.py` points profile B's config at profile A's with directory junctions (no admin) and file
+symlinks (Windows Developer Mode): `skills`, `agents`, `plugins`, `mods`, `dev-mods`, `projects` (project memory and local Code
+transcripts), `CLAUDE.md`, `settings.json`, `keybindings.json`, and the Desktop `claude_desktop_config.json`. The user-level MCP
+server list is copied once into B's `.claude.json` (read from `~/.claude.json` when A uses the stock config dir). Credentials,
+the `.claude.json` identity, the Desktop `config.json` token cache and conversations are never linked or copied (`NEVER` in the
+script, asserted by a test). Preview by default, `--apply --approved` writes, `--rollback --approved` restores; non-empty targets
+are refused, differing files are replaced only with `--replace-files` after a recorded backup, and removing a link never follows
+it. It refuses from a packaged process tree and while B's Desktop is running.
+
+```powershell
+python -B scripts\Link-SharedConfig.py                                    # preview, writes nothing
+python -B scripts\Link-SharedConfig.py --apply --approved --replace-files  # B closed
+python -B scripts\Link-SharedConfig.py --rollback --approved               # B closed
+```
+
+## After a Claude update, and when a login is requested again
+
+- `scripts/Repair-ClaudeProfiles.ps1` (read-only by default, `-Fix` repairs) checks the package version against
+  `<InstallDir>\repair-state.json` (update detection), each profile's stored login (presence only), the identity launcher, the
+  router registration in the real registry and the shared links, and reports which app owns `claude://` links. `-Fix` only
+  reinstalls what this fork owns; it never touches logins, profile data or the default-app choice.
+- `scripts/Connect-ClaudeProfile.ps1 -Profile B` guides one re-login of B: it waits for the router to be chosen in Default apps
+  (the one click Windows reserves), arms B for one callback, opens B, waits until its stored login changes, then waits for the
+  official app to be chosen again and disarms. Nothing secret is read: only a hash of the stored entry is compared.
+- `scripts/Install-ClaudeTools.ps1 -Apply` creates `<Desktop>\Claude multi-comptes` with "Réparer Claude (A+B)",
+  "Reconnecter B" and "Mode opératoire" shortcuts that run the repository scripts directly.
+
+The French operator manual with every location and procedure is [docs/MODE-OPERATOIRE.md](docs/MODE-OPERATOIRE.md).
+
 ## Routing an explicitly selected login
 
 The [routing guide](docs/PROTOCOL-ROUTING.md) describes the current v2 contract.

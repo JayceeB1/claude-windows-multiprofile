@@ -510,6 +510,17 @@ was designed through the ChatGPT driver (one image, deterministic alpha/size che
 persists it as a new `identity` folder plus one shortcut; the receipt-owned `bin` is untouched. Pinning a *running window's* button
 creates a generic pin with the app's own icon: pin the shortcut instead. Fixture tests 39 assertions PS 5.1/7.
 
+## Shared config, repair and re-login (2026-10-07)
+
+`Link-SharedConfig.py` (junctions/symlinks, journal, rollback, never credentials/identity; 16 fixture contracts on real links),
+`Repair-ClaudeProfiles.ps1` (update detection, owned-only repairs; orchestration tested with doubles for the OS/Python edges,
+59 assertions PS 5.1/7), `Connect-ClaudeProfile.ps1` (guided B login around the one Windows-reserved click),
+`Install-ClaudeTools.ps1` (desktop shortcuts) and the French manual `MODE-OPERATOIRE.md`. Read-only classification of the real
+trees: 8 links, 1 backed-up replacement, 7 MCP servers to copy. Findings: descendants of a packaged process inherit
+virtualization without package identity, so subprocess-entry tests skip with a reason inside such trees; PS 5.1 needs a BOM for
+accented scripts; native stderr under `Stop` aborts 5.1. Applying the links, the first real repair and the first re-login of B are
+operator-run acceptance steps (NOT_RUN here: the tools refuse inside Claude Code by design).
+
 ## NEXT SLICE
 
 A/pilot marker matched; approved B provisioning retained, zero memory-key edits; B remains unlaunched.

@@ -139,7 +139,7 @@ public static class ClaudeIdentityNative {
         var link = (IShellLinkW)new ShellLinkObject();
         link.SetPath(target); link.SetArguments(arguments); link.SetWorkingDirectory(workDir);
         link.SetIconLocation(iconPath, 0); link.SetDescription(description); link.SetShowCmd(1);
-        Write((IPropertyStore)link, appId);
+        if (!string.IsNullOrEmpty(appId)) Write((IPropertyStore)link, appId);
         ((IPersistFile)link).Save(lnk, true);
     }
 
@@ -216,6 +216,6 @@ function New-ClaudeIdentityShortcut {
     <# Creates the shortcut (icon + AppUserModelID) that launches the identity launcher. #>
     param([Parameter(Mandatory)][string]$Path, [Parameter(Mandatory)][string]$Target, [string]$Arguments = '',
           [string]$WorkingDirectory = '', [Parameter(Mandatory)][string]$IconPath,
-          [Parameter(Mandatory)][string]$AppId, [string]$Description = '')
+          [string]$AppId = '', [string]$Description = '')
     [ClaudeIdentityNative]::WriteShortcut($Path, $Target, $Arguments, $WorkingDirectory, $IconPath, $Description, $AppId)
 }

@@ -124,8 +124,16 @@ $t = New-Object System.Windows.Forms.Timer; $t.Interval = 60000; $t.Add_Tick({ $
     }
     Assert-Equal 'receipt-owned bin folder is never created' $false (Test-Path -LiteralPath (Join-Path $install 'bin'))
 
+    $recordedParams = Get-Content -LiteralPath (Join-Path $install 'identity\identity.json') -Raw | ConvertFrom-Json
+    Assert-Equal 'manifest records the profile dir for repair' 'C:\Fixture\Claude-B' $recordedParams.profileDir
+    Assert-Equal 'manifest records the config dir for repair' 'C:\Fixture\.claude-b' $recordedParams.configDir
+    Assert-Equal 'manifest records the shortcut name for repair' 'Claude (B)' $recordedParams.shortcutName
     & (Join-Path $scripts 'Install-ClaudeIdentity.ps1') @common -Apply | Out-Null   # idempotent
     Assert-Equal 'rerun keeps the shortcut' $true (Test-Path -LiteralPath $shortcut)
+    # A repair reinstalls from the already installed icon: it must not copy the file onto itself.
+    $fromInstalled = $common.Clone(); $fromInstalled.IconPath = Join-Path $install 'identity\claude-b.ico'
+    & (Join-Path $scripts 'Install-ClaudeIdentity.ps1') @fromInstalled -Apply | Out-Null
+    Assert-Equal 'reinstall from the installed icon works' $true (Test-Path -LiteralPath $shortcut)
 
     # A user-edited installed file is not silently overwritten.
     $edited = Join-Path $install 'identity\Launch-Claude.ps1'

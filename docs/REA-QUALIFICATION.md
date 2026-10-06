@@ -4,9 +4,10 @@
 
 Research/qualification plan only.
 
-This document exists because GitHub Issues are disabled for this repository. It
-does **not** change runtime behavior, install REA, or declare any REA result as
-trusted evidence until the qualification below is completed.
+Originally drafted while GitHub Issues were disabled; they are now enabled. Remaining work is tracked in
+[REA-A2 / issue #3](https://github.com/JayceeB1/claude-windows-multiprofile/issues/3). This plan alone does not install
+REA or authorize adoption. The [packaged smoke receipt](REA-SMOKE-20261006.md) establishes a narrow synthetic result;
+full adoption, native provider readiness and Claude comparison remain unqualified.
 
 Primary upstream:
 
@@ -279,3 +280,13 @@ Do not start with Claude itself.
 
 If that PASSes, proceed to one archived Claude package pair.
 
+
+## Current qualified boundary — 2026-10-06
+
+Imported from documentation PR #2 without resetting this fork's implementation branch. REA 4.0.1 was evaluated in
+an isolated TEMP prefix with lifecycle scripts disabled and redirected home/cache paths, not globally configured.
+The packaged fixture subcase and independent reproduction are CORRECT; full verdict EXPERIMENTAL. File hashes and
+main.cjs delta are traceable; semantic node churn is not a changed-file count. Native ELF/PE and Claude pair NOT_RUN.
+The test-only Run-ReaPackagedSmoke.py accepts an installed pinned tool prefix, generates its own fixtures and installs
+nothing. It is not the future arbitrary-artifact qualification wrapper. Keep REA optional and the native multiprofile
+adapter track independent. Native 8.3 remains NOT_RUN. Full results/limitations are in the linked dated receipt.

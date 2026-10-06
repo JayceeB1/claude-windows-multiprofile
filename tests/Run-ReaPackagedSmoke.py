@@ -45,6 +45,8 @@ def smoke(tool_root, node):
     package = tool_root / 'node_modules' / 'rea-agents'
     if json.loads((package / 'package.json').read_bytes())['version'] != '4.0.1':
         raise RuntimeError('REA_PIN_MISMATCH')
+    if json.loads((tool_root / 'node_modules/@electron/asar/package.json').read_bytes())['version'] != '4.2.0':
+        raise RuntimeError('ASAR_BUILDER_PIN_MISMATCH')
     root = Path(tempfile.mkdtemp(prefix='rea-package-smoke-'))
     # Retained private raw evidence is intentional; cleanup is an explicit later action.
     home = root / 'home'

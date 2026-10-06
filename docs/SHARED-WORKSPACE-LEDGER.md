@@ -1,6 +1,6 @@
 # Shared workspace fork - implementation ledger
 
-Updated 2026-10-06 (chained fixture preparation and preview/package delivery). Delivery order and dependencies: [Shared workspace roadmap](SHARED-WORKSPACE-ROADMAP.md). This is the sole ledger. Requirements below are separate from implementation and evidence statuses.
+Updated 2026-10-06 (open-document reconciliation and optional REA packaged smoke). Delivery order and dependencies: [Shared workspace roadmap](SHARED-WORKSPACE-ROADMAP.md). This is the sole ledger. Requirements below are separate from implementation and evidence statuses.
 
 ## Contract
 
@@ -456,17 +456,12 @@ with saved work and separate consent if restart/instrumentation is needed.
 
 ## Desktop evidence and S3b/S3c/S4b fixture admission (2026-10-06)
 
-User-provided Desktop screenshot reports the second project's memory path and startup index loading; a scoped metadata
-complement is consistent (five entries, index present, no directory override). S4a admits planner/fixture development
-with DESKTOP_USER_REPORT/PARTIAL_LOCAL. Runtime MSIX A data-root and B loading remain unobserved. No topic contents read.
-S3b preview PASS: 30 Windows tests. Explicit provenance/trust/policy refusal, native paths, distinct project maps, no writes.
-S3c API-only transactions PASS: 48 tests (30 planner + 18 apply/recovery); selected-key journals, closed-writer ack,
-nonblocking lock, unrelated-edit preservation, replaced-target refusal; no real apply. S4b additive preview PASS: 40 tests
-(30 planner + 10 workspace cases), no writes; refuse existing assets/shortcuts and preserve A's original entry point.
-Archive has no explicit license grant: no verbatim module redistribution; independent adaptation retains design lineage.
-[Detailed qualification receipts](SHARED-WORKSPACE-QUALIFICATION.md) retain scope, test disposition and IO limitations.
-Terminal/embedded Code versions differ; scratch projects have independent memory. No auth-storage/env-persistence inference.
-Native 8.3 remains NOT_RUN. No package/profile mutation, real install/share/apply/restore/login/restart performed.
+Desktop operator path/startup report plus scoped metadata admit fixture preparation (PARTIAL_LOCAL); A data-root/B
+loading remain unobserved. S3b: 30 original planner contracts; S3c: 18 apply/recovery plus 30 regressions; S4b: 10
+additive preview plus 30 regressions. Later namespace regression brings planner to 31 contracts. No real apply.
+No archive license grant: independently authored adaptation retains lineage, without verbatim redistribution.
+[Detailed receipts](SHARED-WORKSPACE-QUALIFICATION.md) retain commits, test disposition and IO limits. Terminal/embedded
+Code installations differ; scratch memory is independent. No auth-storage/env inference. Native 8.3 remains NOT_RUN.
 
 ## S4c fixture installation (2026-10-06)
 
@@ -491,7 +486,15 @@ protected/exclusive output, credential-named input refusal, allowlisted package 
 No native mutation actions. README/manual procedure supersede legacy Setup/Uninstall recipes. Native OS adapter and
 S5 trials remain NOT_RUN; this closes preparation, not actual two-account acceptance. Optional global sharing omitted.
 
+## New document/issue reconciliation and REA-A1 (2026-10-06)
+
+PR #2 document-only commit aeb8cb8 admitted as 8d1b672; no old implementation snapshot merged. Issues changed from
+disabled to enabled during this review; connected JayceeB1 has admin/push/triage rights. Follow-up [#3](https://github.com/JayceeB1/claude-windows-multiprofile/issues/3) created.
+REA-A1 (`c5389b7`): pinned 4.0.1 packaged fixture and reproduction CORRECT, adoption EXPERIMENTAL; seven classified
+questions, exact artifact/resource hashes and main.cjs delta. Generic compare UNKNOWN; graph churn PARTIAL. Initial
+Startup timeout/CRLF repair retained; [receipt](REA-SMOKE-20261006.md). ELF/PE/Claude pair/runtime/8.3 NOT_RUN; no global setup, normal-use dependency or real profile mutation/isolation proof.
+
 ## NEXT SLICE
 
-Review/admit a native Windows adapter, then separately authorized S5a/S5b local qualification. Desktop path evidence
-is accepted for preparation; do not repeat the CLI-only blocker. No real install/share/apply/restore/login/restart yet.
+Main: native adapter implementation/admission, then separately authorized S5 trials. Optional REA-A2 follows issue #3;
+remaining native-provider/source-built and archived-pair evidence is unqualified. Desktop path evidence remains accepted.

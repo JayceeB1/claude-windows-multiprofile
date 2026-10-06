@@ -387,6 +387,19 @@ S3b/S3c fixture results remain separate from that Desktop gate. Native 8.3 stays
   autoMemoryDirectory loading/read-write evidence, not only a settings-key match.
 - Stop: delivery decision and report; no automatic merge, deployment or restart.
 
+## Optional REA artifact investigation track
+
+New documentation PR #2 supplies [REA-QUALIFICATION.md](REA-QUALIFICATION.md); only its document is admitted,
+not the old branch snapshot. This optional track does not replace native profile protections or existing regressions.
+REA-A1: packaged fixture smoke at pinned REA 4.0.1 is VERIFIED_SYNTHETIC, adoption EXPERIMENTAL. Exact source recipe,
+artifact hashes, structured questions and limitations are in [the dated receipt](REA-SMOKE-20261006.md).
+REA-A2: complete source-built ELF/native PE and explicit provider readiness, then a genuinely archived Claude pair;
+[issue #3](https://github.com/JayceeB1/claude-windows-multiprofile/issues/3) tracks these unexecuted gates. No global setup,
+mandatory dependency, authenticated-process attachment, provider auto-install or automatic runtime promotion.
+Large-target REA issues #623/#746 stay unconfirmed local risks. Claude Code #33619 remains open; #57529 is a closed
+duplicate, not a confirmed cause of this user's folder button failure. GitHub Issues are now enabled; both issue and
+PR creation permissions were read back for the connected account. REA output must preserve OBSERVED/INFERRED/UNKNOWN.
+
 ## Current continuation boundary
 
 S2-D2, S3a review, Desktop operator evidence and S3b/S3c/S4b-e preparation are delivered on Windows fixtures.

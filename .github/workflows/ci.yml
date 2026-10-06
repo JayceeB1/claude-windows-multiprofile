@@ -83,3 +83,13 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           & .\tests\Test-ShimLogging.ps1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Shared workspace fixture qualification (no native Desktop)
+        run: |
+          python -B .\tests\Run-SharedWorkspaceTests.py
+          if ($LASTEXITCODE -ne 0) { throw 'Shared workspace fixture qualification failed.' }
+          & .\tests\Test-Uninstall.ps1

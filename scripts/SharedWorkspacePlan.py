@@ -214,7 +214,7 @@ def check_owned_record(record, adapter):
               'b_roots', 'directories', 'files', 'protocol_change', 'protocol_before',
               'protocol_written', 'protocol_applied'}
     if set(record) != fields or record['schema'] != 1 or record['surface'] != 'synthetic_fixture' or \
-            record['phase'] not in ('installing', 'installed', 'b_removed'):
+            record['phase'] not in ('installing', 'installed', 'b_removed', 'b_removing'):
         raise bridge.BridgeError('OWNERSHIP_SCHEMA')
     install = adapter.check(Path(record['install']))
     if bridge.identity(install) != record['install_identity']:
@@ -271,3 +271,75 @@ def rollback_fixture(install: Path, adapter: FixtureWindows, *, writers_closed: 
     if not any(install.iterdir()):
         install.rmdir()
     return {'status': 'ROLLED_BACK_FIXTURE', 'b_data_retained': True, 'official_package_removal': False}
+
+
+def remove_b_fixture(install: Path, adapter: FixtureWindows, *, writers_closed: bool, delete_b_data=False):
+    """Remove only receipt-owned B additions; retain A routing and official package."""
+    if writers_closed is not True or type(adapter) is not FixtureWindows or type(delete_b_data) is not bool:
+        raise bridge.BridgeError('FIXTURE_CLOSED_WRITERS_REQUIRED')
+    install = adapter.check(install)
+    receipt = install / 'ownership.json'
+    record, _ = read_receipt(receipt)
+    check_owned_record(record, adapter)
+    if record['phase'] not in ('installed', 'b_removed'):
+        raise bridge.BridgeError('PARTIAL_INSTALL_OR_REMOVAL_REQUIRES_REVIEW')
+    if record['protocol_applied'] and adapter.protocol != record['protocol_written']:
+        raise bridge.BridgeError('PROTOCOL_CONFLICT')
+    for name in ('target.txt', 'route.state.json', 'route.log', 'route.lock'):
+        sidecar = install / 'bin' / name
+        if sidecar.exists():
+            if name == 'route.lock':
+                with transactions.locked(sidecar):
+                    raise bridge.BridgeError('UNOWNED_RUNTIME_LOCK_REQUIRES_REVIEW')
+            raise bridge.BridgeError('RUNTIME_SIDECAR_REQUIRES_REVIEW')
+    b_directories = [entry for entry in record['directories'] if entry['path'] in record['b_roots']]
+    if delete_b_data:
+        count = 0
+        for entry in b_directories:
+            root = adapter.check(Path(entry['path']))
+            for folder, directories, files in os.walk(root, followlinks=False):
+                for name in directories + files:
+                    count += 1
+                    if count > bridge.MAX_ENTRIES:
+                        raise bridge.BridgeError('B_DELETION_INSPECTION_LIMIT')
+                    path = adapter.check(Path(folder) / name)
+                    if path.is_file() and path.stat().st_nlink != 1:
+                        raise bridge.BridgeError('B_DELETION_ALIAS_REFUSED')
+    if record['phase'] == 'b_removed' and not delete_b_data:
+        return {'status': 'B_ALREADY_REMOVED_FIXTURE', 'b_data_retained': True}
+    record['phase'] = 'b_removing'
+    save_receipt(receipt, record)
+    manifest = install / 'bin' / 'profiles.json'
+    before = bridge.read_optional(manifest)
+    profiles = bridge.object_json(before)
+    if set(profiles['profiles']) not in ({'A', 'B'}, {'A'}):
+        raise bridge.BridgeError('MANIFEST_MAPPING_CHANGED')
+    profiles['profiles'].pop('B', None)
+    after = transactions.encode(profiles)
+    transactions.replace_checked(manifest, after, before)
+    for entry in record['files']:
+        if entry['path'] == str(manifest):
+            entry.update(sha256=bridge.digest(after), identity=bridge.identity(manifest))
+    record['manifest_sha256'] = bridge.digest(after)
+    save_receipt(receipt, record)
+    for entry in list(record['files']):
+        path = Path(entry['path'])
+        if path.suffix.lower() == '.lnk':
+            spec = bridge.object_json(bridge.read_optional(path)).get('fixture_shortcut', {})
+            if spec.get('role') == 'B':
+                adapter.check(path).unlink()
+                record['files'].remove(entry)
+                save_receipt(receipt, record)
+    if delete_b_data:
+        import shutil
+        for entry in b_directories:
+            root = adapter.check(Path(entry['path']))
+            if bridge.identity(root) != entry['identity']:
+                raise bridge.BridgeError('B_DELETION_IDENTITY_CHANGED')
+            shutil.rmtree(root)  # Explicit fixture-only deletion, checked absolute TEMP roots.
+            record['directories'].remove(entry)
+            save_receipt(receipt, record)
+    record['phase'] = 'b_removed'
+    save_receipt(receipt, record)
+    return {'status': 'B_REMOVED_FIXTURE', 'b_data_retained': not delete_b_data,
+            'a_routing_retained': True, 'memory_deleted': False, 'official_package_removal': False}

@@ -42,3 +42,18 @@ Preserve existing A entry point and refuse pre-existing launcher roots/shortcuts
 Preview does not install, create shortcuts, read account stores or modify the registry. Recheck source hashes and all
 physical inputs before execution. 40 Windows cases PASS (30 planner + 10 additive preview cases), zero skips.
 Actual missing A data-root/MSIX runtime evidence remains a real-install qualification boundary.
+
+## S4c/S4d fixture install and removal (2026-10-06)
+
+S4c: 52 Windows tests PASS (40 prior plus 12 installation/default-guard cases). The OS adapter is explicitly
+synthetic and confined to owned TEMP fixtures: JSON shortcut doubles and in-memory protocol values do not prove
+native COM links or registry changes. New directories/files have physical identity and content-hash receipts.
+Repeated install, partial failure, unrelated assets/shortcuts, changed inputs and protocol conflicts are covered.
+Rollback retains B data by default. Unknown runtime sidecars and even released unowned locks require review.
+
+S4d model: 61 tests PASS (52 prior plus 9 removal cases), zero skips. Retain B data by default; separate explicit
+fixture deletion checks root IDs, nesting, reparse/hardlink descendants and bounded enumeration. Preserve A shortcut,
+A-only routing metadata/assets, official Claude package, original project and memory bytes. Refuse modified shortcuts,
+held locks, partial installations and later protocol owners. Unowned released sidecars are preserved rather than
+claimed for cleanup by name. Partial execution is not an all-or-nothing transaction against external writers.
+No native installation/removal, actual registry operation, package uninstall or project/profile mutation performed.

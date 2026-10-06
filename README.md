@@ -5,12 +5,62 @@ and Code configuration roots, using the same existing project folders and
 explicitly selected project memory. Preserve the working account A in place;
 add account B without migrating projects or requiring worktrees.
 
-**Delivery status:** routing and the passive diagnostic are qualified on fixtures.
-Safe additive installation, memory adoption and two-Desktop acceptance remain
-unfinished. Follow the [ledger](docs/SHARED-WORKSPACE-LEDGER.md) and
-[roadmap](docs/SHARED-WORKSPACE-ROADMAP.md). Do not run the current Setup or
-Uninstall against the working installation before the corresponding ownership,
-preview and rollback gates are delivered and the local operation is authorized.
+**Delivery status:** routing/diagnostic, memory planner/transactions and additive install/removal are qualified on
+Windows fixtures. Desktop operator evidence is recorded for selected A memory. Native additive execution, B memory
+loading and two-Desktop acceptance remain unqualified. The current entry supports preview and packaging only;
+Setup/Uninstall refuse native mutations. Follow the [ledger](docs/SHARED-WORKSPACE-LEDGER.md),
+[roadmap](docs/SHARED-WORKSPACE-ROADMAP.md) and [qualification receipts](docs/SHARED-WORKSPACE-QUALIFICATION.md).
+
+## Preview-first shared workspace
+
+Requires Windows and Python 3.12+, standard library only. Nothing installs dependencies or launches Claude.
+Keep a private specification outside Git, named `*.workspace.local.json`. It explicitly declares A's existing
+`dataDir`/`configDir`, B's new distinct roots, the launcher install parent, Desktop shortcut folder and each existing
+project's own memory mapping. Unknown config provenance, trust, managed/CLI overrides or version evidence refuses a plan.
+Operator-reported Desktop paths are recorded as such; equal CLI/Desktop paths do not prove B loading or MSIX redirection.
+
+```powershell
+python -B scripts/SharedWorkspace.py help
+python -B scripts/SharedWorkspace.py preview --spec "$env:TEMP\claude.workspace.local.json"
+# Optional private exact paths/key changes/hashes; new file only, outside observed roots:
+python -B scripts/SharedWorkspace.py preview --spec "$env:TEMP\claude.workspace.local.json" --output "$env:TEMP\claude-preview.local.md"
+# Allowlisted self-contained code/docs archive with PACKAGE.json hashes, no profiles or private receipts:
+python -B scripts/SharedWorkspace.py package --output "$env:TEMP\claude-workspace-reviewed.zip"
+```
+
+Private specification shape (replace placeholders; mark evidence true only when established):
+
+```json
+{
+  "schema": 1,
+  "profiles": {
+    "A": {"dataDir": "C:\\PATH\\ExistingAData", "configDir": "C:\\PATH\\ExistingAConfig"},
+    "B": {"dataDir": "C:\\PATH\\NewBData", "configDir": "C:\\PATH\\NewBConfig"}
+  },
+  "projects": [{
+    "project": "F:\\PATH\\ExistingProject",
+    "memory": "C:\\PATH\\ExistingAConfig\\projects\\SelectedProject\\memory",
+    "evidence": {
+      "config_provenance": false, "memory_provenance": false,
+      "trust_confirmed": false, "external_policy_reviewed": false,
+      "version": "OBSERVED_VERSION", "surface": "desktop_user_report"
+    }
+  }],
+  "install_dir": "C:\\PATH\\NewLauncher",
+  "desktop_dir": "C:\\PATH\\ExistingDesktop",
+  "protocol": {"change": false, "consent": false, "expected_before": null}
+}
+```
+
+Preview never creates B or memory folders. Existing launcher roots/shortcut names are refused, not adopted.
+Selected project instructions/settings stay on disk. Preview exposes only the `autoMemoryDirectory` change and hashes,
+never whole settings/env/hooks. Fixture rollback preserves later unrelated edits and refuses changed/replaced owned targets.
+B removal retains its data by default, keeps A routing, and never uninstalls the official Claude package.
+
+The installation OS adapter is currently a TEMP-bounded fixture double. JSON shortcut doubles and in-memory protocol
+values are not native .lnk/registry proof. Native adapter admission and separately authorized local trials remain required;
+`apply`, `install`, `remove` and `restore` commands are deliberately unavailable. Do not treat this package as a live installer.
+See the [manual acceptance procedure](MANUAL-TEST.md) before any native operation.
 
 ## Existing mechanism
 
@@ -97,18 +147,18 @@ simultaneous Cowork VMs are outside this fork's acceptance scope.
 ## Development and evidence
 
 PowerShell launch/routing scripts target Windows PS5.1 and PS7 without admin
-rights. Python 3.12+ runs the process fixture harness; the future reviewed bridge
-may have its own prerequisites. Existing runtime scripts do not install dependencies.
+rights. Python 3.12+ runs the process fixture harness and reviewed bridge preparation. Existing runtime scripts do not install dependencies.
 
 ```powershell
+python -B tests/Run-SharedWorkspaceTests.py
 python tests/Test-RoutingProcesses.py
 powershell -NoProfile -File tests\Test-RoutingDiagnostic.ps1
 pwsh -NoProfile -File tests\Test-RoutingDiagnostic.ps1
 ```
 
 These tests use synthetic accounts and owned TEMP metadata. They do not launch
-Claude. CI runs its existing parser, analyzer and routing regressions; it does
-not yet execute either new fixture matrix. Actual A/B identity, configuration,
+Claude. CI runs parser/analyzer/routing regressions and the shared-workspace fixture matrix; Q1/Q2 and D1 runtime
+receipts remain separately qualified. Actual A/B identity, configuration,
 shared memory and removal remain local acceptance gates. PR #1 stays draft.
 
 ## Credits and license

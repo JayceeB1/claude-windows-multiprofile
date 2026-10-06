@@ -1,92 +1,48 @@
-# Manual test checklist
+# Local acceptance procedure — no automatic execution
 
-Automated tests can't exercise Windows protocol activation, MSIX, or the
-Settings UI, so run this on a real machine after changing the setup/router
-scripts. Parameterised on purpose — substitute your own values:
+This checklist is a future separately authorized native trial, not instructions to run the blocked legacy installer.
+Current automated installation/removal uses an explicit TEMP-only OS double. Native adapter admission is still required.
+The sole [ledger](docs/SHARED-WORKSPACE-LEDGER.md) governs status; fixtures cannot establish native acceptance.
 
-| Placeholder | Meaning | Example |
-|---|---|---|
-| `<INSTALL_DIR>` | `-InstallDir` (bin lives at `<INSTALL_DIR>\bin`) | `%USERPROFILE%\ClaudeProfiles` |
-| `<DEFAULT>` | profile bound to the stock paths | `Personal` |
-| `<ISOLATED>` | an isolated profile | `Work` |
-| `<ISOLATED_DIR>` | its data dir | `%APPDATA%\Claude-Work` |
+## Evidence already available
 
-`<BIN>` below means `<INSTALL_DIR>\bin`.
+- Routing/diagnostic process and shared-workspace fixture receipts are retained separately.
+- User-provided Desktop Code screenshot reports a selected project's memory path and MEMORY.md startup loading.
+- Scoped metadata/settings observations agree with that report; no memory/secret/session contents were read.
+- Terminal CLI and embedded Code binaries are separate installations. Scratch projects have independent memory roots.
+- Registered package versions changed across historical receipts. Never reuse a historical version as current proof.
 
----
+## Before native adapter admission and local installation
 
-## 0. Prerequisite
+- [ ] Save active A work. Keep A's existing icon/session, actual projects and official Claude package intact.
+- [ ] Record registered package version and running UI/embedded Code version before the trial; distinguish them.
+- [ ] Review the exact native adapter, plan, owned additions and rollback contract. Current Setup/Uninstall refuse writes.
+- [ ] Obtain separate authorization for real B installation, selected memory edits and any orderly restart.
+- [ ] Confirm A's effective Desktop data/config paths, project trust and managed/CLI/environment settings precedence.
+- [ ] Preview explicit missing B roots, independent launcher parent, new labeled shortcuts and per-project memory map.
+- [ ] Check memory is outside every B deletion root, A Desktop stores and project settings tree. Keep projects in place.
+- [ ] Inspect minimal non-secret backups; never copy whole config/account roots or settings containing env secrets.
+- [ ] Treat protocol registration as a distinct approved change with current-value snapshots and ownership checks.
 
-- [ ] Only the **MSIX** Claude app is installed
-      (`Get-AppxPackage *Claude*` returns a package;
-      `Test-Path "$env:LOCALAPPDATA\AnthropicClaude"` is `$false`, or you accept
-      the Squirrel-leftover warning).
+## S5a browser-focus hypothesis — NOT_RUN
 
-## 1. Fresh setup (acceptance #1)
+- [ ] Choose B explicitly and verify the intended browser account locally; close stale login tabs.
+- [ ] Observe HTTPS destination window/profile, its authenticated account and returned claude:// target separately.
+- [ ] Perform one supported login flow at a time. Browser focus is a hypothesis, never implicit account selection.
+- [ ] Preserve state/PKCE; a delayed old callback may consume a new arm. No A fallback or automatic retry.
+- [ ] Record observed/failed/inconclusive; harmless HTTPS navigation alone does not prove login behavior.
 
-- [ ] `powershell -ExecutionPolicy Bypass -File scripts\Setup.ps1 -Profile <DEFAULT>,<ISOLATED> -DefaultProfile <DEFAULT>`
-      completes with no errors.
-- [ ] Desktop has **Claude (\<DEFAULT>)** and **Claude (\<ISOLATED>)** shortcuts.
-- [ ] `<BIN>` contains `ClaudeOpenShim.ps1`, `Arm-ClaudeLogin.ps1`,
-      `profiles.json`, `claude.ico`, `Launch-Claude.ps1`, `launch.vbs`.
-- [ ] `profiles.json` shows `<DEFAULT>` with `"isDefault": true` and stock
-      `%APPDATA%\Claude`; `<ISOLATED>` with `%APPDATA%\Claude-<ISOLATED>`.
-- [ ] Setup printed the **one manual step** block (Settings → Default apps →
-      link type → `claude` → **Console Window Host**).
-- [ ] Do the Settings pick.
-- [ ] `powershell -ExecutionPolicy Bypass -File scripts\Test-ClaudeRouting.ps1`
-      → **UserChoice ProgId = ClaudeShim.claude**, and the
-      `claude://test/ping` probe shows a **fresh `route.log` line**.
+## S5b two-Desktop acceptance — NOT_RUN
 
-## 2. Armed routing with both instances running (acceptance #2)
+- [ ] A usable before/after adding B; observe actual A/B identities and distinct config roots locally without secrets.
+- [ ] Both Code windows open the same existing disposable project path; no migration or worktree requirement.
+- [ ] Observe each window loading the selected memory path/index, not only matching settings keys.
+- [ ] On an approved disposable memory fixture, demonstrate A write/B read and B write/A read.
+- [ ] Another project's memory remains excluded. Use one writer per project, managed by the user.
+- [ ] Verify persistence after a separately agreed orderly restart, with saved work; never force stop/logout.
+- [ ] Remove receipt-owned B additions only; data retained by default and deletion separately authorized.
+- [ ] A still usable, A routing retained where needed, project/memory bytes and official package preserved.
+- [ ] Recheck installed/running versions after; account for updates and possible server-side feature rollout.
 
-- [ ] Launch **both** profiles (both windows open).
-- [ ] `& "<BIN>\Arm-ClaudeLogin.ps1" -Profile <ISOLATED>` prints
-      `Armed: … [<ISOLATED>] (target: <ISOLATED_DIR>)`.
-- [ ] Start a browser login for the `<ISOLATED>` account; complete SSO.
-- [ ] The callback lands in the **`<ISOLATED>`** window (token/account correct).
-- [ ] `Get-Content "<BIN>\target.txt"` now reads `default`.
-- [ ] `route.log` last line shows `<ISOLATED_DIR> <- claude://…`.
-
-## 3. Unarmed = safe resting state (acceptance #3)
-
-- [ ] Without arming, fire `Start-Process "claude://test/ping"`.
-- [ ] `route.log` shows `default <- claude://test/ping` (routes to the stock
-      profile, not an isolated one).
-
-## 4. Spaces in path survive quoting (acceptance #4)
-
-- [ ] Set up a profile whose data dir contains a space (e.g.
-      `-DataDir @{ ClientA = "$env:APPDATA\Claude-Client A" }`).
-- [ ] Arm + launch it.
-- [ ] `Get-CimInstance Win32_Process -Filter "Name='Claude.exe'" | Select CommandLine`
-      shows `--user-data-dir="…\Claude-Client A"` as **one quoted value** (not
-      truncated at the space). `Test-ClaudeRouting.ps1` reports it intact.
-- [ ] `powershell -ExecutionPolicy Bypass -File tests\Test-ArgBuilder.ps1` passes.
-
-## 5. Uninstall symmetry (acceptance #5)
-
-- [ ] `powershell -ExecutionPolicy Bypass -File scripts\Uninstall.ps1` (no
-      `-RemoveData`) removes shortcuts + router files + registry entries.
-- [ ] Profile **data dirs still exist** (no data loss without `-RemoveData`).
-- [ ] Registry: `HKCU:\Software\Classes\ClaudeShim.claude`,
-      `HKCU:\Software\ClaudeShim`, and
-      `RegisteredApplications\ClaudeShim` are **gone**; the classic `claude` key
-      is restored from backup or removed.
-- [ ] A normal `claude://` login now works via the app's own MSIX registration.
-- [ ] `Uninstall.ps1 -RemoveData` additionally deletes `<ISOLATED_DIR>` and its
-      config dir, but **never** `%APPDATA%\Claude` / the default `~\.claude`.
-
-## 6. Hygiene (acceptance #6, #8)
-
-- [ ] No admin prompt appeared during any step.
-- [ ] `Invoke-ScriptAnalyzer -Path . -Recurse -Severity Error` is clean.
-- [ ] `git check-ignore HANDOFF-claude-desktop-clone-fork.md LOCAL-NOTES.local.md`
-      lists both (they're excluded).
-- [ ] `git grep -nEi "<your-username>|<employer-name>" -- ':!*.local.md' ':!HANDOFF*'`
-      finds nothing machine-specific in tracked, pushable files.
-
-## 7. Recovery: "Windows reset my UserChoice"
-
-- [ ] Re-pick the router in Settings (link type `claude` → Console Window Host).
-- [ ] Re-run `Test-ClaudeRouting.ps1`; the ping probe logs a fresh line again.
+Native 8.3 remains NOT_RUN on the local qualification host. No native shortcut/registry/installation/removal PASS exists.
+Unobserved gates stay NOT_RUN/PARTIAL; no release/merge decision until native acceptance is met.

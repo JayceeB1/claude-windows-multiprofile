@@ -489,7 +489,14 @@ Modified/aliased roots/shortcuts, occupied locks, partial installs and changed p
 Uninstall.ps1 now refuses native cleanup before mutation; Test-Uninstall.ps1 passes under PS5.1 and PS7.
 No stock-name fallback, package removal or actual profile deletion. Native removal remains NOT_RUN.
 
+## S4e preview/package entry (2026-10-06)
+
+50 Windows cases PASS (40 prior + 10 entry/package), no skips: offline preview/help, exact private key/hash reports,
+protected/exclusive output, credential-named input refusal, allowlisted package hashes and extracted relative imports.
+No native mutation actions. README/manual procedure supersede legacy Setup/Uninstall recipes. Native OS adapter and
+S5 trials remain NOT_RUN; this closes preparation, not actual two-account acceptance. Optional global sharing omitted.
+
 ## NEXT SLICE
 
-S4c/S4d are fixture-qualified; native execution is not admitted. Finish S4e preview-first entry and qualification guide. Real
-install/share/apply/restore/login/restart remain separately scoped; keep A, projects and official Claude installed.
+Review/admit a native Windows adapter, then separately authorized S5a/S5b local qualification. Desktop path evidence
+is accepted for preparation; do not repeat the CLI-only blocker. No real install/share/apply/restore/login/restart yet.

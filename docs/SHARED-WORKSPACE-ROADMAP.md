@@ -389,8 +389,8 @@ S3b/S3c fixture results remain separate from that Desktop gate. Native 8.3 stays
 
 ## Current continuation boundary
 
-S2 through D2, S4a implementation and S3a archive review are delivered. The user supplied Desktop Code path/startup
-memory evidence on 2026-10-06; local selected-key/metadata inspection is consistent. This operator evidence admits S3b
-planner/fixture preparation. It does not certify MSIX data redirection, managed/CLI policies or B runtime loading.
-S3b planner is qualified on fixtures; chain S3c and S4b-e without routine approval. Each actual plan still rejects unknown
-trust/config/policy evidence. Real installation, project/profile apply/restore, login or restart remains separately scoped.
+S2-D2, S3a review, Desktop operator evidence and S3b/S3c/S4b-e preparation are delivered on Windows fixtures.
+SharedWorkspace.py provides preview/package only. Native OS adapter admission and S5a/S5b remain unqualified;
+fixture shortcut JSON/registry doubles cannot prove native installation. Setup/Uninstall refuse full native invocation.
+Real installation, project/profile share/apply/restore, login, removal or restart still needs separate local authorization.
+The earlier CLI-only/Desktop-path blocker is superseded by the user's Desktop screenshot, not generalized to all projects.

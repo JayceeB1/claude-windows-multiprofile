@@ -502,6 +502,14 @@ package identity, so `NativeWindowsIO.require_unpackaged_process()` walks the an
 Open: receipt references the redirected `Claude-B` root (`NativeWorkspace.load` refuses from real processes); B launch,
 B config/memory and two-Desktop acceptance remain NOT_RUN. See [report](S5-MSIX-VIRTUALIZATION-20261006.md).
 
+## Taskbar identity for B (2026-10-06)
+
+Windows grouped A and B under the package AppUserModelID (both windows reported an empty explicit id). Setting an explicit id plus
+`WM_SETICON` on B's windows from a separate process split the taskbar button; the operator saw the second blue "B" button. The icon
+was designed through the ChatGPT driver (one image, deterministic alpha/size check, local normalisation). `Install-ClaudeIdentity.ps1`
+persists it as a new `identity` folder plus one shortcut; the receipt-owned `bin` is untouched. Pinning a *running window's* button
+creates a generic pin with the app's own icon: pin the shortcut instead. Fixture tests 39 assertions PS 5.1/7.
+
 ## NEXT SLICE
 
 A/pilot marker matched; approved B provisioning retained, zero memory-key edits; B remains unlaunched.

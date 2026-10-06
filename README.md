@@ -112,6 +112,28 @@ are already common on disk. Selected project memory requires an explicit mapping
 credentials, account logins, connectors and complete config roots stay separate.
 There is no cloud conversation merge, account rotation or global root sharing.
 
+## Separate taskbar button and icon for the second profile
+
+Both profiles run the same packaged executable, so Windows groups them under one taskbar button.
+`scripts/Install-ClaudeIdentity.ps1` adds an independent launcher that gives one profile its own
+AppUserModelID and window icons (only documented shell properties and `WM_SETICON`, set from a
+separate hidden process; nothing is injected into Claude). It is preview-first, writes only a new
+`<InstallDir>\identity` folder and one shortcut it can recognise as its own, and never touches the
+receipt-owned `bin` folder, profile data, registry or the official package.
+
+```powershell
+# Preview, then install. Supply your own .ico (the repo ships no Claude artwork).
+.\scripts\Install-ClaudeIdentity.ps1 -Name B -ProfileDir "$env:APPDATA\Claude-B" -ConfigDir "$env:USERPROFILE\.claude-b" -IconPath C:\icons\claude-b.ico
+.\scripts\Install-ClaudeIdentity.ps1 -Name B -ProfileDir "$env:APPDATA\Claude-B" -ConfigDir "$env:USERPROFILE\.claude-b" -IconPath C:\icons\claude-b.ico -Apply
+# Remove exactly what it created (unpin a taskbar copy by hand):
+.\scripts\Install-ClaudeIdentity.ps1 -Name B -Remove -Apply
+```
+
+Pin the created shortcut (not a running window's button: Windows then pins the generic app) once;
+afterwards launching it needs no script. Verified on owned TEMP fixtures under PS 5.1 and 7
+(`tests/Test-ClaudeIdentity.ps1`, real COM and a throwaway window, not run in CI because it needs
+an interactive desktop) and by the operator on the real B window.
+
 ## Routing an explicitly selected login
 
 The [routing guide](docs/PROTOCOL-ROUTING.md) describes the current v2 contract.

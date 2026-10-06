@@ -521,6 +521,15 @@ virtualization without package identity, so subprocess-entry tests skip with a r
 accented scripts; native stderr under `Stop` aborts 5.1. Applying the links, the first real repair and the first re-login of B are
 operator-run acceptance steps (NOT_RUN here: the tools refuse inside Claude Code by design).
 
+## Code sessions shared with B (2026-10-07)
+
+Operator observed B's Code sidebar empty. Session records live in `<dataDir>\claude-code-sessions\<account>\<organisation>` and
+carry no account identifier, so `Link-SharedConfig.py` now junctions B's organisation folder to A's (80 local sessions over 20
+projects at the time). Transcripts already resolve through the shared `projects` link. B's scheduled-tasks file (empty in both) is
+set aside and restored on rollback; B's own `local_*` records refuse the link. Shared scheduled tasks and the same session open in
+both windows are documented caveats. 20 fixture contracts; real-tree classification read-only (link, dir_backup). NOT_RUN on the
+real tree: applied by the operator through the repair shortcut.
+
 ## NEXT SLICE
 
 A/pilot marker matched; approved B provisioning retained, zero memory-key edits; B remains unlaunched.

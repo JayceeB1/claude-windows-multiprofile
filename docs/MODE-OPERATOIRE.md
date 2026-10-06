@@ -52,6 +52,9 @@ tes deux comptes ouverts d'un jour à l'autre.
 **Partagé en direct** (ce que fait l'un se voit chez l'autre) : tes skills, agents, plugins, mods,
 les **projets avec leur mémoire**, ton `CLAUDE.md` global, tes réglages (`settings.json`) et la configuration
 des serveurs MCP du Desktop. Tes dossiers de projets sont de toute façon les mêmes sur le disque.
+La **liste des sessions Claude Code** (la barre latérale « Récents » de l'onglet Code, avec ses projets) est aussi
+partagée : une session démarrée dans A se retrouve dans B et inversement, et se reprend depuis l'un ou l'autre compte
+(par exemple quand un compte a atteint sa limite). Ouvre la même session dans une seule fenêtre à la fois.
 
 **Copié une fois** : la liste de tes serveurs MCP de niveau utilisateur (lue dans `C:\Users\JC\.claude.json`,
 copiée dans `C:\Users\JC\.claude-b\.claude.json`). Si tu en ajoutes
@@ -59,7 +62,11 @@ un dans A plus tard, lance « Réparer » ; si B en a déjà une liste différen
 l'état et te le signale (voir le dépannage).
 
 **Jamais partagé, par sécurité** : la connexion, les jetons, les identifiants, l'identité du compte, les
-cookies, et les **conversations** (elles appartiennent à chaque compte, d'où une barre latérale vide au début).
+cookies, et les **conversations du chat claude.ai** de chaque compte (elles sont stockées sur les serveurs
+d'Anthropic, rattachées à ton compte, et rien ne peut les fusionner). Seules les sessions **Claude Code locales**
+sont partagées. Les tâches planifiées du Code sont dans le même dossier que les sessions : elles sont donc
+communes aux deux comptes (il n'y en a aucune aujourd'hui ; si tu en crées, évite d'ouvrir A et B en même temps
+au moment prévu).
 
 ## 4. Après une mise à jour de Claude
 

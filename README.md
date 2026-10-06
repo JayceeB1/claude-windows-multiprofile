@@ -140,8 +140,10 @@ an interactive desktop) and by the operator on the real B window.
 symlinks (Windows Developer Mode): `skills`, `agents`, `plugins`, `mods`, `dev-mods`, `projects` (project memory and local Code
 transcripts), `CLAUDE.md`, `settings.json`, `keybindings.json`, and the Desktop `claude_desktop_config.json`. The user-level MCP
 server list is copied once into B's `.claude.json` (read from `~/.claude.json` when A uses the stock config dir). Credentials,
-the `.claude.json` identity, the Desktop `config.json` token cache and conversations are never linked or copied (`NEVER` in the
-script, asserted by a test). Preview by default, `--apply --approved` writes, `--rollback --approved` restores; non-empty targets
+the `.claude.json` identity and the Desktop `config.json` token cache are never linked or copied (`NEVER` in the script,
+asserted by a test). B's Code sessions folder (`claude-code-sessions\<account>\<organisation>`) is pointed at A's, so the Code
+sidebar lists the same local sessions (B's own scheduled-tasks file is set aside and restored on rollback; B's own local sessions
+are never hidden, the link is refused instead; `--no-sessions` skips it). claude.ai chat history stays with each account. Preview by default, `--apply --approved` writes, `--rollback --approved` restores; non-empty targets
 are refused, differing files are replaced only with `--replace-files` after a recorded backup, and removing a link never follows
 it. It refuses from a packaged process tree and while B's Desktop is running.
 

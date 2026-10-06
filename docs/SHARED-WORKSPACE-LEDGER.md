@@ -459,38 +459,21 @@ proof: Desktop A Code on the selected project must expose its actual memory/conf
 context/path read-back or a scoped native file-access observation can establish this without Desktop /memory (unavailable there); perform only
 with saved work and separate consent if restart/instrumentation is needed.
 
-## Desktop evidence and S3b admission (2026-10-06)
+## Desktop evidence and S3b/S3c/S4b fixture admission (2026-10-06)
 
-The user supplied a Desktop Code screenshot for a second existing project. It reports the same user config root, its project-specific memory
-path, MEMORY.md startup loading and on-demand topic files. Accept this operator-provided Desktop report for planner preparation, without
-asserting CLI and Desktop are universally equivalent. No topic names or contents are retained publicly. A targeted read-only metadata/settings
-complement finds five candidate entries, index present, user autoMemoryEnabled=true, no explicit directory override in the three inspected
-scopes; memory contents remain unread. Private screenshot and receipt stay outside Git. This differs from the earlier CLI project. S4a now
-supports planner/fixture development (DESKTOP_USER_REPORT plus PARTIAL_LOCAL). Desktop data-root redirection, managed/CLI policy and actual B
-loading remain unobserved and block real apply, not continued fixture implementation.
-
-S3b: SharedMemoryPlan.py adapts the reviewed archive planner contract; no verbatim module or historical guidance is redistributed. License
-disposition: archive has no explicit grant; user-supplied design lineage/hash retained, this fork implementation authored independently under
-repository licensing. No apply/restore/atomic helpers imported. Explicit A/B roles, missing projected B roots, native identity, bounded/change-
-checked reads, no reparse/hardlink settings, Markdown metadata-only memory validation, separate project mapping, scope conflict and trust/policy
-refusal, selected-key preview/hash/provenance and path-free public summary. Preview never writes. 30 native Windows fixture tests PASS, no skips.
-Original 40-test baseline remains S3a evidence: planner contracts are requalified here; profile-manifest defaults are replaced by explicit
-roles/new B roots; original apply/restore/locking/CLI contracts move to S3c/new entry qualification. No original test is claimed to have passed
-against a changed API. Original whole-file byte rollback is deliberately replaced by selected-key conflict-aware rollback. Native 8.3 remains
-NOT_RUN; no real project/profile changes.
-
-## S3c selected-key fixture transactions (2026-10-06)
-
-SharedMemoryApply.py adds API-only selected-key journals/checksums, owned state, nonblocking Windows locks,
-no-overwrite new-file admission, checked replacement and conflict-aware rollback preserving unrelated edits.
-Revalidate root/file IDs, scope bytes and memory metadata; reject replaced/missing applied targets. A prepared
-transaction interrupted after writing requires review, never invented success. No CAS/power-loss guarantee against
-external writers. Journals contain selected non-secret values/hashes, never whole settings/env/hooks backups.
-48 Windows tests PASS (30 planner regressions + 18 apply/recovery cases), zero skips; real profiles untouched.
-Additional user inventory is operator evidence: terminal and embedded Code binaries differ; scratch projects have
-separate memory. No broader secret/session traversal, auth-storage or environment-persistence claim adopted.
+User-provided Desktop screenshot reports the second project's memory path and startup index loading; a scoped metadata
+complement is consistent (five entries, index present, no directory override). S4a admits planner/fixture development
+with DESKTOP_USER_REPORT/PARTIAL_LOCAL. Runtime MSIX A data-root and B loading remain unobserved. No topic contents read.
+S3b preview PASS: 30 Windows tests. Explicit provenance/trust/policy refusal, native paths, distinct project maps, no writes.
+S3c API-only transactions PASS: 48 tests (30 planner + 18 apply/recovery); selected-key journals, closed-writer ack,
+nonblocking lock, unrelated-edit preservation, replaced-target refusal; no real apply. S4b additive preview PASS: 40 tests
+(30 planner + 10 workspace cases), no writes; refuse existing assets/shortcuts and preserve A's original entry point.
+Archive has no explicit license grant: no verbatim module redistribution; independent adaptation retains design lineage.
+[Detailed qualification receipts](SHARED-WORKSPACE-QUALIFICATION.md) retain scope, test disposition and IO limitations.
+Terminal/embedded Code versions differ; scratch projects have independent memory. No auth-storage/env-persistence inference.
+Native 8.3 remains NOT_RUN. No package/profile mutation, real install/share/apply/restore/login/restart performed.
 
 ## NEXT SLICE
 
-S3c is fixture-qualified. Chain S4b additive preview, then installation/removal/package fixture slices. Real
+S3b/S3c/S4b are fixture-qualified. Chain S4c installation, S4d removal and S4e package/guide fixture slices. Real
 install/share/apply/restore/login/restart remain separately scoped; keep A, projects and official Claude installed.

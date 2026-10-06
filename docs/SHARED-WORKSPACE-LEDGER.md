@@ -1,7 +1,6 @@
 # Shared workspace fork - implementation ledger
 
-Updated 2026-10-06 (chained fixture preparation and preview/package delivery). Delivery order and dependencies: [Shared workspace roadmap](SHARED-WORKSPACE-
-ROADMAP.md). This is the sole ledger. Requirements below are separate from implementation and evidence statuses.
+Updated 2026-10-06 (chained fixture preparation and preview/package delivery). Delivery order and dependencies: [Shared workspace roadmap](SHARED-WORKSPACE-ROADMAP.md). This is the sole ledger. Requirements below are separate from implementation and evidence statuses.
 
 ## Contract
 
@@ -71,8 +70,7 @@ Branch: `fix/setup-profile-path-collision`; draft PR #1. Master base: `2ee030501
 
 Read-only fetch confirmed remote `JayceeB1/claude-windows-multiprofile`. The clean local checkout started on master and was switched normally to
 the tracking PR branch; no reset, clean, stash, forced checkout, merge or rebase. Code HEAD is `794148f4072a59b4ca146b5199f5e7cea8fe8bb6`; master
-remains at `2ee03050185ace47581e9607341bd91cddd5ae9a`. No delta from the supplied code HEAD. [PR #1](https://github.com/JayceeB1/claude-windows-
-multiprofile/pull/1) was OPEN, draft, seven commits and nine cumulative files at inspection, before this additional two-document commit. No merge
+remains at `2ee03050185ace47581e9607341bd91cddd5ae9a`. No delta from the supplied code HEAD. [PR #1](https://github.com/JayceeB1/claude-windows-multiprofile/pull/1) was OPEN, draft, seven commits and nine cumulative files at inspection, before this additional two-document commit. No merge
 performed. Local user's configured Git identity is used without changes or assistant attribution; upstream licence and credits remain intact.
 Inherited CLAUDE.md identity/branch and old test guidance are superseded by the user's explicit instructions and actual branch/tests.
 
@@ -435,9 +433,7 @@ not a settings-key presence test. Native 8.3 remains NOT_RUN. No cookies, creden
   preflight/tests, diff review, atomic commit, report, STOP. Any A restart needs
   saved work and explicit agreement; no forced stop/logout/replacement.
 
-References checked for the locking/IO contract: [FileShare.None](https://learn.microsoft.com/en-
-us/dotnet/api/system.io.fileshare?view=netframework-4.8.1), [File.Move no-overwrite behavior](https://learn.microsoft.com/en-
-us/dotnet/api/system.io.file.move?view=netframework-4.8.1), [native-app OAuth flow boundaries](https://www.rfc-editor.org/rfc/rfc8252.html).
+References checked for the locking/IO contract: [FileShare.None](https://learn.microsoft.com/en-us/dotnet/api/system.io.fileshare?view=netframework-4.8.1), [File.Move no-overwrite behavior](https://learn.microsoft.com/en-us/dotnet/api/system.io.file.move?view=netframework-4.8.1), [native-app OAuth flow boundaries](https://www.rfc-editor.org/rfc/rfc8252.html).
 
 ## S4a selected-memory observation follow-up (2026-10-06)
 

@@ -479,7 +479,18 @@ roles/new B roots; original apply/restore/locking/CLI contracts move to S3c/new 
 against a changed API. Original whole-file byte rollback is deliberately replaced by selected-key conflict-aware rollback. Native 8.3 remains
 NOT_RUN; no real project/profile changes.
 
+## S3c selected-key fixture transactions (2026-10-06)
+
+SharedMemoryApply.py adds API-only selected-key journals/checksums, owned state, nonblocking Windows locks,
+no-overwrite new-file admission, checked replacement and conflict-aware rollback preserving unrelated edits.
+Revalidate root/file IDs, scope bytes and memory metadata; reject replaced/missing applied targets. A prepared
+transaction interrupted after writing requires review, never invented success. No CAS/power-loss guarantee against
+external writers. Journals contain selected non-secret values/hashes, never whole settings/env/hooks backups.
+48 Windows tests PASS (30 planner regressions + 18 apply/recovery cases), zero skips; real profiles untouched.
+Additional user inventory is operator evidence: terminal and embedded Code binaries differ; scratch projects have
+separate memory. No broader secret/session traversal, auth-storage or environment-persistence claim adopted.
+
 ## NEXT SLICE
 
-Chain S3c selected-key apply/rollback fixtures, S4b additive preview, then installation/removal/package fixture slices. Real
+S3c is fixture-qualified. Chain S4b additive preview, then installation/removal/package fixture slices. Real
 install/share/apply/restore/login/restart remain separately scoped; keep A, projects and official Claude installed.

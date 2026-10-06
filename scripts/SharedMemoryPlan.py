@@ -238,7 +238,8 @@ def make_plan(project: Path, memory: Path, profiles: dict, evidence: Evidence) -
         after = (json.dumps(obj, ensure_ascii=False, indent=2, allow_nan=False) + '\n').encode('utf-8')
     if len(after) > MAX_JSON:
         raise BridgeError('PROPOSED_JSON_LIMIT')
-    root_paths = [project, memory, *(p for role in roots.values() for p in role.values()), settings.parent]
+    root_paths = [project, memory, *(p for role in roots.values() for p in role.values()),
+                  settings.parent, *(p for p, _ in snapshots)]
     return Plan(project, memory, settings, roots, evidence, before, after, snapshots,
                 validate_memory(memory), tuple((p, identity(p)) for p in root_paths))
 

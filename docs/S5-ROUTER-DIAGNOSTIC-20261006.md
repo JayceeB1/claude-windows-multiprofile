@@ -169,9 +169,33 @@ reg.exe query "HKCU\Software\RegisteredApplications" /v ClaudeShim /reg:64
 reg.exe query "HKCU\Software\RegisteredApplications" /v ClaudeShim /reg:32
 reg.exe query "HKCR\claude" /v "URL Protocol" /reg:64
 reg.exe query "HKCR\claude" /v "URL Protocol" /reg:32
+reg.exe query "HKCU\Software\Classes\claude\shell\open\command" /ve /reg:64
+reg.exe query "HKCU\Software\Classes\claude\shell\open\command" /ve /reg:32
 ```
 
 If that neutral reader cannot see these values while the Codex-side reader can, the observer/context
 boundary is further localized. If it sees them, the discrepancy is narrower to Settings/its execution
 context. Neither outcome alone identifies a particular virtualization mechanism. Proposal only;
 this independently launched reader remains NOT_RUN. No correction to the real registration is applied.
+
+## Desktop/Code/CLI provenance and operator-supplied Claude report
+
+Targeted read-only process metadata independently confirms the supplied chain: embedded Code engine
+-> official packaged Desktop -> Explorer. No command line, environment, credential or session content
+was read. Embedded Code PE FileVersion/ProductVersion is 2.1.288.0; the separately installed local CLI
+binary's PE metadata is 2.1.292.0. Official package remains 2.19675.1.0. These are separate executable
+version streams, not evidence of a package update during this diagnostic or a version-caused rejection.
+
+The user supplied a Claude response claiming that HKCU Classes claude also has a command pointing
+to the official versioned executable. This is reported evidence, not an independently captured query
+from that process. Repeated Codex-side reads still find no scheme command in HKCU/HKCR, both views;
+the distinct ClaudeShim.claude command and RegisteredApplications value are present in both views.
+The difference may concern observer context or the accuracy/time of the supplied report; it does not
+prove a particular MSIX mechanism. The neutral reader proposal now includes this exact command value.
+
+The quoted generic .reg recipe and cleanup/restart suggestions grant no authorization. The fork already
+has its own ProgID, capability mapping and RegisteredApplications value. No imported .reg, temporary-app
+cleanup, restart, package modification or association rewrite is performed in response to the quote.
+Open the neutral Windows PowerShell manually from Start, outside both Codex and Desktop/embedded-Code
+process trees; asking the current Claude session to run it would not supply that independent context.
+Neutral reader remains NOT_RUN.

@@ -502,4 +502,5 @@ Read-only diagnostic: real claude scheme exists in HKCU/HKCR and MSIX manifest; 
 Approved manual Procmon: Settings enumerates 816 HKCU values without ClaudeShim; direct observer sees 817 including it.
 Settings HKCR claude opens fail while direct 32/64-bit reads succeed. Cause UNKNOWN; no router correction.
 Next: one independently launched neutral reader, read-only, proposed/NOT_RUN; [report](S5-ROUTER-DIAGNOSTIC-20261006.md).
+Verified embedded Code 2.1.288 -> Desktop -> Explorer; separate CLI PE 2.1.292. Claude-reported scheme command differs from our reads; neutral check pending.
 Native 8.3 stays NOT_RUN; optional REA-A2 follows #3. B config/loading and two-Desktop acceptance remain unqualified.

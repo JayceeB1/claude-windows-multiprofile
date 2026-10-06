@@ -206,7 +206,7 @@ Exclude atomic_write, transaction_paths, locked, apply_plan, restore and the
 action-switching CLI from S3b. S3c must use selected-key non-secret backups and
 conflict-aware restore instead of wholesale settings snapshots/deletion.
 No original archive document/ledger is imported as current guidance.
-S3b still requires completed S4a provenance and selected-memory evidence.
+Desktop operator evidence now admits S3b planner/fixture development; unresolved effective scopes still refuse real plans.
 
 #### Read-only MSIX complement to this review — 2026-10-06
 
@@ -389,8 +389,8 @@ S3b/S3c fixture results remain separate from that Desktop gate. Native 8.3 stays
 
 ## Current continuation boundary
 
-S2 through D2, S4a's implementation and S3a's archive review are delivered; do not
-replay them because of historical archive guidance. S4a actual effective-A and
-selected-memory provenance remains partial. Complete that evidence before S3b's
-planner-only admission. Ready slices may chain without routine approval; real
-installation, project/profile apply/restore, login or restart remains separately scoped.
+S2 through D2, S4a implementation and S3a archive review are delivered. The user supplied Desktop Code path/startup
+memory evidence on 2026-10-06; local selected-key/metadata inspection is consistent. This operator evidence admits S3b
+planner/fixture preparation. It does not certify MSIX data redirection, managed/CLI policies or B runtime loading.
+S3b planner is qualified on fixtures; chain S3c and S4b-e without routine approval. Each actual plan still rejects unknown
+trust/config/policy evidence. Real installation, project/profile apply/restore, login or restart remains separately scoped.

@@ -410,7 +410,8 @@ The latest user instruction authorizes tests, superseding the prior stop-before-
 updates and CI resume; no merge while required Desktop acceptance is missing. Default legacy invocations stay refused.
 S5 approved provisioning is installed; two bounded owned-registration repairs retain A/package and leave B unlaunched.
 Operator default-app picker still offers only Claude despite Shell enumeration of the dedicated router: UI gate BLOCKED.
-Registered-app deep link also failed to show its dedicated page; inspect Settings eligibility next. Reboot causality UNKNOWN.
+Reboot did not change versions/assets/picker. Real scheme exists; QueryCurrentDefault returns Undecided.
+Next: bounded Settings Procmon observation after tool/elevation agreement; [diagnostic](S5-ROUTER-DIAGNOSTIC-20261006.md). No causal router fix yet.
 Project/profile share/apply/restore, removal or restart still needs separate local authorization.
 The earlier CLI-only/Desktop-path blocker is superseded by the user's Desktop screenshot, not generalized to all projects.
 Native 8.3, effective B loading/config isolation and two-Desktop acceptance remain NOT_RUN. Optional REA-A2 stays deferred.

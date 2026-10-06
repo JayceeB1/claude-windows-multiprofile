@@ -497,5 +497,7 @@ Commit/push/draft-PR/CI resume under test authorization; do not merge or promote
 
 A/pilot marker matched; approved B provisioning retained, zero memory-key edits; B remains unlaunched.
 Router metadata/dedicated-host repairs read back, but operator picker still shows only Claude: UI gate BLOCKED.
-Registered-app deep link opens only the general page; next: inspect Settings eligibility. Reboot causality UNKNOWN; [receipt](SHARED-WORKSPACE-QUALIFICATION.md).
+Post-restart: versions/19 owned assets unchanged, picker still Claude only. Session renewal did not suffice.
+Read-only diagnostic: real claude scheme exists in HKCU/HKCR and MSIX manifest; effective default is Undecided.
+No missing-scheme/admin cause proved. Next: one bounded Procmon observation, tool/elevation agreement pending; [report](S5-ROUTER-DIAGNOSTIC-20261006.md).
 Native 8.3 stays NOT_RUN; optional REA-A2 follows #3. B config/loading and two-Desktop acceptance remain unqualified.

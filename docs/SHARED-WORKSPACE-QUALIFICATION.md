@@ -259,5 +259,17 @@ Microsoft documents this per-user registered-app page [here](https://learn.micro
 Thus Shell enumeration and Settings application registration remain discrepant; UI acceptance is still BLOCKED.
 CI [37518998278](https://github.com/JayceeB1/claude-windows-multiprofile/actions/runs/37518998278) at
 7901e3d3b1d87a81f69fe8a46076104345b6f357 completed successfully. This does not establish native UI acceptance.
-Session-refresh/reboot causality remains UNKNOWN; no session logout or restart has been performed or required.
+At that pre-restart stage no session logout or restart had been performed or required.
 B login, effective B configuration/loading, two-account operation and removal acceptance remain NOT_RUN.
+
+## Post-restart discriminating diagnostic (2026-10-06)
+
+Operator reboot did not change picker visibility: still only Claude. Read-only before/after checks retain package
+2.19675.1.0, PE 2.19675.1, observed embedded Code 2.1.288, 19 owned identities/hashes and exact router registry.
+Shell enumeration/resolution unchanged; known A singleton present, B absent, callback intent absent.
+The real `claude` declaration is present in HKCU/HKCR with empty REG_SZ URL Protocol; official registered MSIX
+manifest also declares `claude`. QueryCurrentDefault(claude, AT_URLPROTOCOL, AL_EFFECTIVE) returns S_OK/Undecided,
+whose class resolves to Windows OpenWith; per-user/machine queries return 0x80070483. No default handler selected
+for the router is established. Scheme author/Settings rejection cause remain UNKNOWN; no missing-schema fix justified.
+One short Procmon consumer observation is PREPARED/NOT_RUN with explicit tool/elevation agreement pending.
+No router/profile/package mutation, notification replay or callback; see [bounded report and plan](S5-ROUTER-DIAGNOSTIC-20261006.md).

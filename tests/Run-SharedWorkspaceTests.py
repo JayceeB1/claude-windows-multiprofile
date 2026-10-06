@@ -8,7 +8,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 CONTRACTS = (('test_workspace_inventory', 'InventoryTests'), ('test_shared_memory_plan', 'PlanTests'),
              ('test_shared_memory_apply', 'ApplyTests'), ('test_workspace_plan', 'WorkspaceTests'),
              ('test_workspace_install', 'InstallTests'), ('test_workspace_remove', 'RemoveTests'),
-             ('test_workspace_entry', 'EntryTests'))
+             ('test_workspace_entry', 'EntryTests'), ('test_native_workspace', 'NativeTests'),
+             ('test_native_registry', 'RegistryTests'))
 suite = unittest.TestSuite()
 for module, name in CONTRACTS:
     cls = getattr(importlib.import_module(module), name)

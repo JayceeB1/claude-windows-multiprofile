@@ -21,6 +21,7 @@ ROUTER = r'Software\Classes\ClaudeShim.claude'
 CAPABILITIES = r'Software\ClaudeShim'
 REGISTERED = r'Software\RegisteredApplications'
 VALUE = 'ClaudeShim'
+MUTEX_NAME = r'Local\ClaudeSharedWorkspaceRouter-v2'
 MAX_KEYS = 32
 MAX_VALUES = 64
 
@@ -45,7 +46,7 @@ def registry_guard():
     api.WaitForSingleObject.restype = wintypes.DWORD
     api.ReleaseMutex.argtypes = [wintypes.HANDLE]
     api.CloseHandle.argtypes = [wintypes.HANDLE]
-    handle = api.CreateMutexW(None, False, r'Local\ClaudeSharedWorkspaceRouter-v2')
+    handle = api.CreateMutexW(None, False, MUTEX_NAME)
     if not handle:
         raise bridge.BridgeError('ROUTER_MUTEX_UNAVAILABLE')
     acquired = False

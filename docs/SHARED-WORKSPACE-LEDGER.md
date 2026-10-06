@@ -150,7 +150,7 @@ handling in S4; never delete a held lock file.
 
 ## Implementation and evidence register
 
-Status vocabulary: TODO / IN_PROGRESS / BLOCKED / IMPLEMENTED / VERIFIED_SYNTHETIC / VERIFIED_LOCAL. Synthetic qualification can use a native
+Status vocabulary: TODO / IN_PROGRESS / BLOCKED / IMPLEMENTED / IMPLEMENTED_NOT_TESTED / VERIFIED_SYNTHETIC / VERIFIED_LOCAL. Synthetic qualification can use a native
 Windows host; VERIFIED_LOCAL is reserved here for the actual user installation. A passing implementation test does not satisfy the user
 acceptance requirements. Each future slice must add its exact commit, environment, command and receipt before changing its evidence status. The
 roadmap-only turn started no remaining implementation; the separately authorized Q1 delivery is recorded below.
@@ -172,9 +172,11 @@ roadmap-only turn started no remaining implementation; the separately authorized
 | S3c | VERIFIED_SYNTHETIC | S3b | `58e0fcb`; consolidated runner | 18 apply/recovery contracts plus planner; selected-key only; real apply NOT_RUN | Preserve fixture evidence |
 | S3g | TODO | S3c + explicit list | Optional, omitted | No selected global resources or whole-root sharing | Defer |
 | S4b | VERIFIED_SYNTHETIC | S4a + S3b | `059bf05`; consolidated runner | 10 additive preview contracts; no writes | Preserve preview |
-| S4c | VERIFIED_SYNTHETIC | S4b + S3c | `9e4b9ae`; consolidated runner | 12 TEMP-only install/guard contracts; native OS adapter not admitted | Native adapter implementation/admission |
+| S4c | VERIFIED_SYNTHETIC | S4b + S3c | `9e4b9ae`; consolidated runner | 12 historical TEMP-only install/guard contracts; native candidate separate | S4f qualification |
 | S4d | VERIFIED_SYNTHETIC | S4c | `bd34247`, guard `574342f`; runner + Test-Uninstall | 9 B-removal contracts; data retained; native removal NOT_RUN | Native adapter acceptance |
-| S4e | VERIFIED_SYNTHETIC | S4d + D2 | `c50c0da`, guide `839558d`; consolidated runner | 10 preview/package contracts; 19-member package; mutation CLI unavailable | Native adapter then S5 |
+| S4e | VERIFIED_SYNTHETIC | S4d + D2 | `c50c0da`, guide `839558d`; consolidated runner | 10 historical preview/package contracts; historical 19-member package | S4g qualification |
+| S4f | IMPLEMENTED_NOT_TESTED | S4c + S4d | Local `083c02b`; source syntax/review only | Native ownership/COM/registry/recovery; runtime NOT_RUN | Isolated adapter qualification |
+| S4g | IMPLEMENTED_NOT_TESTED | S4f + S4e | Local `7ae1479`, guide `42e8297`; syntax/review only | Explicit native CLI/wrappers and expanded allowlist; tests NOT_RUN | Entry/package and regression qualification |
 | S5a | TODO | S4e + explicit local approval | None | Browser focus is **HYPOTHESIS TO TEST** | Observe HTTPS/profile identity/claude:// separately |
 | S5b | TODO | S5a + all required synthetic gates + approval | None | Two Desktop identities, memory and removal unobserved | Real disposable-project acceptance |
 

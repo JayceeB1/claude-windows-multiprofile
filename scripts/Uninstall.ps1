@@ -16,14 +16,15 @@ param(
     [switch]$Rollback,
     [switch]$Approved,
     [switch]$WritersClosed,
-    [switch]$ApproveProtocol
+    [switch]$ApproveProtocol,
+    [string]$PythonExecutable = 'python'
 )
 $ErrorActionPreference = 'Stop'
 if ($Native) {
     if (-not $Approved -or -not $WritersClosed -or $Profile -or $KeepRouting -or ($Rollback -and $RemoveData) -or ($ApproveProtocol -and -not $Rollback)) {
         throw 'NATIVE_APPROVAL_AND_EXPLICIT_B_OPERATION_REQUIRED'
     }
-    $python = Get-Command python -CommandType Application -ErrorAction Stop
+    $python = Get-Command $PythonExecutable -CommandType Application -ErrorAction Stop
     if ($python.Source -like '*\Microsoft\WindowsApps\*') { throw 'PYTHON_RUNTIME_REQUIRED' }
     $entry = Join-Path $PSScriptRoot 'SharedWorkspace.py'
     $action = if ($Rollback) { 'native-rollback' } else { 'native-remove-b' }

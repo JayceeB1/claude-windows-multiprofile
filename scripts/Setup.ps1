@@ -24,7 +24,8 @@ param(
     [string]$NativeApproval,
     [switch]$Approved,
     [switch]$WritersClosed,
-    [switch]$ApproveProtocol
+    [switch]$ApproveProtocol,
+    [string]$PythonExecutable = 'python'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -34,7 +35,7 @@ if ($NativeSpec) {
     foreach ($legacy in @('Profile', 'DefaultProfile', 'ReuseDefaultForWork', 'InstallDir', 'ConfigDir', 'DataDir', 'NoProtocolRouting', 'LoginShortcuts')) {
         if ($PSBoundParameters.ContainsKey($legacy)) { throw 'NATIVE_SPEC_CONTROLS_PATHS' }
     }
-    $python = Get-Command python -CommandType Application -ErrorAction Stop
+    $python = Get-Command $PythonExecutable -CommandType Application -ErrorAction Stop
     if ($python.Source -like '*\Microsoft\WindowsApps\*') { throw 'PYTHON_RUNTIME_REQUIRED' }
     $entry = Join-Path $scriptRoot 'SharedWorkspace.py'
     if ($NativePreview) {

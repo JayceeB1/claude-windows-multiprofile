@@ -201,35 +201,84 @@ def shortcut_bytes(specification, staging):
 $ErrorActionPreference = 'Stop'
 [Console]::InputEncoding = [Text.UTF8Encoding]::new($false)
 $s = [Console]::In.ReadToEnd() | ConvertFrom-Json
-$w = New-Object -ComObject WScript.Shell
-$c = $w.CreateShortcut($s.path)
-$c.TargetPath = $s.target
-$c.Arguments = $s.arguments
-$c.WorkingDirectory = $s.directory
-$c.IconLocation = $s.icon
-$c.Description = $s.description
-$c.Save()
-$r = $w.CreateShortcut($s.path)
-if ($r.TargetPath -ine $s.target -or $r.Arguments -cne $s.arguments -or
-    $r.WorkingDirectory -ine $s.directory -or $r.IconLocation -ine $s.icon -or
-    $r.Description -cne $s.description) { throw 'SHORTCUT_READBACK_FAILED' }
+Add-Type -TypeDefinition @'
+using System;
+using System.Text;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
+namespace NativeLinks {
+ [ComImport, Guid("000214F9-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+ interface IShellLinkW {
+  void GetPath([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder p, int n, IntPtr data, uint flags);
+  void GetIDList(out IntPtr p); void SetIDList(IntPtr p);
+  void GetDescription([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder p, int n);
+  void SetDescription([MarshalAs(UnmanagedType.LPWStr)] string p);
+  void GetWorkingDirectory([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder p, int n);
+  void SetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] string p);
+  void GetArguments([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder p, int n);
+  void SetArguments([MarshalAs(UnmanagedType.LPWStr)] string p);
+  void GetHotkey(out short p); void SetHotkey(short p);
+  void GetShowCmd(out int p); void SetShowCmd(int p);
+  void GetIconLocation([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder p, int n, out int index);
+  void SetIconLocation([MarshalAs(UnmanagedType.LPWStr)] string p, int index);
+  void SetRelativePath([MarshalAs(UnmanagedType.LPWStr)] string p, uint reserved);
+  void Resolve(IntPtr window, uint flags);
+  void SetPath([MarshalAs(UnmanagedType.LPWStr)] string p);
+ }
+ public static class Link {
+  static object NewLink() { return Activator.CreateInstance(Type.GetTypeFromCLSID(new Guid("00021401-0000-0000-C000-000000000046"))); }
+  public static bool SaveRead(string path, string target, string args, string dir, string icon, string desc) {
+   object created = NewLink();
+   try {
+    IShellLinkW c = (IShellLinkW)created;
+    c.SetPath(target); c.SetArguments(args); c.SetWorkingDirectory(dir);
+    c.SetIconLocation(icon, 0); c.SetDescription(desc);
+    ((IPersistFile)created).Save(path, true);
+   } finally { Marshal.FinalReleaseComObject(created); }
+   object loaded = NewLink();
+   try {
+    ((IPersistFile)loaded).Load(path, 0);
+    IShellLinkW r = (IShellLinkW)loaded;
+    StringBuilder t = new StringBuilder(32768), a = new StringBuilder(32768),
+      d = new StringBuilder(32768), i = new StringBuilder(32768), s = new StringBuilder(32768);
+    int index;
+    r.GetPath(t, t.Capacity, IntPtr.Zero, 4); r.GetArguments(a, a.Capacity);
+    r.GetWorkingDirectory(d, d.Capacity); r.GetIconLocation(i, i.Capacity, out index);
+    r.GetDescription(s, s.Capacity);
+    return String.Equals(t.ToString(), target, StringComparison.OrdinalIgnoreCase) &&
+      String.Equals(a.ToString(), args, StringComparison.Ordinal) &&
+      String.Equals(d.ToString(), dir, StringComparison.OrdinalIgnoreCase) &&
+      String.Equals(i.ToString(), icon, StringComparison.OrdinalIgnoreCase) && index == 0 &&
+      String.Equals(s.ToString(), desc, StringComparison.Ordinal);
+   } finally { Marshal.FinalReleaseComObject(loaded); }
+  }
+ }
+}
+'@
+if (-not [NativeLinks.Link]::SaveRead($s.path, $s.target, $s.arguments, $s.directory, $s.icon, $s.description)) {
+    throw 'SHORTCUT_READBACK_FAILED'
+}
 '''
     windows = windows_root()
     powershell = windows / 'System32/WindowsPowerShell/v1.0/powershell.exe'
     launcher = bridge.safe_path(specification['script'])
     data = bridge.safe_path(specification['dataDir'])
     config = bridge.safe_path(specification['configDir'])
+    staging = bridge.safe_path(staging, directory=True)
     with tempfile.TemporaryDirectory(prefix='.shortcut-', dir=staging) as temporary:
         path = Path(temporary) / 'owned.lnk'
         payload = {'path': str(path), 'target': str(windows / 'System32/wscript.exe'),
                    'arguments': f'"{launcher}" "{data}" "{config}"',
-                   'directory': str(launcher.parent), 'icon': str(windows / 'System32/shell32.dll') + ',0',
+                   'directory': str(launcher.parent), 'icon': str(windows / 'System32/shell32.dll'),
                    'description': 'Claude Desktop - ' + specification['role'] + (' existing' if specification['role'] == 'A' else ' added')}
-        result = subprocess.run([str(powershell), '-NoProfile', '-NonInteractive', '-EncodedCommand',
-                                 base64.b64encode(script.encode('utf-16-le')).decode('ascii')],
-                                input=json.dumps(payload).encode('utf-8'), stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE, timeout=30,
-                                creationflags=subprocess.CREATE_NO_WINDOW)
+        try:
+            result = subprocess.run([str(powershell), '-NoProfile', '-NonInteractive', '-EncodedCommand',
+                                     base64.b64encode(script.encode('utf-16-le')).decode('ascii')],
+                                    input=json.dumps(payload).encode('utf-8'), stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE, timeout=30,
+                                    creationflags=subprocess.CREATE_NO_WINDOW)
+        except subprocess.TimeoutExpired:
+            raise bridge.BridgeError('SHORTCUT_COM_TIMEOUT') from None
         if result.returncode != 0:
             raise bridge.BridgeError('SHORTCUT_COM_OR_READBACK_FAILED')
         raw = bridge.read_optional(path)

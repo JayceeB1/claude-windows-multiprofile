@@ -254,9 +254,11 @@ def unlink_owned(entry):
 def delete_inspection(record):
     directories = [entry for entry in record['directories'] if entry['path'] in record['b_roots']]
     count = 0
+    def unreadable(error):
+        raise bridge.BridgeError('NATIVE_B_DELETE_UNREADABLE') from None
     for entry in directories:
         root = bridge.safe_path(entry['path'], directory=True)
-        for folder, children, files in os.walk(root, followlinks=False):
+        for folder, children, files in os.walk(root, followlinks=False, onerror=unreadable):
             for name in children + files:
                 count += 1
                 if count > bridge.MAX_ENTRIES:

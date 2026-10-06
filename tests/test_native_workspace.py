@@ -18,6 +18,22 @@ import SharedMemoryPlan as bridge
 import SharedWorkspace as entry
 
 
+def _tree_is_unpackaged():
+    """Evaluated before any test double: is the REAL process tree free of MSIX packages?"""
+    try:
+        windows.require_unpackaged_process()
+        return True
+    except bridge.BridgeError:
+        return False
+
+
+# Subprocess entry points enforce the packaged-process guard for real; from inside Codex or Claude
+# Desktop they refuse by design, so that qualification must be run from a normal shell.
+REAL_TREE_UNPACKAGED = _tree_is_unpackaged()
+needs_unpackaged_tree = unittest.skipUnless(
+    REAL_TREE_UNPACKAGED, 'packaged process tree: native subprocess entry refuses by design; run from a normal shell')
+
+
 class NativeTests(EntryTests):
     def setUp(self):
         super().setUp()
@@ -366,6 +382,7 @@ class NativeTests(EntryTests):
         self.assertEqual(native.load(self.install)['phase'], 'installed')
         self.recover()
 
+    @needs_unpackaged_tree
     def test_native_ps_wrappers_both_shells_owned_fixture(self):
         scripts = Path(__file__).resolve().parents[1] / 'scripts'
         for shell in ('powershell', 'pwsh'):
@@ -391,6 +408,7 @@ class NativeTests(EntryTests):
                 self.assertTrue((fixture.desktop / 'Original Claude.lnk').exists())
                 self.assertTrue(fixture.memory.exists())
 
+    @needs_unpackaged_tree
     def test_native_packaged_entry_import_and_install_temp_only(self):
         import zipfile
         archive = self.root / 'native-fixture.zip'

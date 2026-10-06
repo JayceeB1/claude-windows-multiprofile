@@ -499,5 +499,7 @@ A/pilot marker matched; approved B provisioning retained, zero memory-key edits;
 Router metadata/dedicated-host repairs read back, but operator picker still shows only Claude: UI gate BLOCKED.
 Post-restart: versions/19 owned assets unchanged, picker still Claude only. Session renewal did not suffice.
 Read-only diagnostic: real claude scheme exists in HKCU/HKCR and MSIX manifest; effective default is Undecided.
-No missing-scheme/admin cause proved. Next: one bounded Procmon observation, tool/elevation agreement pending; [report](S5-ROUTER-DIAGNOSTIC-20261006.md).
+Approved manual Procmon: Settings enumerates 816 HKCU values without ClaudeShim; direct observer sees 817 including it.
+Settings HKCR claude opens fail while direct 32/64-bit reads succeed. Cause UNKNOWN; no router correction.
+Next: one independently launched neutral reader, read-only, proposed/NOT_RUN; [report](S5-ROUTER-DIAGNOSTIC-20261006.md).
 Native 8.3 stays NOT_RUN; optional REA-A2 follows #3. B config/loading and two-Desktop acceptance remain unqualified.

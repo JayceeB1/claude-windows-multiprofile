@@ -77,13 +77,14 @@ The API can also return legacy commands; no returned string is blindly assumed a
 
 ## One proposed next experiment — targeted Settings observation
 
-Status: PREPARED / NOT_RUN, requires the user's explicit tool/elevation agreement.
+Historical preparation status: PREPARED / NOT_RUN, before the user subsequently authorized
+the tool/elevation and performed the capture manually. Results are recorded below.
 No causal correction is yet justified. Observe the consumer with one short Procmon capture
 instead of writing more registry entries or restarting Windows.
 
 1. Use signed Microsoft Process Monitor from the [official source](https://learn.microsoft.com/en-us/sysinternals/downloads/procmon).
    No Procmon executable was resolved on the current PATH and none of its known process names was running;
-   this is not an exhaustive installed-tool inventory. Download/use and elevation are not yet authorized.
+   this was not an exhaustive installed-tool inventory. Download/use and elevation were subsequently authorized.
 2. Confirm the selected version's local help supports capture-disabled startup (normally `/NoConnect`)
    before starting it. Do not launch ordinary recording and then filter it. If startup suppression cannot
    be verified, stop. No boot logging, profiling, network capture, existing-instance termination or silent EULA acceptance.
@@ -111,3 +112,66 @@ an unobserved broker remains UNKNOWN and requires a separately justified scope b
 
 Completion of this diagnostic slice does not close the native Settings gate or two-account acceptance.
 Native 8.3 and B runtime/configuration/memory/removal gates remain NOT_RUN.
+
+## Authorized operator-controlled capture — result
+
+The user approved Procmon use/elevation, then chose manual guidance after native input failed.
+Microsoft Procmon64 4.11 was downloaded into a unique private TEMP directory; Authenticode is Valid,
+signer Microsoft Corporation. The executable's embedded help confirms /NoConnect suppresses automatic
+collection. The initial hidden preparation launch had no targetable window; a visible /NoConnect launch
+provided a window showing No events (capture disabled). No /AcceptEula, boot logging, notification replay
+or router repair was performed. Computer Use was stopped following a reported physical Escape press;
+subsequent filter/capture/save operations were performed by the operator, not by automation.
+
+The supplied filter screenshot confirms PID 36912 and four registry-read operations. The operator
+confirmed the added path filters, Drop Filtered Events, stopped recording and saved displayed events
+as CSV into the private TEMP directory. These are OPERATOR_CONFIRMED steps; the complete filter state
+and recorder start/stop timing were not independently captured. The manual trigger was the protocol
+picker from the already open Default Apps page; the registered-app deep link was not replayed in this pass.
+
+CSV analysis: 10,020 rows, all SystemSettings.exe PID 36912, all within the four allowed read operations
+and the recorded registration/scheme path scope. Retained event span is 7.8586995 seconds; this is not
+independent proof of the recorder's total wall time. No raw CSV/PML, other application names, command
+lines, environments or screenshots of event data are published. Private receipt retains the CSV hash.
+
+| Observation | Captured Settings consumer | Direct read-only observer after capture |
+| --- | --- | --- |
+| HKCU RegisteredApplications | 816 distinct successful enumerated value names, four passes; no ClaudeShim token in any retained path/detail | 817 values in both 32/64-bit views; ClaudeShim present, enumeration index 0 at read time |
+| Enumeration index 0 | Four successful entries, none named ClaudeShim | ClaudeShim at index 0 at read time |
+| HKCR claude open | Nine NAME NOT FOUND results, Desired Access Maximum Allowed | Opens succeed with both READ and MAXIMUM_ALLOWED in both views |
+| HKCU Classes claude | Nine successful opens; default value read twice; URL Protocol length negotiation observed | Declaration still present |
+| Own ProgID/capabilities | Zero retained accesses or name mentions for ClaudeShim | Exact installed registration and 19 file identities/hashes still match receipt |
+| Effective association | Not changed by the recording | QueryCurrentDefault again returns S_OK / Undecided; no callback intent present |
+
+Of the rows, 9,993 concern RegisteredApplications and 27 the actual scheme. BUFFER OVERFLOW and
+NO MORE ENTRIES occur during enumeration/length negotiation; they are not independently rejection
+causes. Missing optional FriendlyTypeName is likewise not a causal diagnosis. The visible official
+MSIX candidate's AppModel lookup was outside this path allowlist and was not observed.
+
+A limited-query handle reports Settings package identity
+`windows.immersivecontrolpanel_10.0.8.1000_neutral_neutral_cw5n1h2txyewy`.
+This differs from the unpackaged direct observer. The measured visibility/access discrepancy is
+consistent with a consumer-context difference; package identity does not prove registry virtualization,
+a specific cache mechanism, a Windows bug, or that machine-level registration would fix it.
+The two enumerations are from different contexts/times, not a simultaneous equality test.
+No broker activity was captured and no automatic process/path expansion or second recording occurred.
+Official Claude package remains 2.19675.1.0. Native Settings/two-account gates remain BLOCKED/NOT_RUN.
+
+## One next minimal experiment proposed — independent neutral reader
+
+Before any HKLM move or router change, compare the same exact values using a non-elevated Windows
+PowerShell opened manually from Start, outside the Codex-created process tree. This tests whether
+the direct observer's parent context affects the baseline. It is a single read-only experiment;
+no new capture, package install, callback, profile operation or framework is needed.
+
+```powershell
+reg.exe query "HKCU\Software\RegisteredApplications" /v ClaudeShim /reg:64
+reg.exe query "HKCU\Software\RegisteredApplications" /v ClaudeShim /reg:32
+reg.exe query "HKCR\claude" /v "URL Protocol" /reg:64
+reg.exe query "HKCR\claude" /v "URL Protocol" /reg:32
+```
+
+If that neutral reader cannot see these values while the Codex-side reader can, the observer/context
+boundary is further localized. If it sees them, the discrepancy is narrower to Settings/its execution
+context. Neither outcome alone identifies a particular virtualization mechanism. Proposal only;
+this independently launched reader remains NOT_RUN. No correction to the real registration is applied.

@@ -411,7 +411,8 @@ updates and CI resume; no merge while required Desktop acceptance is missing. De
 S5 approved provisioning is installed; two bounded owned-registration repairs retain A/package and leave B unlaunched.
 Operator default-app picker still offers only Claude despite Shell enumeration of the dedicated router: UI gate BLOCKED.
 Reboot did not change versions/assets/picker. Real scheme exists; QueryCurrentDefault returns Undecided.
-Next: bounded Settings Procmon observation after tool/elevation agreement; [diagnostic](S5-ROUTER-DIAGNOSTIC-20261006.md). No causal router fix yet.
+Approved manual Procmon shows Settings/direct-reader registration and HKCR visibility differences; cause UNKNOWN.
+Next: single independent neutral-reader comparison, read-only/proposed; [diagnostic](S5-ROUTER-DIAGNOSTIC-20261006.md). No causal router fix yet.
 Project/profile share/apply/restore, removal or restart still needs separate local authorization.
 The earlier CLI-only/Desktop-path blocker is superseded by the user's Desktop screenshot, not generalized to all projects.
 Native 8.3, effective B loading/config isolation and two-Desktop acceptance remain NOT_RUN. Optional REA-A2 stays deferred.

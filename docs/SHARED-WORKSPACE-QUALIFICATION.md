@@ -271,5 +271,11 @@ The real `claude` declaration is present in HKCU/HKCR with empty REG_SZ URL Prot
 manifest also declares `claude`. QueryCurrentDefault(claude, AT_URLPROTOCOL, AL_EFFECTIVE) returns S_OK/Undecided,
 whose class resolves to Windows OpenWith; per-user/machine queries return 0x80070483. No default handler selected
 for the router is established. Scheme author/Settings rejection cause remain UNKNOWN; no missing-schema fix justified.
-One short Procmon consumer observation is PREPARED/NOT_RUN with explicit tool/elevation agreement pending.
-No router/profile/package mutation, notification replay or callback; see [bounded report and plan](S5-ROUTER-DIAGNOSTIC-20261006.md).
+User approved Procmon/elevation and completed one manually guided picker capture/save. CSV-derived evidence:
+10,020 allowed reads by SystemSettings PID 36912, retained span 7.8586995s; capture controls are operator-confirmed.
+Settings enumerates 816 HKCU registrations without ClaudeShim; direct observer reads 817 including it, both views.
+Settings HKCR claude opens fail NAME NOT FOUND while direct READ/MAXIMUM_ALLOWED opens succeed in both views.
+This localizes an observed context/visibility discrepancy, not a proven MSIX cause or missing-schema fix.
+Own registration/19 assets remain unchanged; no callback; effective default remains S_OK/Undecided.
+Neutral independently launched reader is the single proposed next read-only experiment, NOT_RUN. No raw traces
+published or broad collection/replay performed; see [bounded report](S5-ROUTER-DIAGNOSTIC-20261006.md).

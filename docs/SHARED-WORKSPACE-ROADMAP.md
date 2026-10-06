@@ -403,12 +403,12 @@ PR creation permissions were read back for the connected account. REA output mus
 ## Current continuation boundary
 
 S2-D2, S3a review, Desktop operator evidence and S3b/S3c/S4b-e preparation have historical Windows fixture receipts.
-S4f/S4g-Q1 qualifies the native candidate on Windows fixtures: 164 contracts, 163 PASS / 1 native 8.3 SKIP.
+S4f/S4g-Q1/Q2 qualify the native candidate on Windows fixtures; Q2 adds four actual registry/mutex API contracts.
 Actual Unicode COM shortcuts, file locks, PS5.1/PS7 wrappers and extracted package executed only on owned TEMP.
-Registry algorithms use an in-memory winreg model; native registry/mutex/default-association proof remains NOT_RUN.
+Registry algorithms use a model and actual APIs in a bounded disposable HKCU namespace; real associations/ACL variants remain NOT_RUN.
 The latest user instruction authorizes tests, superseding the prior stop-before-tests. Normal commit/push/draft-PR
 updates and CI resume; no merge while required Desktop acceptance is missing. Default legacy invocations stay refused.
-Next: isolated native registry API/mutex qualification, then separately authorized S5a/S5b trials.
+Next: separately authorized S5a/S5b trials with confirmed A data/config provenance and a reviewed private plan.
 Real installation, project/profile share/apply/restore, login, removal or restart still needs separate local authorization.
 The earlier CLI-only/Desktop-path blocker is superseded by the user's Desktop screenshot, not generalized to all projects.
 Native 8.3, effective B loading/config isolation and two-Desktop acceptance remain NOT_RUN. Optional REA-A2 stays deferred.

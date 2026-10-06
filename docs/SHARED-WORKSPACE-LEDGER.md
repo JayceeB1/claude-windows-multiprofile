@@ -175,8 +175,8 @@ roadmap-only turn started no remaining implementation; the separately authorized
 | S4c | VERIFIED_SYNTHETIC | S4b + S3c | `9e4b9ae`; consolidated runner | 12 historical TEMP-only install/guard contracts; native candidate separate | S4f qualification |
 | S4d | VERIFIED_SYNTHETIC | S4c | `bd34247`, guard `574342f`; runner + Test-Uninstall | 9 B-removal contracts; data retained; native removal NOT_RUN | Native adapter acceptance |
 | S4e | VERIFIED_SYNTHETIC | S4d + D2 | `c50c0da`, guide `839558d`; consolidated runner | 10 historical preview/package contracts; historical 19-member package | S4g qualification |
-| S4f | VERIFIED_SYNTHETIC | S4c + S4d | `083c02b` + Q1 fixes/contracts; Windows | Actual TEMP COM/locks, registry simulated; Desktop NOT_RUN | Native registry then S5 |
-| S4g | VERIFIED_SYNTHETIC | S4f + S4e | `7ae1479` + Q1; Python 3.14.7, PS5.1/7 | Actual TEMP wrappers/extracted package; 164 contracts, 163 PASS / 1 SKIP | Desktop acceptance |
+| S4f | VERIFIED_SYNTHETIC | S4c + S4d | `083c02b` + Q1 fixes/contracts; Windows | Actual TEMP COM/locks and disposable registry/mutex APIs; Desktop NOT_RUN | S5 admission |
+| S4g | VERIFIED_SYNTHETIC | S4f + S4e | `7ae1479` + Q1; Python 3.14.7, PS5.1/7 | Actual TEMP wrappers/extracted package; Q2 168 contracts, 167 PASS / 1 SKIP | Desktop acceptance |
 | S5a | TODO | S4e + explicit local approval | None | Browser focus is **HYPOTHESIS TO TEST** | Observe HTTPS/profile identity/claude:// separately |
 | S5b | TODO | S5a + all required synthetic gates + approval | None | Two Desktop identities, memory and removal unobserved | Real disposable-project acceptance |
 
@@ -489,9 +489,11 @@ Q1/Q2 process matrix 20 PASS; both-shell Setup/argument/launcher/dispatch/uninst
 Error severity clean. Initial harness/Unicode/alias/lint invocation failures retained in [qualification](SHARED-WORKSPACE-QUALIFICATION.md).
 Jev review escalated confidence; manual source review performed, no automatic acceptance. CAS/hostile receipt protection
 not claimed; interrupted manifest/receipt ownership needs review. A, shared resources and official package never touched.
+Q1 fixes/tests: 9a614c3/c5db4a8. [CI 37508782528](https://github.com/JayceeB1/claude-windows-multiprofile/actions/runs/37508782528) at 431d40c passed: 164 contracts, 163 PASS / 1 SKIP per shell.
+Q2: 168 contracts, 167 PASS / 1 SKIP; four actual registry/mutex API tests in guarded disposable HKCU; no production associations.
 Commit/push/draft-PR/CI resume under test authorization; do not merge or promote fixtures to Desktop acceptance.
 
 ## NEXT SLICE
 
-Isolated native registry API/mutex qualification, then separately authorized S5 trials. Native 8.3 stays NOT_RUN;
+Separately authorized S5 trials with confirmed A provenance and an exact reviewed private plan. Native 8.3 stays NOT_RUN;
 optional REA-A2 follows issue #3. Effective B memory/config and two-Desktop acceptance remain unqualified.

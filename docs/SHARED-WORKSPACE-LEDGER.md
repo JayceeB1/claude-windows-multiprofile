@@ -1,6 +1,6 @@
 # Shared workspace fork - implementation ledger
 
-Updated 2026-10-06 (native candidate completed before tests). Delivery order and dependencies: [Shared workspace roadmap](SHARED-WORKSPACE-ROADMAP.md). This is the sole ledger. Requirements below are separate from implementation and evidence statuses.
+Updated 2026-10-06 (native candidate qualified on Windows fixtures). Delivery order and dependencies: [Shared workspace roadmap](SHARED-WORKSPACE-ROADMAP.md). This is the sole ledger. Requirements below are separate from implementation and evidence statuses.
 
 ## Contract
 
@@ -50,7 +50,7 @@ must confirm that adding/removing B only affects its owned additions, not shared
 
 ## Work rules
 
-Current user instruction: chain preparation through local commits and STOP BEFORE TESTS. No push/CI or merge for this unqualified candidate. Keep files below approximately 500 lines. Use the connected user's Git identity; do not copy upstream's author or add assistant/co-author attribution. Keep master
+Current user instruction authorizes fixture tests and normal delivery. No real-profile apply, login/restart or merge before Desktop acceptance. Keep files below approximately 500 lines. Use the connected user's Git identity; do not copy upstream's author or add assistant/co-author attribution. Keep master
 unchanged until approval.
 
 ## Published baseline
@@ -175,8 +175,8 @@ roadmap-only turn started no remaining implementation; the separately authorized
 | S4c | VERIFIED_SYNTHETIC | S4b + S3c | `9e4b9ae`; consolidated runner | 12 historical TEMP-only install/guard contracts; native candidate separate | S4f qualification |
 | S4d | VERIFIED_SYNTHETIC | S4c | `bd34247`, guard `574342f`; runner + Test-Uninstall | 9 B-removal contracts; data retained; native removal NOT_RUN | Native adapter acceptance |
 | S4e | VERIFIED_SYNTHETIC | S4d + D2 | `c50c0da`, guide `839558d`; consolidated runner | 10 historical preview/package contracts; historical 19-member package | S4g qualification |
-| S4f | IMPLEMENTED_NOT_TESTED | S4c + S4d | Local `083c02b`; source syntax/review only | Native ownership/COM/registry/recovery; runtime NOT_RUN | Isolated adapter qualification |
-| S4g | IMPLEMENTED_NOT_TESTED | S4f + S4e | Local `7ae1479`, guide `42e8297`; syntax/review only | Explicit native CLI/wrappers and expanded allowlist; tests NOT_RUN | Entry/package and regression qualification |
+| S4f | VERIFIED_SYNTHETIC | S4c + S4d | `083c02b` + Q1 fixes/contracts; Windows | Actual TEMP COM/locks, registry simulated; Desktop NOT_RUN | Native registry then S5 |
+| S4g | VERIFIED_SYNTHETIC | S4f + S4e | `7ae1479` + Q1; Python 3.14.7, PS5.1/7 | Actual TEMP wrappers/extracted package; 164 contracts, 163 PASS / 1 SKIP | Desktop acceptance |
 | S5a | TODO | S4e + explicit local approval | None | Browser focus is **HYPOTHESIS TO TEST** | Observe HTTPS/profile identity/claude:// separately |
 | S5b | TODO | S5a + all required synthetic gates + approval | None | Two Desktop identities, memory and removal unobserved | Real disposable-project acceptance |
 
@@ -478,20 +478,20 @@ S5 trials remain NOT_RUN; this closes preparation, not actual two-account accept
 
 PR #2 document-only commit aeb8cb8 admitted as 8d1b672; no old implementation snapshot merged. Issues changed from disabled to enabled during this review; connected JayceeB1 has admin/push/triage rights. Follow-up [#3](https://github.com/JayceeB1/claude-windows-multiprofile/issues/3) created. REA-A1 (`c5389b7`): pinned 4.0.1 packaged fixture and reproduction CORRECT, adoption EXPERIMENTAL; seven classified questions, exact artifact/resource hashes and main.cjs delta. Generic compare UNKNOWN; graph churn PARTIAL. Initial Startup timeout/CRLF repair retained; [receipt](REA-SMOKE-20261006.md). ELF/PE/Claude pair/runtime/8.3 NOT_RUN; no global setup, normal-use dependency or real profile mutation/isolation proof.
 
-## S4f/S4g native candidate (2026-10-06) — IMPLEMENTED_NOT_TESTED
+## S4f/S4g candidate and Q1 fixture qualification (2026-10-06)
 
-New NativeWindowsIO/NativeWorkspace implement explicit capsule approval, physical/hash ownership, selected-key journals,
-COM staging/read-back, bounded HKCU router registration and conservative recovery. Setup/Uninstall and SharedWorkspace
-wire explicit native actions; default guards remain. B removal retains A routing/data/shared memory and the official package.
-Separate B-data deletion and protocol consent remain mandatory. Checksums are not receipt authentication; external-editor
-CAS and crash-atomic write/journal recovery are not claimed. Unknown or changed ownership refuses, retained additions need review.
-Assets/package allowlists include the new modules/wrappers. Static review/syntax parsing (4 Python, 2 PS files) only;
-diff whitespace check clean. All candidate tests/runtime gates NOT_RUN; no modules imported or scripts executed.
-Historical PASS above does not qualify this candidate. No real profile/project/shortcut/registry/package operation performed.
-User requested completion BEFORE TESTS: local commits only; push withheld because PR CI automatically executes tests.
-Local candidate: `083c02b` native adapter, `7ae1479` entry/wrappers, `42e8297` guide and qualification queue.
+Candidate commits 083c02b/7ae1479/42e8297 stopped before tests as instructed. Subsequent user go-ahead authorizes Q1.
+Windows matrix: 164 unique contracts, 163 PASS / 1 explicit 8.3 SKIP; 28 new native TEMP and 9 registry-model contracts.
+Actual Unicode COM read-back, operation/routing locks, PS5.1/PS7 wrappers and extracted-package native workflow pass.
+Fixes: IShellLinkW/IPersistFile avoids observed WScript Unicode loss; explicit PythonExecutable bypasses Store alias
+ambiguity; unreadable B traversal refuses before mutation. Registry simulated only; native APIs/mutex remain NOT_RUN.
+Q1/Q2 process matrix 20 PASS; both-shell Setup/argument/launcher/dispatch/uninstall/diagnostic regressions pass; analyzer
+Error severity clean. Initial harness/Unicode/alias/lint invocation failures retained in [qualification](SHARED-WORKSPACE-QUALIFICATION.md).
+Jev review escalated confidence; manual source review performed, no automatic acceptance. CAS/hostile receipt protection
+not claimed; interrupted manifest/receipt ownership needs review. A, shared resources and official package never touched.
+Commit/push/draft-PR/CI resume under test authorization; do not merge or promote fixtures to Desktop acceptance.
 
 ## NEXT SLICE
 
-Isolated candidate qualification from MANUAL-TEST.md, then separately authorized S5 trials. Native 8.3 stays NOT_RUN;
+Isolated native registry API/mutex qualification, then separately authorized S5 trials. Native 8.3 stays NOT_RUN;
 optional REA-A2 follows issue #3. Effective B memory/config and two-Desktop acceptance remain unqualified.

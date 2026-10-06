@@ -155,3 +155,25 @@ Path invocation; no blanket warning-free claim. The fixture-only boundary and na
 Jev advisory review escalated correctness/test-gap confidence (safe_to_apply 0.26); no automatic acceptance. Manual
 review checked Unicode vtable/marshaling, fixed payload transport, ownership/refusal branches and the new fixtures.
 CI receipts will identify their exact pushed revision; the local worktree result above is not an exact remote proof.
+
+## S4f/S4g-Q2 actual registry APIs on a disposable namespace (2026-10-06)
+
+The four additional RegistryApiTests exercise actual HKCU registry APIs and a native mutex under a unique
+Software\ClaudeSharedWorkspaceFixture-<random> namespace and Local\ClaudeFixtureMutex-<random> name. Production
+ROUTER/CAPABILITIES/REGISTERED/VALUE/MUTEX_NAME constants are redirected before any operation. Independent open,
+create and delete interceptors refuse any path outside that namespace. A checked owner marker and strict cleanup
+refuse unknown additions. No production Classes/RegisteredApplications/UserChoice or real profile stores accessed.
+The registry fixture is removed after each test; this is a real disposable registry write, never actual registration
+of Claude. Payload values under the inert namespace are not OS associations. No handler or shortcut was launched.
+
+Actual evidence: installation/read-back/restoration with unrelated fixture value retained, partial write rollback,
+foreign fixture value refusing restore, cross-thread mutex contention/refusal and subsequent release/acquisition.
+Abandoned-mutex, alternative ACLs, cross-logon-session behavior and actual Windows default-handler selection remain
+NOT_RUN. The nine in-memory registry contracts still cover separate policy/interruption cases; no equivalence claim.
+
+Final local consolidated run after Q2: 168 unique contracts, 167 PASS / 1 explicit native 8.3 SKIP, 63.378 seconds,
+Python 3.14.7 AMD64. Q1 native entry/COM/transaction contracts remain intact. Desktop A/B accounts, effective config
+and memory loading remain NOT_RUN. PSScriptAnalyzer Error severity remains clean; source/link/diff checks pass.
+Q1 source at 431d40c7e9d9214c0c87a1e3f3ea61e527a31f89 passed [CI 37508782528](https://github.com/JayceeB1/claude-windows-multiprofile/actions/runs/37508782528),
+all three jobs completed/success. Full logs read: both Windows jobs retain 164 executed / 163 PASS / 1 SKIP and
+native-Uninstall refusal; that receipt precedes Q2 and is not final-head Q2 proof. Current Q2 CI is recorded in PR #1.

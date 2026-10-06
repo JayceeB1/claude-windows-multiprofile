@@ -8,7 +8,7 @@ add account B without migrating projects or requiring worktrees.
 **Delivery status:** routing/diagnostic, memory planner/transactions and additive install/removal are qualified on
 Windows fixtures. Desktop operator evidence is recorded for selected A memory. Native additive execution, B memory
 loading and two-Desktop acceptance remain unqualified. An explicit native adapter and command wrappers are
-qualified on isolated Windows fixtures (COM and locks exercised; registry simulated). Real Desktop acceptance
+qualified on isolated Windows fixtures (COM, locks and disposable registry APIs exercised). Real Desktop acceptance
 remains NOT_RUN. The default Setup/Uninstall invocation still refuses mutations. Follow the [ledger](docs/SHARED-WORKSPACE-LEDGER.md),
 [roadmap](docs/SHARED-WORKSPACE-ROADMAP.md) and [qualification receipts](docs/SHARED-WORKSPACE-QUALIFICATION.md).
 
@@ -67,8 +67,8 @@ See the [manual acceptance procedure](MANUAL-TEST.md) before any native operatio
 ### Native candidate commands — separately authorized real-profile trial
 
 These commands were qualified only on owned TEMP fixtures, never on real profiles or project settings.
-COM uses explicit Unicode IShellLinkW; registry registration/restoration was tested against an in-memory adapter,
-not real Windows associations. Obtain separate authorization before real profiles/projects. Python must be a real
+COM uses explicit Unicode IShellLinkW. Registry algorithms were tested against a model and actual Windows APIs
+in a unique disposable HKCU namespace; production associations/default-handler selection remain unexecuted. Obtain separate authorization before real profiles/projects. Python must be a real
 installed runtime, not a Store alias. Wrappers accept `-PythonExecutable "C:\PATH\python.exe"` to select it explicitly.
 
 ```powershell

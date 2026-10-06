@@ -1,7 +1,7 @@
 # Local acceptance procedure — no automatic execution
 
 This checklist is a future separately authorized native trial, not instructions to run the blocked legacy installer.
-The native adapter is VERIFIED_SYNTHETIC on owned TEMP fixtures. Real registry and Desktop acceptance remain NOT_RUN.
+The native adapter is VERIFIED_SYNTHETIC on owned TEMP fixtures. Real Claude associations and Desktop acceptance remain NOT_RUN.
 The sole [ledger](docs/SHARED-WORKSPACE-LEDGER.md) governs status; fixtures cannot establish native acceptance.
 
 ## Evidence already available
@@ -33,7 +33,7 @@ The user's subsequent test authorization supersedes the implementation-only stop
 - [x] Isolated install/recovery: shortcut failure recovery, interrupted manifest write refused for review, unrelated settings/additions retained.
 - [x] COM: actual Unicode/spaced-path IShellLinkW read-back, staged bytes and full TEMP install/remove/rollback.
 - [x] Registry model: empty ownership, collisions, bounded snapshot, read-back, partial recovery/conflicts and unrelated value retention.
-- [ ] Native registry APIs, ACLs and mutex contention: NOT_RUN; the model cannot establish these.
+- [x] Actual registry APIs and mutex contention in a unique disposable namespace, independently bounded; real associations/ACL variants remain NOT_RUN.
 - [x] Routing: actual FileShare.None contention, outstanding intent refusal and fixture A retained after B removal.
 - [x] Ownership: changed shortcut, replaced asset, corrupt receipt, hardlink deletion refusal and idempotence.
 - [x] B deletion: explicit opt-in; unreadable traversal refuses before mutation; exact recorded fixture roots only.

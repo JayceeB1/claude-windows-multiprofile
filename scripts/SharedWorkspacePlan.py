@@ -11,7 +11,8 @@ import SharedMemoryApply as transactions
 ASSETS = ('Launch-Claude.ps1', 'launch.vbs', 'ClaudeOpenShim.ps1',
           'Arm-ClaudeLogin.ps1', 'Test-ClaudeRouting.ps1', 'Inspect-SharedWorkspace.py',
           'SharedMemoryPlan.py', 'SharedMemoryApply.py', 'SharedWorkspacePlan.py',
-          'SharedWorkspace.py', 'Uninstall.ps1', 'Setup.ps1', 'NativeWindowsIO.py', 'NativeWorkspace.py')
+          'SharedWorkspace.py', 'Uninstall.ps1', 'Setup.ps1', 'NativeWindowsIO.py', 'NativeWorkspace.py',
+          'ClaudeLoginRouter.cs', 'ClaudeLoginRouter.exe')
 
 
 @dataclass(frozen=True)
@@ -74,6 +75,9 @@ def make_workspace_plan(memory_plans: tuple, install: Path, desktop: Path,
     assets = []
     for name in ASSETS:
         raw = bridge.read_optional(source / name)
+        if raw is None and name == 'ClaudeLoginRouter.exe':
+            import NativeWindowsIO
+            raw = NativeWindowsIO.materialize_router_host(source / 'ClaudeLoginRouter.cs')
         if raw is None:
             raise bridge.BridgeError('ASSET_UNAVAILABLE')
         assets.append((name, raw))

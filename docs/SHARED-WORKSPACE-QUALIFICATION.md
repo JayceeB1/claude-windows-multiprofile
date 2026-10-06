@@ -227,3 +227,33 @@ Next operator step: choose Claude Login Router for the claude link type in Windo
 classification before explicitly arming/launching B for one manual browser login. [Microsoft default-app procedure](https://support.microsoft.com/en-us/windows/apps/change-default-apps-in-windows).
 B configuration/memory loading, two-account identity, browser-focus hypothesis and B-removal acceptance remain
 NOT_RUN. The registered official package and existing A entry are retained. Native 8.3 remains NOT_RUN.
+
+## S5 default-app picker discrepancy — acceptance blocked
+
+The operator reports only official Claude in the CLAUDE protocol picker, including after complete Settings
+close/reopen following each repair. The first repair aligns Capabilities.ApplicationName with RegisteredApplications
+and adds owned ProgID display/icon metadata. The second replaces the shared conhost command with an own compiled
+ClaudeLoginRouter.exe, forwarding exactly one URI argument to the adjacent shim without logging it. Both repairs
+retain ownership receipts, source backups and maintenance journals; they do not select a default or launch B.
+The current install has 19 owned files. A remains running; process survival alone is not authentication proof.
+
+Read-only AssocQueryString resolves the dedicated executable and friendly name. Correctly identified Shell COM
+enumeration lists both the router and Claude with IsRecommended S_OK. This is Shell registration evidence, not
+Settings visibility or browser callback proof. The writer has no Windows package identity (15700); MSIX registry
+virtualization is not established as the cause. No credentials, cookies or session databases were inspected.
+
+The maintenance helper fails closed on mismatched receipts, changed registry, occupied added files or armed intent.
+Its journal preserves the original receipt/source backups; interrupted registry/file/receipt migration requires
+manual review and is not claimed atomic or automatically resumable. The ignored PE build is created locally when
+missing and packaged with its C# source; no binary is committed. No new application registry namespace is added.
+
+Latest full local suite before the final additional host-upgrade contract: 171 contracts, 170 PASS / 1 native 8.3
+SKIP. Seven targeted actual-registry contracts subsequently PASS in guarded disposable HKCU, including stale
+host-upgrade refusal. The host roundtrip uses a synthetic URI and a TEMP capture shim, not Claude or browser login.
+Final combined local validation: 172 contracts, 171 PASS / 1 explicit native 8.3 SKIP in 139.084s.
+CI and Desktop acceptance must not inherit an earlier-head PASS.
+
+Next targeted operator observation: `ms-settings:defaultapps?registeredAppUser=ClaudeShim`, without changing an
+association. Microsoft documents this per-user registered-app page [here](https://learn.microsoft.com/en-us/windows/apps/develop/launch/launch-default-apps-settings).
+Session-refresh/reboot causality remains UNKNOWN; no session logout or restart has been performed or required.
+B login, effective B configuration/loading, two-account operation and removal acceptance remain NOT_RUN.

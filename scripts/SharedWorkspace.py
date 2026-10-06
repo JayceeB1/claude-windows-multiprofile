@@ -13,7 +13,7 @@ import SharedWorkspacePlan as workspace
 PACKAGE_FILES = ('Launch-Claude.ps1', 'launch.vbs', 'ClaudeOpenShim.ps1', 'Arm-ClaudeLogin.ps1',
                  'Test-ClaudeRouting.ps1', 'Inspect-SharedWorkspace.py', 'SharedMemoryPlan.py',
                  'SharedMemoryApply.py', 'SharedWorkspacePlan.py', 'SharedWorkspace.py', 'Uninstall.ps1',
-                 'Setup.ps1', 'NativeWindowsIO.py', 'NativeWorkspace.py')
+                 'Setup.ps1', 'NativeWindowsIO.py', 'NativeWorkspace.py', 'ClaudeLoginRouter.cs', 'ClaudeLoginRouter.exe')
 PACKAGE_DOCS = ('README.md', 'LICENSE', 'MANUAL-TEST.md', 'docs/PROTOCOL-ROUTING.md',
                 'docs/SHARED-WORKSPACE-ROADMAP.md', 'docs/SHARED-WORKSPACE-LEDGER.md',
                 'docs/SHARED-WORKSPACE-QUALIFICATION.md', 'docs/REA-QUALIFICATION.md',
@@ -76,6 +76,9 @@ def package(output: Path):
     files = {}
     for name in PACKAGE_FILES:
         raw = memory.read_optional(source / name)
+        if raw is None and name == 'ClaudeLoginRouter.exe':
+            import NativeWindowsIO
+            raw = NativeWindowsIO.materialize_router_host(source / 'ClaudeLoginRouter.cs')
         if raw is None:
             raise memory.BridgeError('PACKAGE_MEMBER_MISSING')
         files['scripts/' + name] = raw

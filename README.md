@@ -15,6 +15,12 @@ remains NOT_RUN. The default Setup/Uninstall invocation still refuses mutations.
 ## Preview-first shared workspace
 
 Requires Windows and Python 3.12+, standard library only. Nothing installs dependencies or launches Claude.
+
+The router host is an own C# WinExe, not a Claude binary. A missing local `scripts/ClaudeLoginRouter.exe`
+is compiled using the existing Windows .NET Framework64 v4 compiler during preview/package preparation;
+this creates an ignored build artifact in the source directory. No compiler is downloaded. The generated
+PE is retained between preview and installation so approval hashes remain stable, and packaged with its source.
+Changing that C# source requires a fresh build and a new approval preview; existing build files are not overwritten.
 Keep a private specification outside Git, named `*.workspace.local.json`. It explicitly declares A's existing
 `dataDir`/`configDir`, B's new distinct roots, the launcher install parent, Desktop shortcut folder and each existing
 project's own memory mapping. Unknown config provenance, trust, managed/CLI overrides or version evidence refuses a plan.

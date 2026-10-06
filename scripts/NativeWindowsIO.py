@@ -122,12 +122,18 @@ def desired_registry(install):
     powershell = str(windows_root() / 'System32/WindowsPowerShell/v1.0/powershell.exe')
     shim = str(bridge.safe_path(install / 'bin/ClaudeOpenShim.ps1'))
     conhost = str(windows_root() / 'System32/conhost.exe')
-    command = f'"{conhost}" --headless "{powershell}" -NoProfile -ExecutionPolicy Bypass -File "{shim}" -Url "%1"'
+    command = f'"{install / "bin" / "ClaudeLoginRouter.exe"}" "%1"'
     leaf = lambda values, children=None: {'values': values, 'children': children or {}}
+    icon = str(windows_root() / 'System32/shell32.dll') + ',0'
     return {'router': leaf({'': 'URL:Claude Protocol', 'URL Protocol': ''},
-                          {'shell': leaf({}, {'open': leaf({}, {'command': leaf({'': command})})})}),
+                          {'Application': leaf({'ApplicationName': 'Claude Login Router',
+                                               'ApplicationDescription': 'Explicit named-profile Claude login router',
+                                               'ApplicationIcon': icon}),
+                           'DefaultIcon': leaf({'': icon}),
+                           'shell': leaf({}, {'open': leaf({}, {'command': leaf({'': command})})})}),
             'capabilities': leaf({}, {'Capabilities': leaf({
-                'ApplicationName': 'Claude Login Router',
+                'ApplicationName': VALUE,
+                'ApplicationIcon': icon,
                 'ApplicationDescription': 'Explicit named-profile Claude login router'},
                 {'URLAssociations': leaf({'claude': 'ClaudeShim.claude'})})}),
             'registered_value': r'Software\ClaudeShim\Capabilities'}
@@ -189,11 +195,101 @@ def _restore_registry(before, expected, allow_partial=False):
 def install_registry(expected_before, desired):
     with registry_guard():
         _install_registry(expected_before, desired)
+    notify_association_changed()
+
+
+def repair_registration_metadata(expected, desired):
+    """Owned v1->v2 metadata only; no command, registered-name or default change."""
+    import copy
+    allowed = copy.deepcopy(desired)
+    allowed['router']['children'].pop('Application')
+    allowed['router']['children'].pop('DefaultIcon')
+    caps = allowed['capabilities']['children']['Capabilities']['values']
+    caps.pop('ApplicationIcon')
+    caps['ApplicationName'] = 'Claude Login Router'
+    if expected != allowed:
+        raise bridge.BridgeError('REGISTRATION_REPAIR_NOT_EXPECTED_VERSION')
+    with registry_guard():
+        if registry_snapshot() != expected:
+            raise bridge.BridgeError('REGISTRATION_REPAIR_CONFLICT')
+        for subkey in ('Application', 'DefaultIcon'):
+            with winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, ROUTER + '\\' + subkey, 0, winreg.KEY_WRITE) as key:
+                for name, value in desired['router']['children'][subkey]['values'].items():
+                    winreg.SetValueEx(key, name, 0, winreg.REG_SZ, value)
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, CAPABILITIES + '\\Capabilities', 0, winreg.KEY_SET_VALUE) as key:
+            for name in ('ApplicationName', 'ApplicationIcon'):
+                winreg.SetValueEx(key, name, 0, winreg.REG_SZ,
+                                 desired['capabilities']['children']['Capabilities']['values'][name])
+        if registry_snapshot() != desired:
+            raise bridge.BridgeError('REGISTRATION_REPAIR_READBACK_FAILED')
+    notify_association_changed()
+
+
+def legacy_host_registry(desired, install):
+    import copy
+    legacy = copy.deepcopy(desired)
+    ps = str(windows_root() / 'System32/WindowsPowerShell/v1.0/powershell.exe')
+    conhost = str(windows_root() / 'System32/conhost.exe')
+    shim = str(install / 'bin/ClaudeOpenShim.ps1')
+    legacy['router']['children']['shell']['children']['open']['children']['command']['values'][''] = \
+        f'"{conhost}" --headless "{ps}" -NoProfile -ExecutionPolicy Bypass -File "{shim}" -Url "%1"'
+    return legacy
+
+
+def upgrade_host_registration(expected, desired, install):
+    if expected != legacy_host_registry(desired, install):
+        raise bridge.BridgeError('ROUTER_HOST_UPGRADE_NOT_EXPECTED_VERSION')
+    with registry_guard():
+        if registry_snapshot() != expected:
+            raise bridge.BridgeError('ROUTER_HOST_UPGRADE_CONFLICT')
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, ROUTER + r'\shell\open\command', 0, winreg.KEY_SET_VALUE) as key:
+            winreg.SetValueEx(key, '', 0, winreg.REG_SZ,
+                desired['router']['children']['shell']['children']['open']['children']['command']['values'][''])
+        if registry_snapshot() != desired:
+            raise bridge.BridgeError('ROUTER_HOST_UPGRADE_READBACK_FAILED')
+    notify_association_changed()
+
+
+def build_router_host(source):
+    source = bridge.safe_path(source)
+    compiler = windows_root() / 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
+    if not compiler.is_file():
+        raise bridge.BridgeError('WINDOWS_CSHARP_COMPILER_REQUIRED')
+    with tempfile.TemporaryDirectory(prefix='claude-router-build-') as temporary:
+        output = Path(temporary) / 'ClaudeLoginRouter.exe'
+        result = subprocess.run([str(compiler), '/nologo', '/target:winexe', '/optimize+',
+            '/out:' + str(output), str(source)], capture_output=True, timeout=30,
+            creationflags=subprocess.CREATE_NO_WINDOW)
+        if result.returncode:
+            raise bridge.BridgeError('ROUTER_HOST_BUILD_FAILED')
+        raw = bridge.read_optional(output)
+        if not raw or not raw.startswith(b'MZ'):
+            raise bridge.BridgeError('ROUTER_HOST_BUILD_INVALID')
+        return raw
+
+
+def materialize_router_host(source):
+    """Create the missing local build artifact once; never overwrite an existing EXE."""
+    import SharedMemoryApply as tx
+    source = bridge.safe_path(source)
+    target = source.with_name('ClaudeLoginRouter.exe')
+    raw = build_router_host(source)
+    tx.create_once(target, raw)
+    return raw
+
+
+def notify_association_changed():
+    """Invalidate Shell association caches; never activate a URI or select a default."""
+    api = ctypes.WinDLL('shell32', use_last_error=True)
+    api.SHChangeNotify.argtypes = [ctypes.c_long, wintypes.UINT, ctypes.c_void_p, ctypes.c_void_p]
+    api.SHChangeNotify.restype = None
+    api.SHChangeNotify(0x08000000, 0, None, None)
 
 
 def restore_registry(before, expected, allow_partial=False):
     with registry_guard():
         _restore_registry(before, expected, allow_partial)
+    notify_association_changed()
 
 
 def shortcut_bytes(specification, staging):

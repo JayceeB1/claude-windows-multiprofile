@@ -408,7 +408,9 @@ Actual Unicode COM shortcuts, file locks, PS5.1/PS7 wrappers and extracted packa
 Registry algorithms use a model and actual APIs in a bounded disposable HKCU namespace; real associations/ACL variants remain NOT_RUN.
 The latest user instruction authorizes tests, superseding the prior stop-before-tests. Normal commit/push/draft-PR
 updates and CI resume; no merge while required Desktop acceptance is missing. Default legacy invocations stay refused.
-Next: separately authorized S5a/S5b trials with confirmed A data/config provenance and a reviewed private plan.
-Real installation, project/profile share/apply/restore, login, removal or restart still needs separate local authorization.
+S5 approved provisioning is installed; two bounded owned-registration repairs retain A/package and leave B unlaunched.
+Operator default-app picker still offers only Claude despite Shell enumeration of the dedicated router: UI gate BLOCKED.
+Next: inspect the registered-app Settings page before considering session refresh; reboot causality remains UNKNOWN.
+Project/profile share/apply/restore, removal or restart still needs separate local authorization.
 The earlier CLI-only/Desktop-path blocker is superseded by the user's Desktop screenshot, not generalized to all projects.
 Native 8.3, effective B loading/config isolation and two-Desktop acceptance remain NOT_RUN. Optional REA-A2 stays deferred.

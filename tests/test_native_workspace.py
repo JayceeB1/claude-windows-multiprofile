@@ -345,6 +345,29 @@ class NativeTests(EntryTests):
             '--approved', '--writers-closed'])['status'], 'NATIVE_ROLLED_BACK')
         self.assert_a_preserved()
 
+    def test_dedicated_host_refuses_invalid_input_and_forwards_one_quoted_argument(self):
+        host = Path(__file__).resolve().parents[1] / 'scripts/ClaudeLoginRouter.exe'
+        if not host.exists():
+            windows.materialize_router_host(host.with_suffix('.cs'))
+        fixture = self.root / 'Host roundtrip'
+        fixture.mkdir()
+        target = fixture / host.name
+        target.write_bytes(host.read_bytes())
+        captured = fixture / 'argument.txt'
+        (fixture / 'ClaudeOpenShim.ps1').write_text("param([string]$Url)\n[IO.File]::WriteAllText($env:FIXTURE_ROUTER_CAPTURE,$Url,[Text.UTF8Encoding]::new($false))\nexit 7\n")
+        env = dict(os.environ, FIXTURE_ROUTER_CAPTURE=str(captured))
+        for args in ([], ['https://example.invalid'], ['claude://bad\nnewline'], ['claude://x', 'extra']):
+            r = subprocess.run([str(target), *args], env=env, capture_output=True, timeout=15,
+                               creationflags=subprocess.CREATE_NO_WINDOW)
+            self.assertEqual(r.returncode, 2)
+            self.assertFalse(captured.exists())
+        url = 'claude://callback?code=SYNTHETIC&state=quote"slash\\\\'
+        r = subprocess.run([str(target), url], env=env, capture_output=True, timeout=15,
+                           creationflags=subprocess.CREATE_NO_WINDOW)
+        self.assertEqual(r.returncode, 7)
+        self.assertEqual(captured.read_text(encoding='utf-8'), url)
+        self.assertFalse(r.stdout or r.stderr)
+
 
 if __name__ == '__main__':
     # Avoid recounting inherited fixture contracts.

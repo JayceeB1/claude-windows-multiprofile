@@ -70,3 +70,14 @@ README and fixed roadmap/ledger/qualification/routing/manual docs; never private
 Package receipt is a WORKTREE_SNAPSHOT, not a native install receipt. No dependency installation, UI automation,
 actual shortcut/registry registration, login or native removal executed. Native adapter admission and S5 local trials
 are remaining implementation/runtime gates; S4 fixture preparation does not hide those limits.
+
+## Final bounded review and consolidated matrix
+
+Run-SharedWorkspaceTests.py executes each class-owned test contract once, without recounting inherited convenience
+cases. The final run includes an additional invalid-namespace-before-probe regression: relative/UNC/device/ADS/traversal
+inputs refuse before filesystem metadata access. Earlier per-slice counts above are historical exact receipts.
+Jev verified reported runtime counts, but escalated correctness/test-gap confidence and did not verify the journal
+claim. Manual source/diff review checked the actual selected-key record constructor and synthetic-secret state tests;
+no automatic review acceptance is claimed. The namespace pre-probe issue found during that review was repaired.
+Selected-key integrity hashes detect corruption, not hostile receipt authors; external-editor CAS and native Desktop
+proof are not claimed. Native API adapter admission remains unfinished; the CLI cannot perform native mutations.

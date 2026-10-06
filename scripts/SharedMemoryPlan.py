@@ -15,6 +15,7 @@ import os
 from pathlib import Path
 import stat
 import sys
+import re
 
 _spec = importlib.util.spec_from_file_location('workspace_inventory',
     Path(__file__).with_name('Inspect-SharedWorkspace.py'))
@@ -36,12 +37,19 @@ def digest(raw: bytes | None) -> str | None:
 def safe_path(value: str | Path, *, directory: bool = False) -> Path:
     try:
         path = Path(value)
+        spelling = str(path)
+        if not re.fullmatch(r'[A-Za-z]:[\\/].*', spelling) or any(
+                part in ('.', '..') or part.endswith(('.', ' ')) or
+                re.search(r'[\x00-\x1f:*?"<>|]', part) or
+                re.fullmatch(r'(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\..*)?', part, re.I)
+                for part in re.split(r'[\\/]', spelling[3:]) if part):
+            raise BridgeError('LOCAL_UNAMBIGUOUS_PATH_REQUIRED')
         inventory.no_reparse(path)
         identity = inventory.physical_path(str(path))
         if directory and (not identity['exists'] or not identity['directory']):
             raise BridgeError('DIRECTORY_REQUIRED')
         return path
-    except (inventory.Unknown, OSError, ValueError):
+    except (inventory.Unknown, OSError, ValueError, TypeError):
         raise BridgeError('PATH_REFUSED') from None
 
 

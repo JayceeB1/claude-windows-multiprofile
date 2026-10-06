@@ -236,6 +236,13 @@ class PlanTests(unittest.TestCase):
         with patch.object(bridge, 'MAX_ENTRIES', 0), self.assertRaises(bridge.BridgeError):
             self.plan()
 
+    def test_invalid_namespace_refused_before_filesystem_probe(self):
+        with patch.object(Path, 'lstat', side_effect=AssertionError('UNEXPECTED_PROBE')):
+            for value in (r'\\remote\share\file', r'\\?\C:\device', 'relative',
+                          str(self.memory) + ':stream', str(self.project / '..' / 'elsewhere')):
+                with self.assertRaises(bridge.BridgeError):
+                    bridge.safe_path(value)
+
 
 if __name__ == '__main__':
     unittest.main()

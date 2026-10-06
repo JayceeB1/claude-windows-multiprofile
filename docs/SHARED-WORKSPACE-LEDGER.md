@@ -486,7 +486,8 @@ Windows Python qualification: 37 tests, 36 PASS, 1 SKIP (native 8.3 remains NOT_
 reads, secret suppression, absent folders, scope boundaries, junctions/hard links, malformed/large/changing settings, conflicting
 scopes, entry cap, file candidates and private/path-free CLI output. No real apply/restore. Read-only local receipt (Git-ignored): user autoMemoryEnabled=true; autoMemoryDirectory absent; project/local settings
 missing; candidate has two entries and MEMORY.md, contents unread. CLI and same Desktop path are user reports; actual Desktop A loading is NOT_OBSERVED. Managed policy, CLI environment/arguments and active config resolution
-remain unobserved. S4a stays PARTIAL_LOCAL/BLOCKED; S3b admission stays BLOCKED, no prototype source imported.
+remain unobserved. S4a stays PARTIAL_LOCAL/BLOCKED; S3b admission stays BLOCKED, no prototype source imported. Registered Claude package 2.19675.1.0 before/after this inspection
+differs from historical 2.19675.0.0; update cause and running version unknown. No package/profile mutation.
 Missing proof: Desktop A Code on the selected project must expose its actual memory/config path and startup index loading.
 A targeted fresh Code-session context/path read-back or a scoped native file-access observation can establish this without
 Desktop /memory (unavailable there); perform only with saved work and separate consent if restart/instrumentation is needed.

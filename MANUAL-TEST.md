@@ -1,7 +1,7 @@
 # Local acceptance procedure — no automatic execution
 
 This checklist is a future separately authorized native trial, not instructions to run the blocked legacy installer.
-The explicit native adapter is IMPLEMENTED_NOT_TESTED. All new runtime gates are NOT_RUN by user request.
+The native adapter is VERIFIED_SYNTHETIC on owned TEMP fixtures. Real registry and Desktop acceptance remain NOT_RUN.
 The sole [ledger](docs/SHARED-WORKSPACE-LEDGER.md) governs status; fixtures cannot establish native acceptance.
 
 ## Evidence already available
@@ -24,20 +24,21 @@ The sole [ledger](docs/SHARED-WORKSPACE-LEDGER.md) governs status; fixtures cann
 - [ ] Inspect minimal non-secret backups; never copy whole config/account roots or settings containing env secrets.
 - [ ] Treat protocol registration as a distinct approved change with current-value snapshots and ownership checks.
 
-## Native candidate qualification queue — all NOT_RUN
+## Native candidate fixture qualification — real Desktop still NOT_RUN
 
-No test or native candidate command was executed during implementation. Historical fixture PASS does not
-cover the new adapter, wrappers, expanded asset list or archive imports. Prepare these gates before S5:
+The user's subsequent test authorization supersedes the implementation-only stop. New receipts are in
+[qualification](docs/SHARED-WORKSPACE-QUALIFICATION.md); checkmarks below refer exclusively to isolated fixtures.
 
-- [ ] Preview: no profile/memory/registry writes; exclusive private capsule; stale assets, scopes and identities refuse.
-- [ ] Isolated install/recovery: phase interruption, selected-key rollback, unrelated settings and additions preserved.
-- [ ] COM: Unicode/spaced paths, read-back fields, staged shortcut bytes and exclusive destination admission.
-- [ ] Registry: empty ownership, collisions, bounded snapshot, read-back, cooperating mutex, partial recovery/conflicts.
-- [ ] Routing: FileShare.None contention, outstanding intent refusal, A retained after B removal; no default-app rewrite.
-- [ ] Ownership: changed/replaced files and roots, reparse/hardlink aliases, idempotence, partial operation refusal.
-- [ ] B deletion: explicit opt-in only; bounded recorded-root inspection; projects, memory, A and official package retained.
-- [ ] Entry/package: real Python prerequisite, PS5.1/PS7 wrappers, expanded allowlist hashes and extracted lazy imports.
-- [ ] Existing regression suite and source analyzers; keep native 8.3 explicitly NOT_RUN.
+- [x] Preview: exclusive private capsule, no profile/memory creation, stale spec/settings refused; prior planner guards retained.
+- [x] Isolated install/recovery: shortcut failure recovery, interrupted manifest write refused for review, unrelated settings/additions retained.
+- [x] COM: actual Unicode/spaced-path IShellLinkW read-back, staged bytes and full TEMP install/remove/rollback.
+- [x] Registry model: empty ownership, collisions, bounded snapshot, read-back, partial recovery/conflicts and unrelated value retention.
+- [ ] Native registry APIs, ACLs and mutex contention: NOT_RUN; the model cannot establish these.
+- [x] Routing: actual FileShare.None contention, outstanding intent refusal and fixture A retained after B removal.
+- [x] Ownership: changed shortcut, replaced asset, corrupt receipt, hardlink deletion refusal and idempotence.
+- [x] B deletion: explicit opt-in; unreadable traversal refuses before mutation; exact recorded fixture roots only.
+- [x] Entry/package: PS5.1/PS7 wrappers with explicit Python; extracted native preview/install/rollback on TEMP.
+- [x] Consolidated regressions and source analyzer; native 8.3 remains explicitly NOT_RUN.
 
 No automatic Claude launch, login, process termination, package uninstall or installation of dependencies.
 Registry and COM trials need an isolated test adapter/namespace; never use a real profile as the fixture.

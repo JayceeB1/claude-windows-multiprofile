@@ -111,3 +111,47 @@ Pre-test source checks: Python ast.parse accepted the four changed/new Python mo
 accepted Setup/Uninstall without executing them. git diff --check found no whitespace errors. No runtime PASS implied.
 No real profile/project/native OS mutation occurred. Candidate commits remain local: pushing PR #1 would trigger CI.
 Native 8.3 stays NOT_RUN; S5 memory/config/account acceptance still requires separately authorized local observation.
+
+## S4f/S4g-Q1 Windows fixture qualification (2026-10-06)
+
+The user's explicit test go-ahead supersedes the prior stop-before-tests instruction. Starting revision c3acecc,
+with the fixes and contracts in this qualification slice: Python 3.14.7 AMD64, Windows PowerShell 5.1.26100.9549,
+PowerShell 7.6.6. `python -B tests/Run-SharedWorkspaceTests.py`: 164 unique contracts, 163 PASS / 1 explicit native
+8.3 SKIP, 63.360 seconds. New contracts: 28 NativeTests and 9 RegistryTests; inheritance is not recounted.
+Native Desktop/account/memory-loading acceptance remains NOT_RUN. Tests only use newly owned random TEMP roots.
+
+Actual OS proof: Unicode IShellLinkW shortcuts saved/read back through IPersistFile, actual staged .lnk bytes,
+fixture install/B removal/full rollback, physical identities, byte-range operation locks and FileShare.None routing
+contention. Actual PS5.1 and PS7 wrappers performed TEMP preview/install/idempotence/remove/rollback with an explicit
+PythonExecutable. Expanded 27-member archive was extracted; its own native entry imported and performed the TEMP
+workflow. No shortcut was launched. The original A entry, synthetic credential bytes and selected memory remained intact.
+Registry proof is exclusively an in-memory winreg model: empty/existing ownership, limits/types, unchanged/default
+handler policy, separate consent, partial write recovery, foreign child/value conflicts and unrelated value retention.
+Native registry APIs/ACLs, mutex contention, actual associations and Windows default selection remain NOT_RUN.
+
+Failures retained: the first harness helper shadowed its install Path and was renamed. The genuine COM Unicode test
+then failed at Save with a non-ANSI staging path; isolated field read-back also showed Japanese characters replaced
+by question marks. An ASCII staging workaround did not preserve those fields and was discarded. The fix uses
+explicit Unicode IShellLinkW plus IPersistFile for both save and independent read-back; the failing Unicode case now
+passes without 8.3 aliases or changing paths. [Microsoft interface reference](https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nn-shobjidl_core-ishelllinkw),
+[IPersistFile Save](https://learn.microsoft.com/en-us/windows/win32/api/objidl/nf-objidl-ipersistfile-save).
+Wrappers initially refused the host's WindowsApps Python alias as designed; PythonExecutable now selects an actual
+installed interpreter explicitly. No parent PATH or global installation was changed. Unreadable B traversal now
+refuses before manifest/shortcut changes, tested through os.walk's error callback.
+
+Removal interrupted after manifest replacement but before receipt persistence requires review; it never guesses
+ownership to delete remaining shortcuts. This fail-closed result is exercised, not promoted to automatic recovery.
+Selected-key conflict/replaced asset/corrupt receipt/hardlinked B content refuse. Rollback keeps unowned additions,
+B roots and lock/journal metadata. These checks are not hostile-receipt authentication or external-editor CAS.
+
+Local regression commands: each of Test-SetupProfiles, Test-ArgBuilder, Test-Launcher, Test-ShimLogging, Test-Uninstall,
+Test-RoutingDiagnostic under PS5.1 and PS7 passed. Setup profile-loop: 152 assertions per shell; launcher 126 PS5.1 /
+129 PS7; dispatch 39 scenarios / 521 assertions per shell; diagnostic 33 cases / 959 assertions per shell. The initial
+PS5.1 standalone -File Setup harness call failed resolving its default PSScriptRoot; supplying explicit SetupPath
+and absolute test paths passed. No claim that this initial invocation passed. Argument builder's three cases passed.
+`python -B tests/Test-RoutingProcesses.py`: Q1/Q2 20 cases PASS across both shells, real metadata / synthetic launch.
+PSScriptAnalyzer 1.25.0 at Error severity over scripts/tests found zero findings after correcting an invalid array
+Path invocation; no blanket warning-free claim. The fixture-only boundary and native 8.3 deferral remain unchanged.
+Jev advisory review escalated correctness/test-gap confidence (safe_to_apply 0.26); no automatic acceptance. Manual
+review checked Unicode vtable/marshaling, fixed payload transport, ownership/refusal branches and the new fixtures.
+CI receipts will identify their exact pushed revision; the local worktree result above is not an exact remote proof.

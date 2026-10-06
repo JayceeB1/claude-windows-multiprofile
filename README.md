@@ -8,7 +8,8 @@ add account B without migrating projects or requiring worktrees.
 **Delivery status:** routing/diagnostic, memory planner/transactions and additive install/removal are qualified on
 Windows fixtures. Desktop operator evidence is recorded for selected A memory. Native additive execution, B memory
 loading and two-Desktop acceptance remain unqualified. An explicit native adapter and command wrappers are
-implemented but NOT_TESTED. The default Setup/Uninstall invocation still refuses mutations. Follow the [ledger](docs/SHARED-WORKSPACE-LEDGER.md),
+qualified on isolated Windows fixtures (COM and locks exercised; registry simulated). Real Desktop acceptance
+remains NOT_RUN. The default Setup/Uninstall invocation still refuses mutations. Follow the [ledger](docs/SHARED-WORKSPACE-LEDGER.md),
 [roadmap](docs/SHARED-WORKSPACE-ROADMAP.md) and [qualification receipts](docs/SHARED-WORKSPACE-QUALIFICATION.md).
 
 ## Preview-first shared workspace
@@ -59,15 +60,16 @@ B removal retains its data by default, keeps A routing, and never uninstalls the
 
 The fixture OS adapter remains TEMP-bounded. JSON shortcut doubles and in-memory protocol values are not native
 .lnk/registry proof. The new Windows 64-bit candidate uses COM shortcut staging/read-back, physical ownership
-receipts, selected-key memory transactions and cooperative locks. Its runtime qualification is NOT_RUN.
+receipts, selected-key memory transactions and cooperative locks. Actual Desktop/runtime qualification is NOT_RUN.
 `apply`, `install`, `remove` and `restore` remain unavailable; only explicit `native-*` actions enter the candidate.
 See the [manual acceptance procedure](MANUAL-TEST.md) before any native operation.
 
-### Native candidate commands — future qualification only
+### Native candidate commands — separately authorized real-profile trial
 
-These commands have not been executed for this candidate. The user requested completion before tests;
-no new native behavior, package or wrapper is claimed qualified. First qualify on isolated fixtures, then obtain
-separate authorization for real profiles/projects. Python must be a real installed runtime, not a Store alias.
+These commands were qualified only on owned TEMP fixtures, never on real profiles or project settings.
+COM uses explicit Unicode IShellLinkW; registry registration/restoration was tested against an in-memory adapter,
+not real Windows associations. Obtain separate authorization before real profiles/projects. Python must be a real
+installed runtime, not a Store alias. Wrappers accept `-PythonExecutable "C:\PATH\python.exe"` to select it explicitly.
 
 ```powershell
 # Prepare a private approval capsule; reads selected metadata and optionally router registry namespaces.
@@ -182,7 +184,7 @@ powershell -NoProfile -File tests\Test-RoutingDiagnostic.ps1
 pwsh -NoProfile -File tests\Test-RoutingDiagnostic.ps1
 ```
 
-The commands above are documented future runs, not executed for the current native candidate.
+The commands above reproduce synthetic qualification; real Desktop gates remain unexecuted.
 These existing tests use synthetic accounts and owned TEMP metadata. They do not launch
 Claude. CI runs parser/analyzer/routing regressions and the shared-workspace fixture matrix; Q1/Q2 and D1 runtime
 receipts remain separately qualified. Actual A/B identity, configuration,

@@ -227,6 +227,178 @@ class InventoryTests(unittest.TestCase):
         self.assertFalse(json.loads(output.getvalue())['apply_allowed'])
         self.assertEqual(before, {p: p.read_bytes() for p in self.root.rglob('*') if p.is_file()})
 
+    def memory_fixture(self):
+        project = self.root / 'Selected Project'
+        project.mkdir()
+        memory = self.config / 'projects' / 'selected' / 'memory'
+        memory.mkdir(parents=True)
+        return project, memory
+
+    def test_memory_observation_no_contents_no_mutation(self):
+        project, memory = self.memory_fixture()
+        (memory / 'MEMORY.md').write_text('SYNTHETIC_SECRET')
+        (memory / 'note.md').write_text('SYNTHETIC_SECRET')
+        (self.config / 'settings.json').write_text(json.dumps({
+            'autoMemoryEnabled': True, 'env': {'TOKEN': 'SYNTHETIC_SECRET'},
+            'hooks': {'SessionStart': 'SYNTHETIC_SECRET'}}))
+        before = {p: (p.read_bytes(), p.stat().st_mtime_ns) for p in self.root.rglob('*') if p.is_file()}
+        original = Path.open
+        def limited_open(path, *a, **kw):
+            self.assertEqual(path, self.config / 'settings.json')
+            self.assertEqual(a, ('rb',))
+            return original(path, *a, **kw)
+        with patch.object(Path, 'open', limited_open):
+            result = inventory.memory_observation(str(project), str(self.config), str(memory), 'cli')
+        self.assertNotIn('SYNTHETIC_SECRET', json.dumps(result))
+        self.assertEqual(result['settings']['user_candidate']['autoMemoryEnabled'], True)
+        self.assertEqual(result['settings']['project']['state'], 'missing')
+        self.assertEqual(result['memory']['entry_count'], 2)
+        self.assertTrue(result['memory']['index_present'])
+        self.assertFalse(result['memory']['contents_read'])
+        self.assertFalse(result['apply_allowed'])
+        self.assertEqual(before, {p: (p.read_bytes(), p.stat().st_mtime_ns)
+                                for p in self.root.rglob('*') if p.is_file()})
+
+    def test_reported_desktop_is_not_observed_loading(self):
+        project, memory = self.memory_fixture()
+        result = inventory.memory_observation(str(project), str(self.config), str(memory), 'desktop_a')
+        self.assertEqual(result['reported_surface'], 'desktop_a')
+        self.assertEqual(result['actual_surface'], 'not_observed')
+        self.assertEqual(result['desktop_a_loading'], 'not_observed')
+        self.assertEqual(result['effective_resolution'], 'unconfirmed')
+
+    def test_missing_memory_not_created(self):
+        project, memory = self.memory_fixture()
+        memory.rmdir()
+        result = inventory.memory_observation(str(project), str(self.config), str(memory))
+        self.assertEqual(result['memory']['state'], 'missing')
+        self.assertFalse(memory.exists())
+
+    def test_configured_directory_in_scope_observed_only(self):
+        project, memory = self.memory_fixture()
+        settings = self.config / 'settings.json'
+        settings.write_text(json.dumps({'autoMemoryDirectory': str(memory)}))
+        result = inventory.memory_observation(str(project), str(self.config), str(memory))
+        value = result['settings']['user_candidate']['autoMemoryDirectory']
+        self.assertEqual(value['state'], 'configured_in_scope')
+        self.assertEqual(value['path'], inventory.physical_path(str(memory))['canonical'])
+        self.assertEqual(result['effective_resolution'], 'unconfirmed')
+
+    def test_out_of_scope_setting_not_probed_or_printed(self):
+        project, memory = self.memory_fixture()
+        (self.config / 'settings.json').write_text(json.dumps({'autoMemoryDirectory': r'Q:\SYNTHETIC_SECRET'}))
+        original = inventory.physical_path
+        def limited_probe(path):
+            self.assertNotIn('SYNTHETIC_SECRET', path)
+            return original(path)
+        with patch.object(inventory, 'physical_path', limited_probe):
+            result = inventory.memory_observation(str(project), str(self.config), str(memory))
+        self.assertNotIn('SYNTHETIC_SECRET', json.dumps(result))
+        self.assertEqual(result['settings']['user_candidate']['autoMemoryDirectory']['state'], 'invalid_or_outside_scope')
+
+    def test_out_of_scope_candidate_not_probed(self):
+        project, memory = self.memory_fixture()
+        original = inventory.physical_path
+        def limited_probe(path):
+            self.assertNotIn('SYNTHETIC_SECRET', path)
+            return original(path)
+        with patch.object(inventory, 'physical_path', limited_probe):
+            result = inventory.memory_observation(str(project), str(self.config), r'Q:\SYNTHETIC_SECRET')
+        self.assertEqual(result['memory']['state'], 'unknown_or_refused')
+
+    def test_junction_settings_parent_refused_before_read(self):
+        project, memory = self.memory_fixture()
+        link = self.junction(self.config)
+        (self.config / 'settings.json').write_text('{"autoMemoryEnabled":true}')
+        with patch.object(Path, 'open', side_effect=AssertionError('ALIAS_READ')):
+            result = inventory.memory_observation(str(project), str(link), str(memory))
+        self.assertEqual(result['settings'], {})
+
+    def test_hardlink_settings_refused(self):
+        project, memory = self.memory_fixture()
+        first = self.config / 'settings.json'
+        first.write_text('{"autoMemoryEnabled":true}')
+        os.link(first, self.root / 'alias.json')
+        result = inventory.memory_observation(str(project), str(self.config), str(memory))
+        self.assertEqual(result['settings']['user_candidate']['state'], 'unknown_or_refused')
+
+    def test_duplicate_invalid_large_settings_refused(self):
+        project, memory = self.memory_fixture()
+        settings = self.config / 'settings.json'
+        for payload in ('{"autoMemoryEnabled":true,"autoMemoryEnabled":false}', '[1]',
+                        '{"x":NaN}', 'x' * 65537):
+            settings.write_text(payload)
+            result = inventory.memory_observation(str(project), str(self.config), str(memory))
+            self.assertEqual(result['settings']['user_candidate']['state'], 'unknown_or_refused')
+
+    def test_separate_scope_values_not_effective_precedence_claim(self):
+        project, memory = self.memory_fixture()
+        (project / '.claude').mkdir()
+        (self.config / 'settings.json').write_text('{"autoMemoryEnabled":true}')
+        (project / '.claude' / 'settings.local.json').write_text('{"autoMemoryEnabled":false}')
+        result = inventory.memory_observation(str(project), str(self.config), str(memory))
+        self.assertTrue(result['settings']['user_candidate']['autoMemoryEnabled'])
+        self.assertFalse(result['settings']['local']['autoMemoryEnabled'])
+        self.assertEqual(result['effective_resolution'], 'unconfirmed')
+
+    def test_settings_changed_during_read_refused(self):
+        project, memory = self.memory_fixture()
+        settings = self.config / 'settings.json'
+        settings.write_text('{"autoMemoryEnabled":true}')
+        original = Path.open
+        class ChangingReader:
+            def __enter__(self):
+                self.stream = original(settings, 'rb')
+                return self
+            def __exit__(self, *args):
+                self.stream.close()
+            def fileno(self):
+                return self.stream.fileno()
+            def read(self, limit):
+                data = self.stream.read(limit)
+                with original(settings, 'ab') as writer:
+                    writer.write(b' ')
+                return data
+        with patch.object(Path, 'open', return_value=ChangingReader()):
+            result = inventory.memory_observation(str(project), str(self.config), str(memory))
+        self.assertEqual(result['settings']['user_candidate']['state'], 'unknown_or_refused')
+
+    def test_main_receipt_output_cannot_be_inside_project(self):
+        project, memory = self.memory_fixture()
+        output = project / 'receipt.local.md'
+        args = ['inventory', '--install-dir', str(self.install), '--a-data', str(self.data),
+                '--a-config', str(self.config), '--project', str(project),
+                '--memory-candidate', str(memory), '--reported-surface', 'cli', '--output', str(output)]
+        with patch.object(sys, 'argv', args), patch.object(inventory, 'installed_package',
+             return_value={'state': 'unknown', 'packages': []}), self.assertRaises(inventory.Unknown):
+            inventory.main()
+        self.assertFalse(output.exists())
+
+    def test_memory_metadata_bounded_and_file_candidate_refused(self):
+        project, memory = self.memory_fixture()
+        for number in range(130):
+            (memory / str(number)).touch()
+        result = inventory.memory_observation(str(project), str(self.config), str(memory))
+        self.assertEqual(result['memory']['entry_count'], 'over_128')
+        result = inventory.memory_observation(str(project), str(self.config), str(memory / '0'))
+        self.assertEqual(result['memory']['state'], 'unknown_or_refused')
+
+    def test_main_memory_receipt_private_and_stdout_path_free(self):
+        project, memory = self.memory_fixture()
+        receipt = self.root / 'receipt.local.md'
+        args = ['inventory', '--install-dir', str(self.install), '--a-data', str(self.data),
+                '--a-config', str(self.config), '--project', str(project),
+                '--memory-candidate', str(memory), '--reported-surface', 'cli', '--output', str(receipt)]
+        output = io.StringIO()
+        with patch.object(sys, 'argv', args), patch.object(inventory, 'installed_package',
+             return_value={'state': 'unknown', 'packages': []}), contextlib.redirect_stdout(output):
+            self.assertEqual(inventory.main(), 0)
+        self.assertNotIn(str(self.root), output.getvalue())
+        self.assertFalse(json.loads(output.getvalue())['apply_allowed'])
+        report = json.loads(receipt.read_text())
+        self.assertEqual(report['memory_observation']['reported_surface'], 'cli')
+        self.assertEqual(report['memory_observation']['desktop_a_loading'], 'not_observed')
+
 
 if __name__ == '__main__':
     unittest.main()

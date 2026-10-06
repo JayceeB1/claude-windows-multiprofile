@@ -1,6 +1,6 @@
 # Shared workspace fork - implementation ledger
 
-Updated 2026-10-06 (S3a archive review and Windows requalification). Delivery order and dependencies: [Shared workspace
+Updated 2026-10-06 (S4a selected-memory observation follow-up). Delivery order and dependencies: [Shared workspace
 roadmap](SHARED-WORKSPACE-ROADMAP.md). This is the sole ledger. Requirements below are separate from implementation and
 evidence statuses.
 
@@ -17,8 +17,8 @@ automatic account/quota rotation. Preserve upstream licensing; do not modify or 
 
 The user explicitly confirmed on 2026-10-05 that a working session already exists. Treat that session as account A, to
 preserve in place, NOT as a disposable test profile or a fresh login. The exact local paths and effective configuration
-have not been inspected on the user's machine. These are requirements to implement and qualify, not protections already
-proven by the current code.
+have only partial read-only observations; effective Desktop A configuration remains unconfirmed. These are acceptance
+requirements, not protections already proven by the current code.
 
 - Start with a read-only inventory of paths/config provenance and existing
   launcher/routing metadata. Do not read, print, upload or clone auth tokens,
@@ -415,22 +415,17 @@ Resolve this review commit with `git log -1 --format=%H -- docs/SHARED-WORKSPACE
 
 ## Read-only MSIX complement to S3a (2026-10-06)
 
-Claude x64 / Anthropic, PBC: registered version 2.19675.0.0 before and after,
-PackageFullName stable; manifest SHA-256
-`eab8b235a718c86e8715ed78fa8e62f91daff6266099fdae0db5a004dc817571`.
-Three FullTrustApplication declarations: Claude, SshAskpass, SshProxy; runtime/
-trust attributes are implicit. Legacy registry-disabled declaration coexists with
-newer 12 registry exclusions and four LocalAppData filesystem exclusions;
-unvirtualizedResources and service/full-trust capabilities are declared.
-Detailed namespace-sensitive interpretation and source links are in the roadmap;
-private identity/location/XML receipts are Git-ignored. No package/profile mutation.
-Physical candidates are not declared duplicates; MSIX declarations are not actual
-A redirection/use proof. Effective usage remains UNKNOWN. Preserve official package
-when removing B; never use package uninstall as profile cleanup. Capture versions
-before/after qualification, account for automatic updates and possible progressive
-server rollout; UI appearance alone is not identity proof. S3 requires effective
-memory loading/read-write evidence in Code, not a settings-key presence test.
-Native 8.3 remains NOT_RUN. No cookies, credentials or session databases read.
+Claude x64 / Anthropic, PBC: registered version 2.19675.0.0 before and after, PackageFullName stable; manifest SHA-256
+`eab8b235a718c86e8715ed78fa8e62f91daff6266099fdae0db5a004dc817571`. Three FullTrustApplication declarations: Claude,
+SshAskpass, SshProxy; runtime/trust attributes are implicit. Legacy registry-disabled declaration coexists with newer 12
+registry exclusions and four LocalAppData filesystem exclusions; unvirtualizedResources and service/full-trust capabilities
+are declared. Detailed namespace-sensitive interpretation and source links are in the roadmap; private identity/location/XML
+receipts are Git-ignored. No package/profile mutation. Physical candidates are not declared duplicates; MSIX declarations are
+not actual A redirection/use proof. Effective usage remains UNKNOWN. Preserve official package when removing B; never use
+package uninstall as profile cleanup. Capture versions before/after qualification, account for automatic updates and possible
+progressive server rollout; UI appearance alone is not identity proof. S3 requires effective memory loading/read-write
+evidence in Code, not a settings-key presence test. Native 8.3 remains NOT_RUN. No cookies, credentials or session databases
+read.
 
 ## Decisions and planning evidence
 
@@ -457,10 +452,6 @@ Native 8.3 remains NOT_RUN. No cookies, credentials or session databases read.
 - Current intent does not correlate the outgoing OAuth request: a delayed
   callback can consume a new arm. Preserve state/PKCE; no unsupported origin
   recognition promise. Consumed-without-launch requires deliberate recovery.
-- ZIP lookup was restricted to the repository (including untracked/hidden file
-  names) and the supplied visualization workspace. Neither contained the ZIP;
-  no other drive search or invented Windows equivalent of a sandbox path.
-  That historical lookup is superseded by the supplied archive and S3a review below.
 - Official sources reread on 2026-10-05:
   [memory storage](https://code.claude.com/docs/en/memory#storage-location),
   [precedence](https://code.claude.com/docs/en/settings#settings-precedence),
@@ -484,9 +475,21 @@ References checked for the locking/IO contract:
 no-overwrite behavior](https://learn.microsoft.com/en-us/dotnet/api/system.io.file.move?view=netframework-4.8.1),
 [native-app OAuth flow boundaries](https://www.rfc-editor.org/rfc/rfc8252.html).
 
-Document validation (roadmap-only turn): both files are below 500 lines; relative links resolve; UTF-8 readback, one
-NEXT SLICE and staged `git diff --check` pass. The complete two-document diff was reviewed; application, test and CI
-files are unchanged.
+## S4a selected-memory observation follow-up (2026-10-06)
+
+Implemented explicit --project/--memory-candidate/--reported-surface options in Inspect-SharedWorkspace.py; read only selected keys from user/project/local settings with a 64 KiB bound, duplicate/nonfinite rejection and change checks;
+refuse reparse ancestors and multiply linked settings. Reject outside-scope configured/candidate paths before probing.
+Memory inspection counts at most 129 entries and checks index presence without reading contents or creating folders. Protect the selected project from receipt output; exclusive private .local.md output remains the only write.
+These checks are bounded observations, not a concurrent namespace-race security guarantee or effective precedence.
+
+Windows Python qualification: 37 tests, 36 PASS, 1 SKIP (native 8.3 remains NOT_RUN). Fixtures cover no mutation/content
+reads, secret suppression, absent folders, scope boundaries, junctions/hard links, malformed/large/changing settings, conflicting
+scopes, entry cap, file candidates and private/path-free CLI output. No real apply/restore. Read-only local receipt (Git-ignored): user autoMemoryEnabled=true; autoMemoryDirectory absent; project/local settings
+missing; candidate has two entries and MEMORY.md, contents unread. CLI and same Desktop path are user reports; actual Desktop A loading is NOT_OBSERVED. Managed policy, CLI environment/arguments and active config resolution
+remain unobserved. S4a stays PARTIAL_LOCAL/BLOCKED; S3b admission stays BLOCKED, no prototype source imported.
+Missing proof: Desktop A Code on the selected project must expose its actual memory/config path and startup index loading.
+A targeted fresh Code-session context/path read-back or a scoped native file-access observation can establish this without
+Desktop /memory (unavailable there); perform only with saved work and separate consent if restart/instrumentation is needed.
 
 ## NEXT SLICE
 

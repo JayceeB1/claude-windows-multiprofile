@@ -213,6 +213,139 @@ def inspect_entry(path: str | None) -> dict:
         return {'state': 'unknown', 'source': 'user_candidate'}
 
 
+def no_reparse(path: Path) -> None:
+    for item in (path, *path.parents):
+        try:
+            info = item.lstat()
+        except FileNotFoundError:
+            continue
+        if info.st_mode & 0o170000 == 0o120000 or getattr(info, 'st_file_attributes', 0) & 0x400:
+            raise Unknown('REPARSE_REFUSED')
+
+
+def lexically_in_scope(value: str, roots: list[Path]) -> bool:
+    if not isinstance(value, str) or not re.fullmatch(r'[A-Za-z]:[\\/].*', value):
+        return False
+    normalized = ntpath.normpath(value).casefold()
+    return any(normalized == ntpath.normpath(str(root)).casefold() or
+               normalized.startswith(ntpath.normpath(str(root)).casefold().rstrip('\\') + '\\')
+               for root in roots)
+
+
+def selected_memory_settings(path: Path, allowed_roots: list[Path]) -> dict:
+    """Bounded, selected-key observations; no full settings snapshots or raw errors."""
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise ValueError('DUPLICATE_JSON')
+            result[key] = value
+        return result
+
+    def signature(info):
+        return info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns
+
+    try:
+        no_reparse(path)
+        before = path.stat()
+        if not path.is_file() or before.st_nlink != 1:
+            raise Unknown('SETTINGS_NOT_SINGLE_REGULAR_FILE')
+        with path.open('rb') as stream:
+            opened = os.fstat(stream.fileno())
+            if signature(before) != signature(opened):
+                raise Unknown('SETTINGS_CHANGED')
+            raw = stream.read(65537)
+            after = os.fstat(stream.fileno())
+        if len(raw) > 65536 or signature(before) != signature(after) or \
+                signature(before) != signature(path.stat()):
+            raise Unknown('SETTINGS_LIMIT_OR_CHANGE')
+        obj = json.loads(raw.decode('utf-8-sig'), object_pairs_hook=pairs,
+                         parse_constant=lambda _: (_ for _ in ()).throw(ValueError('NONFINITE')))
+        if not isinstance(obj, dict):
+            raise Unknown('SETTINGS_OBJECT_REQUIRED')
+        enabled = obj.get('autoMemoryEnabled')
+        result = {'state': 'observed', 'autoMemoryEnabled': enabled if isinstance(enabled, bool)
+                  else ('absent' if 'autoMemoryEnabled' not in obj else 'invalid'),
+                  'autoMemoryDirectory': {'state': 'absent'}}
+        if 'autoMemoryDirectory' in obj:
+            result['autoMemoryDirectory'] = {'state': 'invalid_or_outside_scope'}
+            value = obj['autoMemoryDirectory']
+            if isinstance(value, str) and lexically_in_scope(value, allowed_roots):
+                try:
+                    # No environment expansion or home guessing. Values are observed,
+                    # not asserted to be the active setting of CLI or Desktop.
+                    no_reparse(Path(value))
+                    identity = physical_path(value)
+                    physical_roots = [physical_path(str(root)) for root in allowed_roots]
+                    if any(identity['canonical'] == root['canonical'] or
+                           identity['canonical'].startswith(root['canonical'].rstrip('\\') + '\\')
+                           for root in physical_roots):
+                        result['autoMemoryDirectory'] = {'state': 'configured_in_scope',
+                                                        'path': identity['canonical']}
+                except (Unknown, OSError, ValueError):
+                    pass
+        permissions = obj.get('permissions')
+        block = permissions.get('blockReadsOutsideWorkingDirectories') if isinstance(permissions, dict) else None
+        result['blockReadsOutsideWorkingDirectories'] = block if isinstance(block, bool) else 'not_observed'
+        env = obj.get('env')
+        result['selected_env_keys_present'] = [key for key in (
+            'CLAUDE_CONFIG_DIR', 'CLAUDE_CODE_PROJECT_DIR_NAME', 'CLAUDE_CODE_DISABLE_AUTO_MEMORY')
+            if isinstance(env, dict) and key in env]
+        return result
+    except FileNotFoundError:
+        return {'state': 'missing'}
+    except (Unknown, OSError, ValueError, UnicodeError, RecursionError):
+        return {'state': 'unknown_or_refused'}
+
+
+def memory_observation(project: str, config: str, candidate: str | None,
+                       reported_surface: str = 'unknown') -> dict:
+    result = {'reported_surface': reported_surface, 'actual_surface': 'not_observed',
+              'effective_resolution': 'unconfirmed', 'desktop_a_loading': 'not_observed',
+              'apply_allowed': False, 'settings': {}, 'memory': {'state': 'not_supplied'}}
+    try:
+        project_path, config_path = Path(project), Path(config)
+        for path in (project_path, config_path):
+            no_reparse(path)
+            identity = physical_path(str(path))
+            if not identity['exists'] or not identity['directory']:
+                raise Unknown('OBSERVATION_ROOT_UNAVAILABLE')
+        root_paths = [project_path, config_path]
+        roots = [physical_path(str(p)) for p in root_paths]
+        files = {'user_candidate': config_path / 'settings.json',
+                 'project': project_path / '.claude' / 'settings.json',
+                 'local': project_path / '.claude' / 'settings.local.json'}
+        result['settings'] = {scope: selected_memory_settings(path, root_paths) for scope, path in files.items()}
+        if candidate:
+            if not lexically_in_scope(candidate, root_paths):
+                raise Unknown('MEMORY_OUTSIDE_SCOPE')
+            path = Path(candidate)
+            no_reparse(path)
+            identity = physical_path(candidate)
+            if not any(identity['canonical'] == root['canonical'] or
+                       identity['canonical'].startswith(root['canonical'].rstrip('\\') + '\\') for root in roots):
+                raise Unknown('MEMORY_OUTSIDE_SCOPE')
+            memory = {'state': 'missing', 'contents_read': False}
+            if identity['exists'] and not identity['directory']:
+                raise Unknown('MEMORY_NOT_DIRECTORY')
+            if identity['exists'] and identity['directory']:
+                with os.scandir(path) as entries:
+                    count = 0
+                    for _ in entries:
+                        count += 1
+                        if count > 128:
+                            break
+                index = path / 'MEMORY.md'
+                no_reparse(index)
+                memory = {'state': 'present', 'entry_count': count if count <= 128 else 'over_128',
+                          'index_present': index.is_file(), 'contents_read': False}
+            result['memory'] = memory
+        result['external_scopes'] = 'managed_cli_environment_and_arguments_not_observed'
+    except (Unknown, OSError, ValueError):
+        result['memory'] = {'state': 'unknown_or_refused', 'contents_read': False}
+    return result
+
+
 def save_private(path: str, report: dict, protected: dict) -> None:
     target = physical_path(path)
     if target['exists'] or not path.endswith('.local.md'):
@@ -236,11 +369,18 @@ def main() -> int:
     parser.add_argument('--entry-point')
     parser.add_argument('--entry-kind', choices=('unknown', 'registered_app', 'custom'), default='unknown',
                         help='User-reported opening method; does not prove effective config')
+    parser.add_argument('--project', help='Explicit project for selected memory observations; no discovery')
+    parser.add_argument('--memory-candidate', help='Explicit candidate below project/config roots; metadata only')
+    parser.add_argument('--reported-surface', choices=('unknown', 'cli', 'desktop_a'), default='unknown',
+                        help='User report only, never automatic loading proof')
     parser.add_argument('--output', help='New private .local.md JSON report outside observed roots')
     args = parser.parse_args()
-    report = inventory_roots({'a_data': {'path': args.a_data, 'role': 'protected'},
-                              'a_config': {'path': args.a_config, 'role': 'protected'},
-                              'install_metadata': {'path': args.install_dir, 'role': 'protected'}})
+    specs = {'a_data': {'path': args.a_data, 'role': 'protected'},
+             'a_config': {'path': args.a_config, 'role': 'protected'},
+             'install_metadata': {'path': args.install_dir, 'role': 'protected'}}
+    if args.project:
+        specs['selected_project'] = {'path': args.project, 'role': 'protected'}
+    report = inventory_roots(specs)
     if 'identity' in report['roots']['install_metadata']:
         report['manifest'] = read_manifest(args.install_dir)
         report['route_state'] = read_route_state(args.install_dir)
@@ -255,6 +395,11 @@ def main() -> int:
         report['entry_point']['reported_kind'] = args.entry_kind
         report['entry_point']['opening_method_source'] = 'user_report'
     report['a_source'] = 'user_candidates_not_effective_desktop_proof'
+    if args.project:
+        report['memory_observation'] = memory_observation(args.project, args.a_config,
+                                                         args.memory_candidate, args.reported_surface)
+    elif args.memory_candidate:
+        raise Unknown('PROJECT_REQUIRED_FOR_MEMORY_OBSERVATION')
     if args.output:
         save_private(args.output, report, report['roots'])
     # Public stdout is fixed and path-free, even when the private report has paths.

@@ -26,6 +26,13 @@ class NativeTests(EntryTests):
         self.shortcut = patch.object(windows, 'shortcut_bytes', return_value=b'SYNTHETIC_LNK_DOUBLE')
         self.shortcut.start()
         self.addCleanup(self.shortcut.stop)
+        # Fixtures must run from any shell, packaged or not; dedicated cases exercise the guard.
+        self.identity = patch.object(windows, 'package_identity_rc', return_value=windows.NO_PACKAGE_IDENTITY)
+        self.identity.start()
+        self.addCleanup(self.identity.stop)
+        self.ancestors = patch.object(windows, 'ancestor_package_rcs', return_value=[])
+        self.ancestors.start()
+        self.addCleanup(self.ancestors.stop)
         # Every test refuses any accidental real-registry call.
         self.registry_guards = []
         for name in ('registry_snapshot', 'install_registry', 'restore_registry'):
@@ -234,6 +241,70 @@ class NativeTests(EntryTests):
                 code, output = self.run_entry([action, '--spec', str(self.config / '.credentials.json')])
                 self.assertEqual(code, 2)
                 self.assertNotIn('SYNTHETIC', output)
+
+    def test_native_cli_refuses_packaged_process_before_any_read_or_write(self):
+        # MSIX-redirected HKCU/AppData writes are invisible to Settings: refuse every native action first.
+        capsule_args = ['--spec', str(self.spec), '--output', str(self.capsule_path)]
+        recovery_args = ['--install-dir', str(self.install), '--approved', '--writers-closed']
+        cases = [['native-preview', *capsule_args], ['native-install', '--spec', str(self.spec),
+                 '--approval', str(self.capsule_path), '--approved', '--writers-closed'],
+                 ['native-remove-b', *recovery_args], ['native-rollback', *recovery_args]]
+        before = self.bytes_snapshot()
+        with patch.object(windows, 'package_identity_rc', return_value=122), \
+                patch.object(bridge, 'read_optional', side_effect=AssertionError('READ_BEFORE_IDENTITY_GUARD')):
+            for args in cases:
+                code, output = self.run_entry(args)
+                self.assertEqual(code, 2, args[0])
+                self.assertEqual(json.loads(output)['reason'], 'PACKAGED_PROCESS_REFUSED', args[0])
+        self.assertFalse(self.capsule_path.exists())
+        self.assertEqual(before, self.bytes_snapshot())
+
+    def test_native_cli_unpackaged_process_passes_identity_guard(self):
+        code, output = self.run_entry(['native-preview', '--spec', str(self.spec),
+            '--output', str(self.capsule_path)])
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(output)['status'], 'NATIVE_PREVIEW_SAVED')
+
+    def test_identity_guard_fails_closed_on_unexpected_result(self):
+        for rc in (0, 122, 1, -1):
+            with patch.object(windows, 'package_identity_rc', return_value=rc):
+                with self.assertRaisesRegex(bridge.BridgeError, 'PACKAGED_PROCESS_REFUSED'):
+                    windows.require_unpackaged_process()
+        windows.require_unpackaged_process()  # the setUp doubles report no package identity anywhere
+
+    def test_identity_guard_refuses_packaged_ancestor_of_unpackaged_process(self):
+        # Observed: python <- bash <- claude.exe <- packaged Claude.exe inherits the private registry layer.
+        chain = [(10, 'bash.exe', 15700), (11, 'claude.exe', 15700), (12, 'Claude.exe', 122), (13, 'explorer.exe', 15700)]
+        with patch.object(windows, 'ancestor_package_rcs', return_value=chain):
+            with self.assertRaisesRegex(bridge.BridgeError, 'PACKAGED_PROCESS_REFUSED'):
+                windows.require_unpackaged_process()
+        # Unopenable ancestors (rc None) and unpackaged ones do not refuse.
+        with patch.object(windows, 'ancestor_package_rcs', return_value=[(1, 'svchost.exe', None), (2, 'explorer.exe', 15700)]):
+            windows.require_unpackaged_process()
+
+    def test_cli_refuses_packaged_ancestor_before_any_read(self):
+        chain = [(12, 'Claude.exe', 122)]
+        with patch.object(windows, 'ancestor_package_rcs', return_value=chain),                 patch.object(bridge, 'read_optional', side_effect=AssertionError('READ_BEFORE_IDENTITY_GUARD')):
+            code, output = self.run_entry(['native-preview', '--spec', str(self.spec), '--output', str(self.capsule_path)])
+        self.assertEqual(code, 2)
+        self.assertEqual(json.loads(output)['reason'], 'PACKAGED_PROCESS_REFUSED')
+        self.assertFalse(self.capsule_path.exists())
+
+    def test_real_package_identity_api_returns_a_documented_code(self):
+        self.identity.stop()
+        self.ancestors.stop()
+        try:
+            # 15700: unpackaged; 122: packaged (the zero-length buffer is too small). Any CI or Desktop shell is one of them.
+            self.assertIn(windows.package_identity_rc(), (windows.NO_PACKAGE_IDENTITY, 122))
+            chain = windows.ancestor_package_rcs()
+            self.assertIsInstance(chain, list)
+            self.assertLessEqual(len(chain), 32)
+            for pid, exe, rc in chain:
+                self.assertIsInstance(pid, int)
+                self.assertTrue(rc is None or isinstance(rc, int))
+        finally:
+            self.identity.start()
+            self.ancestors.start()
 
     def test_native_cli_conflicting_preview_flags_refuse(self):
         code, output = self.run_entry(['native-preview', '--spec', str(self.spec),

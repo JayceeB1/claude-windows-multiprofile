@@ -493,10 +493,19 @@ Q1 fixes/tests: 9a614c3/c5db4a8. [CI 37508782528](https://github.com/JayceeB1/cl
 Q2: 168 contracts, 167 PASS / 1 SKIP; four actual registry/mutex API tests in guarded disposable HKCU; no production associations.
 Commit/push/draft-PR/CI resume under test authorization; do not merge or promote fixtures to Desktop acceptance.
 
+## S5 picker unblocked: MSIX virtualization (2026-10-06)
+
+Cause: router registry/AppData writes made from Codex (MSIX) were redirected to its private package store; Settings reads the
+real registry. Real registry written once by `Apply-RouterRegistration.py` from a Start-menu shell; operator observed
+"Claude Login Router" in the `claude` picker. Default selection stays manual. Virtualization is inherited by descendants without
+package identity, so `NativeWindowsIO.require_unpackaged_process()` walks the ancestor chain (179 contracts, 178 PASS / 1 SKIP).
+Open: receipt references the redirected `Claude-B` root (`NativeWorkspace.load` refuses from real processes); B launch,
+B config/memory and two-Desktop acceptance remain NOT_RUN. See [report](S5-MSIX-VIRTUALIZATION-20261006.md).
+
 ## NEXT SLICE
 
 A/pilot marker matched; approved B provisioning retained, zero memory-key edits; B remains unlaunched.
-Router metadata/dedicated-host repairs read back, but operator picker still shows only Claude: UI gate BLOCKED.
+Router metadata/dedicated-host repairs read back; picker was blocked by MSIX redirection and now lists the router (see S5 entry above).
 Post-restart: versions/19 owned assets unchanged, picker still Claude only. Session renewal did not suffice.
 Read-only diagnostic: real claude scheme exists in HKCU/HKCR and MSIX manifest; effective default is Undecided.
 Approved manual Procmon: Settings enumerates 816 HKCU values without ClaudeShim; direct observer sees 817 including it.

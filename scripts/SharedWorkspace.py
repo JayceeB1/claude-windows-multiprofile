@@ -126,6 +126,8 @@ def main(argv=None):
             if os.name != 'nt':
                 raise memory.BridgeError('WINDOWS_NATIVE_REQUIRED')
             import NativeWorkspace as native
+            import NativeWindowsIO
+            NativeWindowsIO.require_unpackaged_process()
             if args.action == 'native-preview':
                 if args.spec is None or args.output is None or args.approved or args.approval or args.install_dir or \
                         args.writers_closed or args.approve_protocol or args.delete_owned_b_data:

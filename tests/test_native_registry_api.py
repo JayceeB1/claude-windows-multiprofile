@@ -178,6 +178,17 @@ class RegistryApiTests(NativeTests):
                 windows.restore_registry(before, current)
             self.delete_registered_fixture({})
 
+    def test_repair_helper_refuses_packaged_process_before_repair(self):
+        spec = importlib.util.spec_from_file_location('registration_repair_guard',
+            Path(__file__).resolve().parents[1] / 'scripts/Repair-Registration.py')
+        helper = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(helper)
+        argv = ['Repair-Registration.py', '--install-dir', str(self.install), '--approved']
+        with patch.object(windows, 'package_identity_rc', return_value=122), \
+                patch.object(helper, 'repair', side_effect=AssertionError('REPAIR_REACHED')), \
+                patch('sys.argv', argv):
+            self.assertEqual(helper.main(), 2)
+
     def test_repair_maintenance_keeps_owned_receipt_valid_and_profiles_intact(self):
         spec = importlib.util.spec_from_file_location('registration_repair',
             Path(__file__).resolve().parents[1] / 'scripts/Repair-Registration.py')

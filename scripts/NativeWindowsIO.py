@@ -26,6 +26,105 @@ MAX_KEYS = 32
 MAX_VALUES = 64
 
 
+NO_PACKAGE_IDENTITY = 15700  # APPMODEL_ERROR_NO_PACKAGE
+
+
+def package_identity_rc():
+    """Raw GetCurrentPackageFullName result for this process (15700 means no package identity)."""
+    api = ctypes.WinDLL('kernel32', use_last_error=True)
+    api.GetCurrentPackageFullName.argtypes = [ctypes.POINTER(wintypes.UINT), wintypes.LPWSTR]
+    api.GetCurrentPackageFullName.restype = wintypes.LONG
+    length = wintypes.UINT(0)
+    return api.GetCurrentPackageFullName(ctypes.byref(length), None)
+
+
+def ancestor_package_rcs(max_depth=32):
+    """GetPackageFullName result for each ancestor process, nearest first: [(pid, exe, rc)].
+
+    Package virtualization is inherited by every descendant of a packaged process even though the
+    descendant itself has no package identity (observed: python <- bash <- claude.exe <- packaged
+    Claude.exe sees the private registry layer while GetCurrentPackageFullName says 15700).
+    A parent that is younger than its child was reaped and its PID reused: stop there.
+    """
+    api = ctypes.WinDLL('kernel32', use_last_error=True)
+    api.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+    api.OpenProcess.restype = wintypes.HANDLE
+    api.CloseHandle.argtypes = [wintypes.HANDLE]
+    api.GetPackageFullName.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.UINT), wintypes.LPWSTR]
+    api.GetPackageFullName.restype = wintypes.LONG
+    api.GetProcessTimes.argtypes = [wintypes.HANDLE] + [ctypes.POINTER(wintypes.FILETIME)] * 4
+    api.GetProcessTimes.restype = wintypes.BOOL
+    api.CreateToolhelp32Snapshot.argtypes = [wintypes.DWORD, wintypes.DWORD]
+    api.CreateToolhelp32Snapshot.restype = wintypes.HANDLE
+
+    class Entry(ctypes.Structure):
+        _fields_ = [('dwSize', wintypes.DWORD), ('cntUsage', wintypes.DWORD), ('th32ProcessID', wintypes.DWORD),
+                    ('th32DefaultHeapID', ctypes.c_void_p), ('th32ModuleID', wintypes.DWORD),
+                    ('cntThreads', wintypes.DWORD), ('th32ParentProcessID', wintypes.DWORD),
+                    ('pcPriClassBase', wintypes.LONG), ('dwFlags', wintypes.DWORD), ('szExeFile', wintypes.WCHAR * 260)]
+    api.Process32FirstW.argtypes = api.Process32NextW.argtypes = [wintypes.HANDLE, ctypes.POINTER(Entry)]
+    api.Process32FirstW.restype = api.Process32NextW.restype = wintypes.BOOL
+
+    snapshot = api.CreateToolhelp32Snapshot(0x2, 0)  # TH32CS_SNAPPROCESS
+    if snapshot in (None, wintypes.HANDLE(-1).value):
+        raise bridge.BridgeError('PACKAGE_CONTEXT_UNDETERMINED')
+    processes = {}
+    try:
+        entry = Entry()
+        entry.dwSize = ctypes.sizeof(Entry)
+        more = api.Process32FirstW(snapshot, ctypes.byref(entry))
+        while more:
+            processes[entry.th32ProcessID] = (entry.th32ParentProcessID, entry.szExeFile)
+            more = api.Process32NextW(snapshot, ctypes.byref(entry))
+    finally:
+        api.CloseHandle(snapshot)
+
+    def facts(pid):
+        handle = api.OpenProcess(0x1000, False, pid)  # PROCESS_QUERY_LIMITED_INFORMATION
+        if not handle:
+            return None, None  # not openable (system/elevated): cannot be this user's packaged app
+        try:
+            created = [wintypes.FILETIME() for _ in range(4)]
+            started = None
+            if api.GetProcessTimes(handle, *map(ctypes.byref, created)):
+                started = (created[0].dwHighDateTime << 32) | created[0].dwLowDateTime
+            length = wintypes.UINT(0)
+            return api.GetPackageFullName(handle, ctypes.byref(length), None), started
+        finally:
+            api.CloseHandle(handle)
+
+    chain, pid, seen = [], os.getpid(), set()
+    child_started = facts(pid)[1]
+    for _ in range(max_depth):
+        if pid not in processes or pid in seen:
+            break
+        seen.add(pid)
+        parent, _name = processes[pid]
+        if parent not in processes:
+            break
+        rc, started = facts(parent)
+        if child_started and started and started > child_started:
+            break  # PID reuse: the real parent is gone
+        chain.append((parent, processes[parent][1], rc))
+        pid, child_started = parent, started
+    return chain
+
+
+def require_unpackaged_process():
+    """Refuse native registry/AppData work from an MSIX-packaged process tree.
+
+    HKCU and AppData writes from a packaged process (Codex, Claude Desktop) and from every one of
+    its descendants are redirected to a private per-package store that Windows Settings and the
+    protocol picker never read, so a "successful" install would be invisible there.
+    Checks the process itself and its whole ancestor chain; fails closed on any unexpected result.
+    """
+    if package_identity_rc() != NO_PACKAGE_IDENTITY:
+        raise bridge.BridgeError('PACKAGED_PROCESS_REFUSED')
+    for _pid, _exe, rc in ancestor_package_rcs():
+        if rc not in (None, NO_PACKAGE_IDENTITY):
+            raise bridge.BridgeError('PACKAGED_PROCESS_REFUSED')
+
+
 def windows_root():
     api = ctypes.WinDLL('kernel32', use_last_error=True)
     api.GetWindowsDirectoryW.argtypes = [wintypes.LPWSTR, wintypes.UINT]

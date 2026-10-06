@@ -129,6 +129,7 @@ def main():
     try:
         if not args.approved:
             raise bridge.BridgeError('REGISTRATION_REPAIR_APPROVAL_REQUIRED')
+        windows.require_unpackaged_process()
         print(json.dumps(repair(args.install_dir)))
         return 0
     except (bridge.BridgeError, OSError, ValueError, KeyError, StopIteration, subprocess.SubprocessError):

@@ -85,3 +85,9 @@ proof are not claimed. Native API adapter admission remains unfinished; the CLI 
 Final native 8.3 policy: the deferred test is explicitly skipped on every host, including CI even if its volume offers
 an alias. Synthetic equivalent-ID coverage remains separate. The earlier CI run at 67d1ded offered an alias and ran
 that fixture; it is not adopted as local/user qualification. All current receipts retain native 8.3 NOT_RUN by scope.
+
+Final consolidated receipt at 8f0947d: local Python 3.14.7 ran 127 unique contracts, 126 PASS / 1 SKIP. Windows CI
+[37430638213](https://github.com/JayceeB1/claude-windows-multiprofile/actions/runs/37430638213) at the exact same SHA
+completed all three jobs successfully. Both PS5.1/PS7 jobs on Python 3.12 report 127 executed, 126 passed, 1 explicit
+native 8.3 skip, and native-Uninstall refusal PASS. Full logs reread; no Desktop launch/installation/removal proof.
+19-member code/docs package hashes and normalized committed-file bytes match that revision; private archive stays local.

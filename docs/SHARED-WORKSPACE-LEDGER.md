@@ -1,6 +1,6 @@
 # Shared workspace fork - implementation ledger
 
-Updated 2026-10-06 (Desktop evidence and S3b planner admission). Delivery order and dependencies: [Shared workspace roadmap](SHARED-WORKSPACE-
+Updated 2026-10-06 (chained fixture preparation and preview/package delivery). Delivery order and dependencies: [Shared workspace roadmap](SHARED-WORKSPACE-
 ROADMAP.md). This is the sole ledger. Requirements below are separate from implementation and evidence statuses.
 
 ## Contract
@@ -148,8 +148,7 @@ Physical path identity and metadata ownership belong to S4's local inventory. Fu
 remain UNQUALIFIED. A running Desktop retains its environment; refocusing does not reconfigure it.
 
 Historical route.log contents, PowerShell debugging/transcripts/in-memory errors, OS process command-line telemetry and Claude internal logs are
-NOT sanitized. The URL remains in the child command line. Do not publish old logs. The older PROTOCOL-ROUTING.md and routing diagnostic still
-describe the legacy marker/log behavior: update them before packaging. New route.lock and any orphan temporary metadata need ownership-aware
+NOT sanitized. The URL remains in the child command line. Do not publish old logs. Historical versions described legacy marker/log behavior; D2 supersedes those instructions. New route.lock and any orphan temporary metadata need ownership-aware
 handling in S4; never delete a held lock file.
 
 ## Implementation and evidence register
@@ -170,15 +169,15 @@ roadmap-only turn started no remaining implementation; the separately authorized
 | S2c2-Q2 | VERIFIED_SYNTHETIC | Q1 | Parent `1497f48`; three-file Q2 delivery below; native PS5.1/7 + Python | 12 Q2 cases PASS, plus 8 Q1 regressions; four expiry mutants detected; no Desktop launch | Preserve |
 | S2c2-D1 | VERIFIED_SYNTHETIC | Q2 | Parent `8b8431b`; three-file D1 delivery below; native PS5.1/7 | 33 fixture cases / 959 assertions per shell; six unsafe/leaking mutants detected; no installed invocation | Preserve |
 | S2c2-D2 | VERIFIED_SYNTHETIC | D1 | Parent `c96402f`; four-file D2 delivery below | Docs/examples match v2 and D1; Setup non-guidance tokens unchanged | Preserve; S3a now reviewed |
-| S3a | VERIFIED_SYNTHETIC | D2 + supplied ZIP | Parent `8804e5c`; archive receipt and review below | Original 40 Windows tests PASS, zero skips; two adaptation gaps confirmed; no repository import | S3b after S4a provenance |
-| S4a | BLOCKED | D2 | Parent `ce2b7ba`; inventory module/tests delivered below | 22 native fixture tests PASS; 8.3 native alias NOT_RUN; local candidate/package inventory PARTIAL; effective Code config unconfirmed | Confirm effective A for S3b |
-| S3b | BLOCKED | S3a + S4a | Source now reviewed; no import | Effective A/selected-memory provenance remains unconfirmed; admission adaptations listed in roadmap | Complete S4a, then planner-only import |
-| S3c | TODO | S3b | None | No apply/rollback receipts | Minimal selected-key changes on fixtures |
-| S3g | TODO | S3c + selected list | None; optional | No global sharing requested by default | Defer or qualify explicit allowlist |
-| S4b | TODO | S4a + S3b | None | Setup lacks complete collision/ownership preview | Additive no-write plan |
-| S4c | TODO | S4b + S3c | None | Full Setup not fixture-qualified for preserving A | Additive execution/rollback on fixtures |
-| S4d | TODO | S4c | None; Uninstall source reviewed | Name-derived fallback and unchecked custom config deletion; route.lock/temp not cleaned; no ownership/conflict protection | Owned B removal, retain data by default |
-| S4e | TODO | S4d + D2 | None | No qualified one-command package | Preview-first entry and guide |
+| S3a | VERIFIED_SYNTHETIC | D2 + ZIP | `1664fa4`; frozen archive review | Original 40 Windows tests PASS; no verbatim import | Preserve lineage |
+| S4a | IMPLEMENTED | D2 | `8f0947d`; read-only inventory + Desktop operator report | PARTIAL_LOCAL; path/index report accepted for preparation; native data redirection unresolved | Native acceptance |
+| S3b | VERIFIED_SYNTHETIC | S3a + S4a operator evidence | `6f22250`, namespace repair `e7dd6ee`; Run-SharedWorkspaceTests | 31 planner contracts; no writes, explicit scope/trust/policy refusal | Preserve preview |
+| S3c | VERIFIED_SYNTHETIC | S3b | `58e0fcb`; consolidated runner | 18 apply/recovery contracts plus planner; selected-key only; real apply NOT_RUN | Preserve fixture evidence |
+| S3g | TODO | S3c + explicit list | Optional, omitted | No selected global resources or whole-root sharing | Defer |
+| S4b | VERIFIED_SYNTHETIC | S4a + S3b | `059bf05`; consolidated runner | 10 additive preview contracts; no writes | Preserve preview |
+| S4c | VERIFIED_SYNTHETIC | S4b + S3c | `9e4b9ae`; consolidated runner | 12 TEMP-only install/guard contracts; native OS adapter not admitted | Native adapter implementation/admission |
+| S4d | VERIFIED_SYNTHETIC | S4c | `bd34247`, guard `574342f`; runner + Test-Uninstall | 9 B-removal contracts; data retained; native removal NOT_RUN | Native adapter acceptance |
+| S4e | VERIFIED_SYNTHETIC | S4d + D2 | `c50c0da`, guide `839558d`; consolidated runner | 10 preview/package contracts; 19-member package; mutation CLI unavailable | Native adapter then S5 |
 | S5a | TODO | S4e + explicit local approval | None | Browser focus is **HYPOTHESIS TO TEST** | Observe HTTPS/profile identity/claude:// separately |
 | S5b | TODO | S5a + all required synthetic gates + approval | None | Two Desktop identities, memory and removal unobserved | Real disposable-project acceptance |
 
@@ -491,7 +490,7 @@ No stock-name fallback, package removal or actual profile deletion. Native remov
 
 ## S4e preview/package entry (2026-10-06)
 
-50 Windows cases PASS (40 prior + 10 entry/package), no skips: offline preview/help, exact private key/hash reports,
+50 Windows cases PASS at the S4e slice (40 prior + 10 entry/package), no skips: offline preview/help, exact private key/hash reports,
 protected/exclusive output, credential-named input refusal, allowlisted package hashes and extracted relative imports.
 No native mutation actions. README/manual procedure supersede legacy Setup/Uninstall recipes. Native OS adapter and
 S5 trials remain NOT_RUN; this closes preparation, not actual two-account acceptance. Optional global sharing omitted.

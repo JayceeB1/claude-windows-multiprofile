@@ -1,6 +1,6 @@
 # Shared workspace fork - implementation ledger
 
-Updated 2026-10-06 (open-document reconciliation and optional REA packaged smoke). Delivery order and dependencies: [Shared workspace roadmap](SHARED-WORKSPACE-ROADMAP.md). This is the sole ledger. Requirements below are separate from implementation and evidence statuses.
+Updated 2026-10-06 (native candidate completed before tests). Delivery order and dependencies: [Shared workspace roadmap](SHARED-WORKSPACE-ROADMAP.md). This is the sole ledger. Requirements below are separate from implementation and evidence statuses.
 
 ## Contract
 
@@ -50,8 +50,7 @@ must confirm that adding/removing B only affects its owned additions, not shared
 
 ## Work rules
 
-One coherent micro-slice, 2-4 files, self-review, tests, atomic commit, draft PR, then STOP. No merge without explicit approval. Keep files below
-approximately 500 lines. Use the connected user's Git identity; do not copy upstream's author or add assistant/co-author attribution. Keep master
+Current user instruction: chain preparation through local commits and STOP BEFORE TESTS. No push/CI or merge for this unqualified candidate. Keep files below approximately 500 lines. Use the connected user's Git identity; do not copy upstream's author or add assistant/co-author attribution. Keep master
 unchanged until approval.
 
 ## Published baseline
@@ -437,22 +436,9 @@ References checked for the locking/IO contract: [FileShare.None](https://learn.m
 
 ## S4a selected-memory observation follow-up (2026-10-06)
 
-Implemented explicit --project/--memory-candidate/--reported-surface options in Inspect-SharedWorkspace.py; read only selected keys from
-user/project/local settings with a 64 KiB bound, duplicate/nonfinite rejection and change checks; refuse reparse ancestors and multiply linked
-settings. Reject outside-scope configured/candidate paths before probing. Memory inspection counts at most 129 entries and checks index presence
-without reading contents or creating folders. Protect the selected project from receipt output; exclusive private .local.md output remains the
-only write. These checks are bounded observations, not a concurrent namespace-race security guarantee or effective precedence.
+Implemented explicit --project/--memory-candidate/--reported-surface options in Inspect-SharedWorkspace.py; read only selected keys from user/project/local settings with a 64 KiB bound, duplicate/nonfinite rejection and change checks; refuse reparse ancestors and multiply linked settings. Reject outside-scope configured/candidate paths before probing. Memory inspection counts at most 129 entries and checks index presence without reading contents or creating folders. Protect the selected project from receipt output; exclusive private .local.md output remains the only write. These checks are bounded observations, not a concurrent namespace-race security guarantee or effective precedence.
 
-Windows Python qualification: 37 tests, 36 PASS, 1 SKIP (native 8.3 remains NOT_RUN). Fixtures cover no mutation/content reads, secret
-suppression, absent folders, scope boundaries, junctions/hard links, malformed/large/changing settings, conflicting scopes, entry cap, file
-candidates and private/path-free CLI output. No real apply/restore. Read-only local receipt (Git-ignored): user autoMemoryEnabled=true;
-autoMemoryDirectory absent; project/local settings missing; candidate has two entries and MEMORY.md, contents unread. CLI and same Desktop path
-are user reports; actual Desktop A loading is NOT_OBSERVED. Managed policy, CLI environment/arguments and active config resolution remain
-unobserved. S4a stays PARTIAL_LOCAL/BLOCKED; S3b admission stays BLOCKED, no prototype source imported. Registered Claude package 2.19675.1.0
-before/after this inspection differs from historical 2.19675.0.0; update cause and running version unknown. No package/profile mutation. Missing
-proof: Desktop A Code on the selected project must expose its actual memory/config path and startup index loading. A targeted fresh Code-session
-context/path read-back or a scoped native file-access observation can establish this without Desktop /memory (unavailable there); perform only
-with saved work and separate consent if restart/instrumentation is needed.
+Windows Python qualification: 37 tests, 36 PASS, 1 SKIP (native 8.3 remains NOT_RUN). Fixtures cover no mutation/content reads, secret suppression, absent folders, scope boundaries, junctions/hard links, malformed/large/changing settings, conflicting scopes, entry cap, file candidates and private/path-free CLI output. No real apply/restore. Read-only local receipt (Git-ignored): user autoMemoryEnabled=true; autoMemoryDirectory absent; project/local settings missing; candidate has two entries and MEMORY.md, contents unread. CLI and same Desktop path are user reports; actual Desktop A loading is NOT_OBSERVED. Managed policy, CLI environment/arguments and active config resolution remain unobserved. S4a stays PARTIAL_LOCAL/BLOCKED; S3b admission stays BLOCKED, no prototype source imported. Registered Claude package 2.19675.1.0 before/after this inspection differs from historical 2.19675.0.0; update cause and running version unknown. No package/profile mutation. Missing proof: Desktop A Code on the selected project must expose its actual memory/config path and startup index loading. A targeted fresh Code-session context/path read-back or a scoped native file-access observation can establish this without Desktop /memory (unavailable there); perform only with saved work and separate consent if restart/instrumentation is needed.
 
 ## Desktop evidence and S3b/S3c/S4b fixture admission (2026-10-06)
 
@@ -488,13 +474,22 @@ S5 trials remain NOT_RUN; this closes preparation, not actual two-account accept
 
 ## New document/issue reconciliation and REA-A1 (2026-10-06)
 
-PR #2 document-only commit aeb8cb8 admitted as 8d1b672; no old implementation snapshot merged. Issues changed from
-disabled to enabled during this review; connected JayceeB1 has admin/push/triage rights. Follow-up [#3](https://github.com/JayceeB1/claude-windows-multiprofile/issues/3) created.
-REA-A1 (`c5389b7`): pinned 4.0.1 packaged fixture and reproduction CORRECT, adoption EXPERIMENTAL; seven classified
-questions, exact artifact/resource hashes and main.cjs delta. Generic compare UNKNOWN; graph churn PARTIAL. Initial
-Startup timeout/CRLF repair retained; [receipt](REA-SMOKE-20261006.md). ELF/PE/Claude pair/runtime/8.3 NOT_RUN; no global setup, normal-use dependency or real profile mutation/isolation proof.
+PR #2 document-only commit aeb8cb8 admitted as 8d1b672; no old implementation snapshot merged. Issues changed from disabled to enabled during this review; connected JayceeB1 has admin/push/triage rights. Follow-up [#3](https://github.com/JayceeB1/claude-windows-multiprofile/issues/3) created. REA-A1 (`c5389b7`): pinned 4.0.1 packaged fixture and reproduction CORRECT, adoption EXPERIMENTAL; seven classified questions, exact artifact/resource hashes and main.cjs delta. Generic compare UNKNOWN; graph churn PARTIAL. Initial Startup timeout/CRLF repair retained; [receipt](REA-SMOKE-20261006.md). ELF/PE/Claude pair/runtime/8.3 NOT_RUN; no global setup, normal-use dependency or real profile mutation/isolation proof.
+
+## S4f/S4g native candidate (2026-10-06) — IMPLEMENTED_NOT_TESTED
+
+New NativeWindowsIO/NativeWorkspace implement explicit capsule approval, physical/hash ownership, selected-key journals,
+COM staging/read-back, bounded HKCU router registration and conservative recovery. Setup/Uninstall and SharedWorkspace
+wire explicit native actions; default guards remain. B removal retains A routing/data/shared memory and the official package.
+Separate B-data deletion and protocol consent remain mandatory. Checksums are not receipt authentication; external-editor
+CAS and crash-atomic write/journal recovery are not claimed. Unknown or changed ownership refuses, retained additions need review.
+Assets/package allowlists include the new modules/wrappers. Static review/syntax parsing (4 Python, 2 PS files) only;
+diff whitespace check clean. All candidate tests/runtime gates NOT_RUN; no modules imported or scripts executed.
+Historical PASS above does not qualify this candidate. No real profile/project/shortcut/registry/package operation performed.
+User requested completion BEFORE TESTS: local commits only; push withheld because PR CI automatically executes tests.
+Local candidate: `083c02b` native adapter, `7ae1479` entry/wrappers, `42e8297` guide and qualification queue.
 
 ## NEXT SLICE
 
-Main: native adapter implementation/admission, then separately authorized S5 trials. Optional REA-A2 follows issue #3;
-remaining native-provider/source-built and archived-pair evidence is unqualified. Desktop path evidence remains accepted.
+Isolated candidate qualification from MANUAL-TEST.md, then separately authorized S5 trials. Native 8.3 stays NOT_RUN;
+optional REA-A2 follows issue #3. Effective B memory/config and two-Desktop acceptance remain unqualified.

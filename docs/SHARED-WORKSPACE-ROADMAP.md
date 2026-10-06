@@ -402,8 +402,13 @@ PR creation permissions were read back for the connected account. REA output mus
 
 ## Current continuation boundary
 
-S2-D2, S3a review, Desktop operator evidence and S3b/S3c/S4b-e preparation are delivered on Windows fixtures.
-SharedWorkspace.py provides preview/package only. Native OS adapter admission and S5a/S5b remain unqualified;
-fixture shortcut JSON/registry doubles cannot prove native installation. Setup/Uninstall refuse full native invocation.
+S2-D2, S3a review, Desktop operator evidence and S3b/S3c/S4b-e preparation have historical Windows fixture receipts.
+S4f native implementation and S4g entry/package wiring are IMPLEMENTED_NOT_TESTED: native-preview/install/remove-b/
+rollback, COM shortcut staging, bounded HKCU router ownership, selected-key journals and cooperative locks.
+The latest instruction is to finish before tests. No new runtime execution, fixture run, archive reproduction or
+CI trigger is authorized in this delivery. Candidate commits remain local because pushing the branch starts CI.
+Default Setup/Uninstall and unnamed apply/install/remove/restore remain refused; explicit native wrappers are candidates.
+Next: isolated native adapter/wrapper/package qualification using MANUAL-TEST.md, then separately authorized S5a/S5b.
 Real installation, project/profile share/apply/restore, login, removal or restart still needs separate local authorization.
 The earlier CLI-only/Desktop-path blocker is superseded by the user's Desktop screenshot, not generalized to all projects.
+Native 8.3, effective B loading/config isolation and two-Desktop acceptance remain NOT_RUN. Optional REA-A2 stays deferred.

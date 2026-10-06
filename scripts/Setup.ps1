@@ -1,80 +1,13 @@
 <#
 .SYNOPSIS
-    Installs "clones" of the Claude Desktop app: one isolated profile + one
-    desktop shortcut per account, and (optionally) a claude:// login router so
-    browser-SSO callbacks land in the profile you intend.
-
+    Explicit native workspace candidate wrapper (IMPLEMENTED_NOT_TESTED).
 .DESCRIPTION
-    For each profile name you pass, this script:
-      * binds it to a data directory (and optional Claude Code config dir):
-          - the profile named by -DefaultProfile (if any) reuses the STOCK paths
-            (%APPDATA%\Claude + the default ~\.claude), i.e. the account the
-            normally-installed app is already signed into;
-          - every other profile gets a fresh, isolated %APPDATA%\Claude-<name>
-            data dir (kept under %APPDATA% so the Cowork VM works -- see the note
-            in the loop below) and a ~\.claude-<name> config dir.
-        Both are overridable per profile via -DataDir / -ConfigDir hashtables.
-      * copies the launcher + router scripts into -InstallDir\bin (so the
-        shortcuts keep working even if you delete this repo),
-      * writes profiles.json into bin\ so Arm-ClaudeLogin.ps1 and
-        Test-ClaudeRouting.ps1 know each profile's directories,
-      * creates a "Claude (<Name>)" shortcut on your Desktop that opens the app
-        with that profile, using the real Claude icon,
-      * unless -NoProtocolRouting: registers a chooseable claude:// handler (the
-        shim), then prints the ONE manual Settings step needed to activate it.
-
-    No baked-in assumption about which profile owns the stock paths: pass
-    -DefaultProfile None (the default) and every profile is isolated, or name any
-    profile to bind it to the stock login.
-
-.PARAMETER Profile
-    One or more profile names. Default: Work, Personal.
-
-.PARAMETER DefaultProfile
-    Which declared profile (if any) binds to the STOCK paths (%APPDATA%\Claude +
-    default ~\.claude). Use 'None' (default) for no such binding -- every profile
-    gets its own isolated dirs. Example: -DefaultProfile Personal makes Personal
-    reuse the already-signed-in account and isolates the rest.
-
-.PARAMETER ReuseDefaultForWork
-    DEPRECATED compatibility alias for -DefaultProfile Work. Ignored if
-    -DefaultProfile is given explicitly.
-
-.PARAMETER InstallDir
-    Where the launcher scripts (bin\) live. Default: %USERPROFILE%\ClaudeProfiles.
-    NOTE: profile *data* always lives under %APPDATA%\<...>, not here -- this is
-    required for the Cowork VM to start (the native VM service resolves rootfs.vhdx
-    under %APPDATA% regardless of --user-data-dir).
-
-.PARAMETER ConfigDir
-    Optional hashtable mapping a profile name to a Claude Code / Cowork config
-    directory (CLAUDE_CONFIG_DIR), overriding the derived ~\.claude-<name>.
-
-.PARAMETER DataDir
-    Optional hashtable mapping a profile name to a data directory, overriding the
-    derived %APPDATA%\Claude-<name>. MUST stay directly under %APPDATA% or Cowork
-    breaks (see the Cowork note below).
-
-.PARAMETER NoProtocolRouting
-    Skip installing/registering the claude:// login router. Use this if you
-    prefer to sequence logins manually (log in one account at a time with the
-    others closed).
-
-.PARAMETER LoginShortcuts
-    Also create a "Claude (<name>) - Sign in" desktop shortcut per profile that
-    arms the router for that profile and opens it, ready for a browser login.
-
-.EXAMPLE
-    .\Setup.ps1
-    # Creates "Claude (Work)" and "Claude (Personal)"; no stock binding.
-
-.EXAMPLE
-    .\Setup.ps1 -Profile Personal,Work -DefaultProfile Personal
-    # Personal reuses the stock login; Work is isolated (data + config).
-
-.EXAMPLE
-    .\Setup.ps1 -Profile Personal,Client -DefaultProfile Personal `
-        -ConfigDir @{ Client = "$env:USERPROFILE\.claude-client" }
+    Default invocation refuses mutations. NativeSpec supplies a reviewed private
+    specification; NativePreview saves a new private approval capsule. Installation
+    requires NativeApproval, Approved and WritersClosed. ApproveProtocol is separate.
+    Legacy profile/path switches cannot be combined with this native branch.
+    No dependency installation, login/restart or official package removal.
+    Qualify on isolated fixtures before separately authorized real-profile use.
 #>
 [CmdletBinding()]
 param(
@@ -85,11 +18,40 @@ param(
     [hashtable]$ConfigDir = @{},
     [hashtable]$DataDir = @{},
     [switch]$NoProtocolRouting,
-    [switch]$LoginShortcuts
+    [switch]$LoginShortcuts,
+    [string]$NativeSpec,
+    [string]$NativePreview,
+    [string]$NativeApproval,
+    [switch]$Approved,
+    [switch]$WritersClosed,
+    [switch]$ApproveProtocol
 )
 
 $ErrorActionPreference = 'Stop'
 $scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+
+if ($NativeSpec) {
+    foreach ($legacy in @('Profile', 'DefaultProfile', 'ReuseDefaultForWork', 'InstallDir', 'ConfigDir', 'DataDir', 'NoProtocolRouting', 'LoginShortcuts')) {
+        if ($PSBoundParameters.ContainsKey($legacy)) { throw 'NATIVE_SPEC_CONTROLS_PATHS' }
+    }
+    $python = Get-Command python -CommandType Application -ErrorAction Stop
+    if ($python.Source -like '*\Microsoft\WindowsApps\*') { throw 'PYTHON_RUNTIME_REQUIRED' }
+    $entry = Join-Path $scriptRoot 'SharedWorkspace.py'
+    if ($NativePreview) {
+        if ($Approved -or $NativeApproval -or $WritersClosed -or $ApproveProtocol) { throw 'NATIVE_PREVIEW_ARGUMENTS' }
+        & $python.Source -B $entry native-preview --spec $NativeSpec --output $NativePreview
+    } else {
+        if (-not $NativeApproval -or -not $Approved -or -not $WritersClosed) {
+            throw 'NATIVE_APPROVAL_AND_CLOSED_WRITERS_REQUIRED'
+        }
+        $arguments = @('-B', $entry, 'native-install', '--spec', $NativeSpec,
+                       '--approval', $NativeApproval, '--approved', '--writers-closed')
+        if ($ApproveProtocol) { $arguments += '--approve-protocol' }
+        & $python.Source @arguments
+    }
+    if ($LASTEXITCODE -ne 0) { throw 'NATIVE_WORKSPACE_OPERATION_REFUSED' }
+    return
+}
 
 # The legacy installer below force-copies assets and cannot prove additive ownership.
 # Keep its fragments for regression tests, but refuse full invocation before any OS IO.

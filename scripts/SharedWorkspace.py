@@ -1,17 +1,19 @@
-"""Preview-first entry and allowlisted offline package; no native apply/remove CLI."""
+"""Preview-first entry; native candidate actions require explicit reviewed approval."""
 import argparse
 import json
 from pathlib import Path
 import re
 import sys
 import zipfile
+import os
 
 import SharedMemoryPlan as memory
 import SharedWorkspacePlan as workspace
 
 PACKAGE_FILES = ('Launch-Claude.ps1', 'launch.vbs', 'ClaudeOpenShim.ps1', 'Arm-ClaudeLogin.ps1',
                  'Test-ClaudeRouting.ps1', 'Inspect-SharedWorkspace.py', 'SharedMemoryPlan.py',
-                 'SharedMemoryApply.py', 'SharedWorkspacePlan.py', 'SharedWorkspace.py', 'Uninstall.ps1')
+                 'SharedMemoryApply.py', 'SharedWorkspacePlan.py', 'SharedWorkspace.py', 'Uninstall.ps1',
+                 'Setup.ps1', 'NativeWindowsIO.py', 'NativeWorkspace.py')
 PACKAGE_DOCS = ('README.md', 'LICENSE', 'MANUAL-TEST.md', 'docs/PROTOCOL-ROUTING.md',
                 'docs/SHARED-WORKSPACE-ROADMAP.md', 'docs/SHARED-WORKSPACE-LEDGER.md',
                 'docs/SHARED-WORKSPACE-QUALIFICATION.md', 'docs/REA-QUALIFICATION.md',
@@ -82,14 +84,14 @@ def package(output: Path):
         if raw is None:
             raise memory.BridgeError('PACKAGE_MEMBER_MISSING')
         files[name] = raw
-    receipt = {'schema': 1, 'source': 'WORKTREE_SNAPSHOT', 'native_execution': 'NOT_ADMITTED',
+    receipt = {'schema': 1, 'source': 'WORKTREE_SNAPSHOT', 'native_execution': 'IMPLEMENTED_NOT_TESTED',
                'sha256': {name: memory.digest(raw) for name, raw in files.items()}}
     files['PACKAGE.json'] = (json.dumps(receipt, indent=2) + '\n').encode('utf-8')
     with output.open('xb') as stream:
         with zipfile.ZipFile(stream, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
             for name, raw in files.items():
                 archive.writestr(name, raw)
-    return {'status': 'PACKAGED', 'members': len(files), 'native_execution': 'NOT_ADMITTED'}
+    return {'status': 'PACKAGED', 'members': len(files), 'native_execution': 'IMPLEMENTED_NOT_TESTED'}
 
 
 def main(argv=None):
@@ -97,20 +99,71 @@ def main(argv=None):
     parser.add_argument('action', nargs='?', default='help')
     parser.add_argument('--spec', type=Path)
     parser.add_argument('--output', type=Path)
+    parser.add_argument('--approval', type=Path, help='Exact saved *.native.local.json preview')
+    parser.add_argument('--install-dir', type=Path)
+    parser.add_argument('--approved', action='store_true', help='Explicit approval for this local operation')
+    parser.add_argument('--writers-closed', action='store_true')
+    parser.add_argument('--approve-protocol', action='store_true')
+    parser.add_argument('--delete-owned-b-data', action='store_true')
     args = parser.parse_args(argv)
     try:
         if args.action == 'help':
             parser.print_help()
             return 0
         if args.action == 'preview':
+            if args.approval or args.install_dir or args.approved or args.writers_closed or args.approve_protocol or args.delete_owned_b_data:
+                raise memory.BridgeError('PREVIEW_ARGUMENTS')
             if args.spec is None:
                 raise memory.BridgeError('SPEC_REQUIRED')
             plan = spec_plan(args.spec)
             if args.output:
                 private_report(args.output, plan, args.spec)
             result = {**plan.summary(), 'private_report': 'saved' if args.output else 'not_saved'}
+        elif args.action.startswith('native-'):
+            if os.name != 'nt':
+                raise memory.BridgeError('WINDOWS_NATIVE_REQUIRED')
+            import NativeWorkspace as native
+            if args.action == 'native-preview':
+                if args.spec is None or args.output is None or args.approved or args.approval or args.install_dir or \
+                        args.writers_closed or args.approve_protocol or args.delete_owned_b_data:
+                    raise memory.BridgeError('NATIVE_PREVIEW_ARGUMENTS')
+                plan = spec_plan(args.spec)
+                capsule = native.prepare(plan, args.spec)
+                native.save_preview(args.output, capsule, plan, args.spec)
+                result = {**plan.summary(), 'status': 'NATIVE_PREVIEW_SAVED', 'preview_sha256': capsule['sha256'],
+                          'native_qualification': 'NOT_TESTED'}
+            elif args.action == 'native-install':
+                native.require_approval(args.approved, args.writers_closed)
+                if args.spec is None or args.approval is None or args.output or args.install_dir or args.delete_owned_b_data:
+                    raise memory.BridgeError('NATIVE_INSTALL_ARGUMENTS')
+                capsule_record = native.approval(args.approval)
+                install_dir = memory.safe_path(capsule_record['workspace']['install'])
+                if install_dir.exists():
+                    result = native.installed_again(install_dir, capsule_record, args.spec,
+                        approved=args.approved, writers_closed=args.writers_closed)
+                else:
+                    plan = spec_plan(args.spec)
+                    result = native.install(plan, capsule_record, args.spec, approved=args.approved,
+                        writers_closed=args.writers_closed, approve_protocol=args.approve_protocol)
+            elif args.action in ('native-remove-b', 'native-rollback'):
+                native.require_approval(args.approved, args.writers_closed)
+                if args.install_dir is None or args.spec or args.output or args.approval:
+                    raise memory.BridgeError('NATIVE_RECOVERY_ARGUMENTS')
+                if args.action == 'native-remove-b':
+                    if args.approve_protocol:
+                        raise memory.BridgeError('B_REMOVAL_RETAINS_PROTOCOL')
+                    result = native.remove_b(args.install_dir, approved=args.approved,
+                        writers_closed=args.writers_closed, delete_b_data=args.delete_owned_b_data)
+                else:
+                    if args.delete_owned_b_data:
+                        raise memory.BridgeError('ROLLBACK_RETAINS_B_DATA')
+                    result = native.rollback(args.install_dir, approved=args.approved,
+                        writers_closed=args.writers_closed, approve_protocol=args.approve_protocol)
+            else:
+                raise memory.BridgeError('NATIVE_ACTION_NOT_ADMITTED')
         elif args.action == 'package':
-            if args.output is None or args.spec is not None:
+            if args.output is None or args.spec is not None or args.approval or args.install_dir or args.approved or \
+                    args.writers_closed or args.approve_protocol or args.delete_owned_b_data:
                 raise memory.BridgeError('PACKAGE_ARGUMENTS')
             result = package(args.output)
         else:

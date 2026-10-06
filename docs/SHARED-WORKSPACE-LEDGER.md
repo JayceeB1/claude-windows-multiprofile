@@ -172,7 +172,7 @@ roadmap-only turn started no remaining implementation; the separately authorized
 | S3c | VERIFIED_SYNTHETIC | S3b | `58e0fcb`; consolidated runner | 18 apply/recovery contracts plus planner; selected-key only; real apply NOT_RUN | Preserve fixture evidence |
 | S3g | TODO | S3c + explicit list | Optional, omitted | No selected global resources or whole-root sharing | Defer |
 | S4b | VERIFIED_SYNTHETIC | S4a + S3b | `059bf05`; consolidated runner | 10 additive preview contracts; no writes | Preserve preview |
-| S4c | VERIFIED_SYNTHETIC | S4b + S3c | `9e4b9ae`; consolidated runner | 12 historical TEMP-only install/guard contracts; native candidate separate | S4f qualification |
+| S4c | VERIFIED_SYNTHETIC | S4b + S3c | Historical fixtures + approved native provisioning receipt | Native B/17 files/router installed locally; actual Desktop runtime NOT_RUN | B login / S5 |
 | S4d | VERIFIED_SYNTHETIC | S4c | `bd34247`, guard `574342f`; runner + Test-Uninstall | 9 B-removal contracts; data retained; native removal NOT_RUN | Native adapter acceptance |
 | S4e | VERIFIED_SYNTHETIC | S4d + D2 | `c50c0da`, guide `839558d`; consolidated runner | 10 historical preview/package contracts; historical 19-member package | S4g qualification |
 | S4f | VERIFIED_SYNTHETIC | S4c + S4d | `083c02b` + Q1 fixes/contracts; Windows | Actual TEMP COM/locks and disposable registry/mutex APIs; Desktop NOT_RUN | S5 admission |
@@ -495,6 +495,6 @@ Commit/push/draft-PR/CI resume under test authorization; do not merge or promote
 
 ## NEXT SLICE
 
-A/pilot blinded startup marker matched; private native preview ready, zero memory-key edits, B not provisioned.
-Await explicit B installation/router consent, then manual B login and S5 proof. See [receipt](SHARED-WORKSPACE-QUALIFICATION.md).
+A/pilot marker matched; user-approved B roots/17 owned files/router installed, zero memory-key edits; B not launched.
+User selects router in Windows; verify, arm B and perform one manual login. See [receipt](SHARED-WORKSPACE-QUALIFICATION.md).
 Native 8.3 stays NOT_RUN; optional REA-A2 follows #3. B config/loading and two-Desktop acceptance remain unqualified.

@@ -201,3 +201,29 @@ candidate namespaces were read-only checked empty; the exact additional registra
 review, with consent NOT_GRANTED. Installation and protocol writes await the user's reserved explicit authorization.
 No B creation/login, real association change, A restart or package mutation performed. S5 browser/account/B memory
 and removal acceptance remain NOT_RUN. Native 8.3 stays NOT_RUN. No marker, personal paths or private receipts published.
+
+## S5 approved native B provisioning (2026-10-06) — installed, runtime NOT_RUN
+
+The user explicitly approved B installation plus router registration and acknowledged no active pilot task.
+The saved preview and all four owned pilot files were revalidated before mutation; ZERO selected memory-setting
+edits were required. A new private consent-bound capsule adds the previously reviewed protocol registration to
+the unchanged paths/assets. Setup's explicit native branch executed under Windows PS5.1 with a real Python
+runtime, Approved/WritersClosed/ApproveProtocol; returned NATIVE_INSTALLED, default_app_choice MANUAL.
+
+Native ownership receipt phase installed and registry phase applied read back. All 17 owned file identities/hashes
+match; both shortcuts are native Shell Links; B data/config roots exist and are empty. The actual new registry
+namespaces match the approved registration. No original registration rewrite or UserChoice selection was performed.
+The pilot files retain their original identities/hashes. No existing project or A config edit, credential copy,
+package uninstall, app restart/termination, URI dispatch, B launch or login. Original A PID remains alive; this
+alone does not independently prove continued authentication. User confirms identity/usage in later acceptance.
+
+Registered package remains 2.19675.1.0; original executable path uses that version and its PE FileVersion reads
+2.19675.1. Package and running executable versions are recorded separately, without inferring update causality.
+Passive installed diagnostic reports package present, protocolChoice missing, lock_missing, dispatch not_probed.
+No intent was armed and no lock created by diagnosis; missing UserChoice is not confirmation of the selected default.
+Private execution/ownership receipts retain actual paths; no secrets/session stores read or public marker disclosure.
+
+Next operator step: choose Claude Login Router for the claude link type in Windows Settings, then verify the passive
+classification before explicitly arming/launching B for one manual browser login. [Microsoft default-app procedure](https://support.microsoft.com/en-us/windows/apps/change-default-apps-in-windows).
+B configuration/memory loading, two-account identity, browser-focus hypothesis and B-removal acceptance remain
+NOT_RUN. The registered official package and existing A entry are retained. Native 8.3 remains NOT_RUN.

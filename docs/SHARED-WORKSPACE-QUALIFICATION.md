@@ -57,3 +57,16 @@ A-only routing metadata/assets, official Claude package, original project and me
 held locks, partial installations and later protocol owners. Unowned released sidecars are preserved rather than
 claimed for cleanup by name. Partial execution is not an all-or-nothing transaction against external writers.
 No native installation/removal, actual registry operation, package uninstall or project/profile mutation performed.
+
+## S4e preview/package entry (2026-10-06)
+
+SharedWorkspace.py offers help, preview and allowlisted package creation only. Native apply/install/remove/restore
+commands refuse before input reads. Private input must be named *.workspace.local.json, preventing credential-named
+inputs from being parsed as a spec. Closed schemas, bounded JSON, explicit per-project evidence and scope refusal
+remain mandatory. Stdout is path-free; optional new *.local.md previews refuse protected roots and overwrite.
+50 native Windows tests PASS (40 prior + 10 entry/package cases), zero skips. Offline archive member/hash checks,
+no-overwrite output and extracted-package relative imports pass. Packaging includes reviewed scripts, MIT notice,
+README and fixed roadmap/ledger/qualification/routing/manual docs; never private specs, credentials or logs.
+Package receipt is a WORKTREE_SNAPSHOT, not a native install receipt. No dependency installation, UI automation,
+actual shortcut/registry registration, login or native removal executed. Native adapter admission and S5 local trials
+are remaining implementation/runtime gates; S4 fixture preparation does not hide those limits.

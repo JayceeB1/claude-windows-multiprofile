@@ -9,7 +9,9 @@ import SharedMemoryPlan as bridge
 import SharedMemoryApply as transactions
 
 ASSETS = ('Launch-Claude.ps1', 'launch.vbs', 'ClaudeOpenShim.ps1',
-          'Arm-ClaudeLogin.ps1', 'Test-ClaudeRouting.ps1')
+          'Arm-ClaudeLogin.ps1', 'Test-ClaudeRouting.ps1', 'Inspect-SharedWorkspace.py',
+          'SharedMemoryPlan.py', 'SharedMemoryApply.py', 'SharedWorkspacePlan.py',
+          'SharedWorkspace.py', 'Uninstall.ps1')
 
 
 @dataclass(frozen=True)

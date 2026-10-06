@@ -481,7 +481,15 @@ install, partial failure and conflict-aware rollback retain B data and A/project
 cleanup. Legacy Setup now refuses full execution before OS IO; its profile-loop regression fragments remain intact.
 Native installation/shortcuts/registry remain NOT_RUN. 52 Windows tests PASS (40 prior + 12 install/guard cases), no skips.
 
+## S4d removal qualification (2026-10-06)
+
+61 Windows fixture tests PASS (52 prior + 9 B-removal cases), zero skips: B data retained by default, separately
+acknowledged fixture deletion limited to recorded physical B roots, A-only routing/shortcut and package preserved.
+Modified/aliased roots/shortcuts, occupied locks, partial installs and changed protocol owners refuse removal.
+Uninstall.ps1 now refuses native cleanup before mutation; Test-Uninstall.ps1 passes under PS5.1 and PS7.
+No stock-name fallback, package removal or actual profile deletion. Native removal remains NOT_RUN.
+
 ## NEXT SLICE
 
-S4c is fixture-qualified; native installation is not admitted. Chain S4d removal and S4e package/guide fixture slices. Real
+S4c/S4d are fixture-qualified; native execution is not admitted. Finish S4e preview-first entry and qualification guide. Real
 install/share/apply/restore/login/restart remain separately scoped; keep A, projects and official Claude installed.

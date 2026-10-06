@@ -14,7 +14,9 @@ PACKAGE_FILES = ('Launch-Claude.ps1', 'launch.vbs', 'ClaudeOpenShim.ps1', 'Arm-C
                  'SharedMemoryApply.py', 'SharedWorkspacePlan.py', 'SharedWorkspace.py', 'Uninstall.ps1')
 PACKAGE_DOCS = ('README.md', 'LICENSE', 'MANUAL-TEST.md', 'docs/PROTOCOL-ROUTING.md',
                 'docs/SHARED-WORKSPACE-ROADMAP.md', 'docs/SHARED-WORKSPACE-LEDGER.md',
-                'docs/SHARED-WORKSPACE-QUALIFICATION.md')
+                'docs/SHARED-WORKSPACE-QUALIFICATION.md', 'docs/REA-QUALIFICATION.md',
+                'docs/REA-SMOKE-20261006.md', 'docs/REA-SMOKE-20261006.json',
+                'tests/fixtures/rea/package-recipe.json', 'tests/Run-ReaPackagedSmoke.py')
 
 
 class Parser(argparse.ArgumentParser):

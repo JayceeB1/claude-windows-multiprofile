@@ -253,7 +253,11 @@ host-upgrade refusal. The host roundtrip uses a synthetic URI and a TEMP capture
 Final combined local validation: 172 contracts, 171 PASS / 1 explicit native 8.3 SKIP in 139.084s.
 CI and Desktop acceptance must not inherit an earlier-head PASS.
 
-Next targeted operator observation: `ms-settings:defaultapps?registeredAppUser=ClaudeShim`, without changing an
-association. Microsoft documents this per-user registered-app page [here](https://learn.microsoft.com/en-us/windows/apps/develop/launch/launch-default-apps-settings).
+Operator observation: `ms-settings:defaultapps?registeredAppUser=ClaudeShim` opened only the general Default Apps
+page, not a dedicated router page. The accompanying protocol-picker screenshot still shows only official Claude.
+Microsoft documents this per-user registered-app page [here](https://learn.microsoft.com/en-us/windows/apps/develop/launch/launch-default-apps-settings).
+Thus Shell enumeration and Settings application registration remain discrepant; UI acceptance is still BLOCKED.
+CI [37518998278](https://github.com/JayceeB1/claude-windows-multiprofile/actions/runs/37518998278) at
+7901e3d3b1d87a81f69fe8a46076104345b6f357 completed successfully. This does not establish native UI acceptance.
 Session-refresh/reboot causality remains UNKNOWN; no session logout or restart has been performed or required.
 B login, effective B configuration/loading, two-account operation and removal acceptance remain NOT_RUN.

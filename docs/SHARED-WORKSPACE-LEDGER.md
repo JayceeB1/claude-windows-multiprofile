@@ -497,5 +497,5 @@ Commit/push/draft-PR/CI resume under test authorization; do not merge or promote
 
 A/pilot marker matched; approved B provisioning retained, zero memory-key edits; B remains unlaunched.
 Router metadata/dedicated-host repairs read back, but operator picker still shows only Claude: UI gate BLOCKED.
-Next: inspect the registered-app Settings page; reboot/session-refresh causality is UNKNOWN. See [receipt](SHARED-WORKSPACE-QUALIFICATION.md).
+Registered-app deep link opens only the general page; next: inspect Settings eligibility. Reboot causality UNKNOWN; [receipt](SHARED-WORKSPACE-QUALIFICATION.md).
 Native 8.3 stays NOT_RUN; optional REA-A2 follows #3. B config/loading and two-Desktop acceptance remain unqualified.

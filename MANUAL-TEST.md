@@ -1,7 +1,7 @@
 # Local acceptance procedure — no automatic execution
 
 This checklist is a future separately authorized native trial, not instructions to run the blocked legacy installer.
-Current automated installation/removal uses an explicit TEMP-only OS double. Native adapter admission is still required.
+The explicit native adapter is IMPLEMENTED_NOT_TESTED. All new runtime gates are NOT_RUN by user request.
 The sole [ledger](docs/SHARED-WORKSPACE-LEDGER.md) governs status; fixtures cannot establish native acceptance.
 
 ## Evidence already available
@@ -16,13 +16,31 @@ The sole [ledger](docs/SHARED-WORKSPACE-LEDGER.md) governs status; fixtures cann
 
 - [ ] Save active A work. Keep A's existing icon/session, actual projects and official Claude package intact.
 - [ ] Record registered package version and running UI/embedded Code version before the trial; distinguish them.
-- [ ] Review the exact native adapter, plan, owned additions and rollback contract. Current Setup/Uninstall refuse writes.
+- [ ] Qualify the candidate on isolated fixtures before real profile admission; review the capsule and ownership journal.
 - [ ] Obtain separate authorization for real B installation, selected memory edits and any orderly restart.
 - [ ] Confirm A's effective Desktop data/config paths, project trust and managed/CLI/environment settings precedence.
 - [ ] Preview explicit missing B roots, independent launcher parent, new labeled shortcuts and per-project memory map.
 - [ ] Check memory is outside every B deletion root, A Desktop stores and project settings tree. Keep projects in place.
 - [ ] Inspect minimal non-secret backups; never copy whole config/account roots or settings containing env secrets.
 - [ ] Treat protocol registration as a distinct approved change with current-value snapshots and ownership checks.
+
+## Native candidate qualification queue — all NOT_RUN
+
+No test or native candidate command was executed during implementation. Historical fixture PASS does not
+cover the new adapter, wrappers, expanded asset list or archive imports. Prepare these gates before S5:
+
+- [ ] Preview: no profile/memory/registry writes; exclusive private capsule; stale assets, scopes and identities refuse.
+- [ ] Isolated install/recovery: phase interruption, selected-key rollback, unrelated settings and additions preserved.
+- [ ] COM: Unicode/spaced paths, read-back fields, staged shortcut bytes and exclusive destination admission.
+- [ ] Registry: empty ownership, collisions, bounded snapshot, read-back, cooperating mutex, partial recovery/conflicts.
+- [ ] Routing: FileShare.None contention, outstanding intent refusal, A retained after B removal; no default-app rewrite.
+- [ ] Ownership: changed/replaced files and roots, reparse/hardlink aliases, idempotence, partial operation refusal.
+- [ ] B deletion: explicit opt-in only; bounded recorded-root inspection; projects, memory, A and official package retained.
+- [ ] Entry/package: real Python prerequisite, PS5.1/PS7 wrappers, expanded allowlist hashes and extracted lazy imports.
+- [ ] Existing regression suite and source analyzers; keep native 8.3 explicitly NOT_RUN.
+
+No automatic Claude launch, login, process termination, package uninstall or installation of dependencies.
+Registry and COM trials need an isolated test adapter/namespace; never use a real profile as the fixture.
 
 ## S5a browser-focus hypothesis — NOT_RUN
 

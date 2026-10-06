@@ -91,3 +91,23 @@ Final consolidated receipt at 8f0947d: local Python 3.14.7 ran 127 unique contra
 completed all three jobs successfully. Both PS5.1/PS7 jobs on Python 3.12 report 127 executed, 126 passed, 1 explicit
 native 8.3 skip, and native-Uninstall refusal PASS. Full logs reread; no Desktop launch/installation/removal proof.
 19-member code/docs package hashes and normalized committed-file bytes match that revision; private archive stays local.
+
+## S4f/S4g native candidate — IMPLEMENTED_NOT_TESTED (2026-10-06)
+
+NativeWindowsIO.py and NativeWorkspace.py are a new source candidate, with explicit SharedWorkspace.py and
+Setup/Uninstall native entry branches. Default legacy mutations remain refused. Source review binds private approval
+capsules to plan metadata/settings hashes, physical ownership and copied assets; separate registry consent and B-data
+retention/deletion remain explicit. COM/registry/file-lock code has NOT been executed. Rollback conservatively retains
+B roots and installation metadata, refuses replaced owned files or conflicting settings, and never removes the MSIX.
+Selected-key journals remain non-secret; no credentials/session databases/cookies or complete settings copies.
+Checksums detect corruption, not malicious authors. Cooperating locks do not establish external-editor CAS; interruptions
+between mutation and ownership persistence can require manual review. Partial matching registry trees may be restored
+only under separate approval; unexpected additions refuse. These are source contracts, not established runtime proof.
+
+User boundary: finish BEFORE TESTS. No candidate tests, native-preview/install/removal/rollback, package build/import
+reproduction or CI were run. Historical local/CI PASS receipts above cover their named revisions only. Native COM,
+registry, ownership/recovery, PS5.1/PS7 wrapper and expanded-package qualification are NOT_RUN; matrix in MANUAL-TEST.md.
+Pre-test source checks: Python ast.parse accepted the four changed/new Python modules; PowerShell Parser.ParseFile
+accepted Setup/Uninstall without executing them. git diff --check found no whitespace errors. No runtime PASS implied.
+No real profile/project/native OS mutation occurred. Candidate commits remain local: pushing PR #1 would trigger CI.
+Native 8.3 stays NOT_RUN; S5 memory/config/account acceptance still requires separately authorized local observation.

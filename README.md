@@ -7,8 +7,8 @@ add account B without migrating projects or requiring worktrees.
 
 **Delivery status:** routing/diagnostic, memory planner/transactions and additive install/removal are qualified on
 Windows fixtures. Desktop operator evidence is recorded for selected A memory. Native additive execution, B memory
-loading and two-Desktop acceptance remain unqualified. The current entry supports preview and packaging only;
-Setup/Uninstall refuse native mutations. Follow the [ledger](docs/SHARED-WORKSPACE-LEDGER.md),
+loading and two-Desktop acceptance remain unqualified. An explicit native adapter and command wrappers are
+implemented but NOT_TESTED. The default Setup/Uninstall invocation still refuses mutations. Follow the [ledger](docs/SHARED-WORKSPACE-LEDGER.md),
 [roadmap](docs/SHARED-WORKSPACE-ROADMAP.md) and [qualification receipts](docs/SHARED-WORKSPACE-QUALIFICATION.md).
 
 ## Preview-first shared workspace
@@ -57,10 +57,38 @@ Selected project instructions/settings stay on disk. Preview exposes only the `a
 never whole settings/env/hooks. Fixture rollback preserves later unrelated edits and refuses changed/replaced owned targets.
 B removal retains its data by default, keeps A routing, and never uninstalls the official Claude package.
 
-The installation OS adapter is currently a TEMP-bounded fixture double. JSON shortcut doubles and in-memory protocol
-values are not native .lnk/registry proof. Native adapter admission and separately authorized local trials remain required;
-`apply`, `install`, `remove` and `restore` commands are deliberately unavailable. Do not treat this package as a live installer.
+The fixture OS adapter remains TEMP-bounded. JSON shortcut doubles and in-memory protocol values are not native
+.lnk/registry proof. The new Windows 64-bit candidate uses COM shortcut staging/read-back, physical ownership
+receipts, selected-key memory transactions and cooperative locks. Its runtime qualification is NOT_RUN.
+`apply`, `install`, `remove` and `restore` remain unavailable; only explicit `native-*` actions enter the candidate.
 See the [manual acceptance procedure](MANUAL-TEST.md) before any native operation.
+
+### Native candidate commands — future qualification only
+
+These commands have not been executed for this candidate. The user requested completion before tests;
+no new native behavior, package or wrapper is claimed qualified. First qualify on isolated fixtures, then obtain
+separate authorization for real profiles/projects. Python must be a real installed runtime, not a Store alias.
+
+```powershell
+# Prepare a private approval capsule; reads selected metadata and optionally router registry namespaces.
+# Creates only this new private output, never profiles or a memory directory:
+python -B scripts/SharedWorkspace.py native-preview --spec "C:\PATH\plan.workspace.local.json" --output "C:\PATH\plan.native.local.json"
+# AFTER qualification and explicit approval of the saved capsule; all relevant writers closed:
+python -B scripts/SharedWorkspace.py native-install --spec "C:\PATH\plan.workspace.local.json" --approval "C:\PATH\plan.native.local.json" --approved --writers-closed
+# B-only removal; retains B data, A routing and shared memory:
+python -B scripts/SharedWorkspace.py native-remove-b --install-dir "C:\PATH\NewLauncher" --approved --writers-closed
+# Full owned-additions rollback; selected memory key restored, B data/metadata retained:
+python -B scripts/SharedWorkspace.py native-rollback --install-dir "C:\PATH\NewLauncher" --approved --writers-closed
+```
+
+Protocol registration requires spec consent plus `--approve-protocol` at installation and rollback. It adds only
+new HKCU router namespaces and one RegisteredApplications value, refusing existing ownership. It leaves the
+classic `claude` registration and UserChoice intact; choosing a default handler is manual. Removal of B retains
+this router for A. `--delete-owned-b-data` is a separate explicit deletion option on B removal only.
+Receipts bind approved paths, physical identities and file hashes; changed ownership refuses recovery.
+Partial operations may require manual review: write/journal crashes and arbitrary external-editor races are not
+transactional CAS guarantees. Checksums detect corruption, not hostile receipt authors. Rollback retains launcher
+directories, locks, journals and B roots rather than deleting unrecorded additions. No official package uninstall.
 
 ## Existing mechanism
 
@@ -127,17 +155,15 @@ old logs or use raw process dumps for diagnosis. See the guide for event meaning
 
 ## Setup and removal boundaries
 
-Current Setup supports `-Profile`, `-DefaultProfile`, per-profile `-DataDir` and
-`-ConfigDir`, `-InstallDir`, `-LoginShortcuts` and `-NoProtocolRouting`. These are
-existing implementation parameters, not proof of safe adoption of A.
-`-DefaultProfile` selects stock-path construction at setup time; it does not
-identify A's actual data/config provenance and is unrelated to armer disarming.
-Setup currently replaces files, manifests and shortcuts. Its registration writes
-need explicit scope and backups. Do not rerun it as a routing repair shortcut.
+Setup's legacy profile parameters remain for compatibility; their full execution is blocked.
+The new explicit wrapper is `-NativeSpec ... -NativePreview ...` for capsule preparation, or
+`-NativeSpec ... -NativeApproval ... -Approved -WritersClosed` for installation after qualification.
+`-ApproveProtocol` supplies separate protocol consent. The private spec controls all paths; legacy path switches
+do not configure the native candidate. No stock-path inference or adoption of an existing installation.
 
-Current Uninstall is not ownership-qualified for custom A or shared memory.
-Do not infer safe deletion from a folder name or use `-RemoveData` as cleanup.
-The planned removal retains data by default and checks ownership and conflicts.
+Uninstall's candidate requires `-Native -InstallDir ... -Approved -WritersClosed`; add `-Rollback` for full recovery,
+or separately approve `-RemoveData` for B-only deletion. `-Profile` and `-KeepRouting` are refused in native mode.
+Default invocation refuses cleanup. No deletion inferred from stock names; data retention is the default.
 No forced logout/restart, profile migration, blanket config link or app copying.
 
 Historical upstream observations concern Cowork VM placement and shared-HOME
@@ -156,7 +182,8 @@ powershell -NoProfile -File tests\Test-RoutingDiagnostic.ps1
 pwsh -NoProfile -File tests\Test-RoutingDiagnostic.ps1
 ```
 
-These tests use synthetic accounts and owned TEMP metadata. They do not launch
+The commands above are documented future runs, not executed for the current native candidate.
+These existing tests use synthetic accounts and owned TEMP metadata. They do not launch
 Claude. CI runs parser/analyzer/routing regressions and the shared-workspace fixture matrix; Q1/Q2 and D1 runtime
 receipts remain separately qualified. Actual A/B identity, configuration,
 shared memory and removal remain local acceptance gates. PR #1 stays draft.

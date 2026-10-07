@@ -14,7 +14,7 @@ PACKAGE_FILES = ('Launch-Claude.ps1', 'launch.vbs', 'ClaudeOpenShim.ps1', 'Arm-C
                  'Test-ClaudeRouting.ps1', 'Inspect-SharedWorkspace.py', 'SharedMemoryPlan.py',
                  'SharedMemoryApply.py', 'SharedWorkspacePlan.py', 'SharedWorkspace.py', 'Uninstall.ps1',
                  'Setup.ps1', 'NativeWindowsIO.py', 'NativeWorkspace.py', 'ClaudeLoginRouter.cs', 'ClaudeLoginRouter.exe')
-PACKAGE_DOCS = ('README.md', 'LICENSE', 'NOTICE.md', 'MANUAL-TEST.md', 'docs/PROTOCOL-ROUTING.md',
+PACKAGE_DOCS = ('README.md', 'LICENSE', 'NOTICE.md', 'AUTHORS.md', 'MANUAL-TEST.md', 'docs/PROTOCOL-ROUTING.md',
                 'docs/dev-log/SHARED-WORKSPACE-ROADMAP.md', 'docs/dev-log/SHARED-WORKSPACE-LEDGER.md',
                 'docs/dev-log/SHARED-WORKSPACE-QUALIFICATION.md', 'docs/dev-log/REA-QUALIFICATION.md',
                 'docs/dev-log/REA-SMOKE-20261006.md', 'docs/dev-log/REA-SMOKE-20261006.json',

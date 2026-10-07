@@ -10,6 +10,7 @@ All notable changes. Format based on [Keep a Changelog](https://keepachangelog.c
   ([docs/MANUAL.md](docs/MANUAL.md)), French manual moved to `docs/fr/` with generic paths, technical reference moved to
   `docs/reference/`, dated reports moved to `docs/dev-log/`, `CLAUDE.md` rewritten, `CONTRIBUTING.md` added.
 - Single trunk (`master`); the `develop` sync workflow is removed.
+- `AUTHORS.md` added; Fred Nielsen is credited in `LICENSE`, `NOTICE.md`, the README and AUTHORS for the `claude://` routing design.
 
 ### Fixed
 - Receipt reconciliation compares B's root to its canonical parent plus its name, so 8.3 short or aliased path prefixes

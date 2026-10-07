@@ -8,7 +8,7 @@ upstream copyright notice is kept in [LICENSE](LICENSE) (MIT).
 | Project | Author | What this project builds on |
 | --- | --- | --- |
 | [vodongha/claude-desktop-clone](https://github.com/vodongha/claude-desktop-clone) | vodongha | The original multi-instance launcher: dynamic resolution of the MSIX executable, one `--user-data-dir` per profile, `Setup.ps1` shortcuts, the optional `CLAUDE_CONFIG_DIR` isolation layer. MIT. |
-| [fredless/claude-windows-multiprofile](https://github.com/fredless/claude-windows-multiprofile) | Fred Nielsen (fredless) | The `claude://` SSO login router and its protocol-routing documentation, the base of the router in this project. |
+| [fredless/claude-windows-multiprofile](https://github.com/fredless/claude-windows-multiprofile) | Fred Nielsen (fredless) | The `claude://` deep-link routing design and its first implementation: `ClaudeOpenShim.ps1` (handler, one-shot intent, loud failure instead of a silent fallback), `Arm-ClaudeLogin.ps1`, `Test-ClaudeRouting.ps1`, the argument-quoting fix and its unit test, the `profiles.json` contract, the reworked `Setup.ps1`/`Uninstall.ps1`, and the original protocol-routing guide. This project's router, its hardening and its tests grew from that work. See [AUTHORS.md](AUTHORS.md). |
 | this repository | JayceeB1 and contributors | The shared workspace (preview-first plans, ownership receipts, native candidate), separate taskbar identity, shared configuration and Claude Code sessions, update repair, guided re-login, receipt reconciliation, French and English manuals, tests and CI. |
 
 The full commit history of every ancestor is preserved in this repository, with its original authors.

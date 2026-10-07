@@ -79,10 +79,10 @@ subprocess-entry tests skip inside a packaged process tree, by design.
 This project is a fork and builds on the work of others (see [NOTICE](NOTICE.md) for the full lineage):
 
 - [vodongha/claude-desktop-clone](https://github.com/vodongha/claude-desktop-clone), the original launcher (MIT).
-- [fredless/claude-windows-multiprofile](https://github.com/fredless/claude-windows-multiprofile), the intermediate fork this one descends from.
+- [fredless/claude-windows-multiprofile](https://github.com/fredless/claude-windows-multiprofile) by **Fred Nielsen**: the `claude://` login-routing design and first implementation that this project's router is built on, and the profile contract behind Setup/Uninstall. Thank you, Fred.
 - [Zoltak-Dev/ai-multi-instance](https://github.com/Zoltak-Dev/ai-multi-instance), origin of the `--user-data-dir`
   technique and of the prior UserChoice-hash work (this project does not implement UserChoice-hash automation).
 - [sypnose-cloud/claude-desktop-multi](https://github.com/sypnose-cloud/claude-desktop-multi), prior art on running
   several instances.
 
-Released under the [MIT License](LICENSE).
+Everyone who contributed is listed in [AUTHORS](AUTHORS.md). Released under the [MIT License](LICENSE).

@@ -182,7 +182,7 @@ function Invoke-ClaudeRepair {
     if (-not $pkg) { $checks.Add((New-Check 'Application Claude' 'TODO' 'non installée' 'Installe Claude Desktop (claude.ai/download).')); return $checks }
     $version = [string]$pkg.Version
     if ($state -and $state.packageVersion -and $state.packageVersion -ne $version) {
-        $checks.Add((New-Check 'Application Claude' 'INFO' "mise à jour détectée : $($state.packageVersion) -> $version" 'Les fenêtres déjà ouvertes gardent l''ancienne version : ferme-les puis relance-les.'))
+        $checks.Add((New-Check 'Application Claude' 'INFO' "Claude a été mis à jour depuis le dernier contrôle ($($state.packageVersion) -> $version) ; la version installée est déjà la dernière connue" 'Information, pas une mise à jour à faire. Les fenêtres ouvertes avant la mise à jour gardent l''ancienne version : ferme-les puis relance-les.'))
     } else {
         $checks.Add((New-Check 'Application Claude' 'OK' "version $version"))
     }

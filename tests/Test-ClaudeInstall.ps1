@@ -88,4 +88,6 @@ try {
 } finally {
     if (Test-Path -LiteralPath $root) { Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue }
 }
+# The child runs above end with a deliberate non-zero exit; the test itself passed.
+$global:LASTEXITCODE = 0
 Write-Host "PASS: $script:assertions installer assertions; no Claude process, login, registry or real shortcut touched."

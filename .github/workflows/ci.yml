@@ -89,6 +89,11 @@ jobs:
           $ErrorActionPreference = 'Stop'
           & .\tests\Test-ClaudeRepair.ps1
 
+      - name: Installer regression (synthetic data, preview and template only)
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & .\tests\Test-ClaudeInstall.ps1
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

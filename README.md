@@ -41,7 +41,7 @@ full list of open items is in the [ledger](docs/dev-log/SHARED-WORKSPACE-LEDGER.
 | You want to | Read |
 | --- | --- |
 | Use it day to day, repair after an update, log B in again | [Manual](docs/MANUAL.md) · [version française](docs/fr/MODE-OPERATOIRE.md) |
-| Install it | [Manual, section "Installing"](docs/MANUAL.md#6-installing-from-scratch) |
+| Install it | `scripts\Install-ClaudeMultiAccount.ps1`, see [Manual, "Installing from scratch"](docs/MANUAL.md#6-installing-from-scratch) |
 | Understand the design and the safety rules | [Technical reference](docs/reference/SHARED-WORKSPACE.md) · [login routing](docs/PROTOCOL-ROUTING.md) |
 | Check what was tested and how | [Manual acceptance](MANUAL-TEST.md) · [development log](docs/dev-log/) |
 | Contribute | [CONTRIBUTING](CONTRIBUTING.md) · [CLAUDE.md](CLAUDE.md) for AI assistants |
@@ -67,6 +67,7 @@ profile, uninstalls the official package or chooses your default app for you.
 ```powershell
 python -B tests/Run-SharedWorkspaceTests.py
 powershell -NoProfile -File tests\Test-ClaudeRepair.ps1
+powershell -NoProfile -File tests\Test-ClaudeInstall.ps1
 powershell -NoProfile -File tests\Test-ClaudeIdentity.ps1   # needs an interactive desktop
 ```
 

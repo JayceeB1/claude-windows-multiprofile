@@ -164,6 +164,12 @@ def main(argv=None):
                         raise memory.BridgeError('ROLLBACK_RETAINS_B_DATA')
                     result = native.rollback(args.install_dir, approved=args.approved,
                         writers_closed=args.writers_closed, approve_protocol=args.approve_protocol)
+            elif args.action == 'native-reconcile':
+                # Preview without approval flags; both flags together apply. One alone is refused by the callee.
+                if args.install_dir is None or args.spec or args.output or args.approval or args.approve_protocol or \
+                        args.delete_owned_b_data:
+                    raise memory.BridgeError('NATIVE_RECOVERY_ARGUMENTS')
+                result = native.reconcile(args.install_dir, approved=args.approved, writers_closed=args.writers_closed)
             else:
                 raise memory.BridgeError('NATIVE_ACTION_NOT_ADMITTED')
         elif args.action == 'package':

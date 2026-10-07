@@ -4,10 +4,12 @@ IMPLEMENTED_NOT_TESTED. No auto login/restart, no package uninstall. Checks seri
 cooperating writers; they do not provide CAS against arbitrary external editors.
 """
 import json
+import ntpath
 import os
 from pathlib import Path
 import shutil
 import ctypes
+import uuid
 
 import SharedMemoryPlan as bridge
 import SharedMemoryApply as tx
@@ -97,7 +99,9 @@ def record_path(install):
     return bridge.safe_path(install, directory=True) / 'native-ownership.json'
 
 
-def load(install):
+def load(install, drifted=None):
+    """Validate the sealed ownership record. A list passed as `drifted` collects B-root identity drift
+    (for reconciliation) instead of refusing on it; every other change is still fatal."""
     record, _ = read_sealed(record_path(install))
     fields = {'schema', 'kind', 'phase', 'install', 'install_identity', 'approval_sha256', 'protected',
               'protected_identities', 'approved_layout', 'b_roots', 'directories', 'files', 'projects', 'registry_before',
@@ -140,8 +144,15 @@ def load(install):
             raise bridge.BridgeError('NATIVE_DUPLICATE_OWNERSHIP_PATH')
     for entry in record['directories']:
         path = bridge.safe_path(entry['path'], directory=True)
-        if not (str(path) in record['b_roots'] or bridge.identity(path)['canonical'].startswith(
-                bridge.identity(install)['canonical'].rstrip('\\') + '\\')) or bridge.identity(path) != entry['identity']:
+        owned_location = str(path) in record['b_roots'] or bridge.identity(path)['canonical'].startswith(
+            bridge.identity(install)['canonical'].rstrip('\\') + '\\')
+        if not owned_location:
+            raise bridge.BridgeError('NATIVE_OWNED_DIRECTORY_CHANGED')
+        if bridge.identity(path) != entry['identity']:
+            # Only reconciliation collects drift, and only for B's own roots; everything else stays fatal.
+            if drifted is not None and str(path) in record['b_roots']:
+                drifted.append(entry)
+                continue
             raise bridge.BridgeError('NATIVE_OWNED_DIRECTORY_CHANGED')
     for entry in record['files']:
         path = bridge.safe_path(entry['path'])
@@ -353,3 +364,67 @@ def rollback(install, *, approved, writers_closed, approve_protocol=False):
             record['phase'] = 'rolled_back'
             persist(record_path(install), record)
     return {'status': 'NATIVE_ROLLED_BACK', 'b_data_retained': True, 'official_package_removal': False}
+
+
+def reconcile(install, *, approved, writers_closed):
+    """Re-record the physical identity of B's own roots after they were recreated outside the receipt's view.
+
+    The historical receipt bound B's data folder to the identity of a copy that Codex's MSIX virtualization had
+    created in a private store. The real folder has the same path and a different file identity, so every
+    validation refused. This transition replaces ONLY the recorded identity of entries listed in `b_roots`:
+    its declared path really holds a real directory (no redirection, alias or link); B closed; no armed login intent. It is a preview unless
+    both approval flags are given. The sealed receipt is replaced with compare-and-swap after a journal,
+    validated in full, and restored if that validation fails. Nothing else in the receipt, the profiles, the
+    registry or the files it owns is touched.
+    """
+    if (approved is True) != (writers_closed is True):
+        raise bridge.BridgeError('NATIVE_APPROVAL_AND_CLOSED_WRITERS_REQUIRED')
+    apply = approved is True and writers_closed is True
+    if apply:
+        require_approval(approved, writers_closed)
+    install = bridge.safe_path(install, directory=True)
+    with tx.locked(install / 'operation.lock'):
+        drifted = []
+        record = load(install, drifted)
+        if record['phase'] != 'installed':
+            raise bridge.BridgeError('NATIVE_RECONCILE_REQUIRES_INSTALLED_PHASE')
+        if not drifted:
+            return {'status': 'NATIVE_RECEIPT_ALREADY_CURRENT', 'writes_nothing': True}
+        current = {}
+        for entry in drifted:
+            now = bridge.identity(bridge.safe_path(entry['path'], directory=True))
+            # The recorded location may be a private redirected store; what must hold now is that the directory
+            # really sits at its declared path (no redirection, alias or link between the path and the disk).
+            if not now['directory'] or now['canonical'] != ntpath.normpath(entry['path']).casefold():
+                raise bridge.BridgeError('NATIVE_B_ROOT_NOT_AT_ITS_DECLARED_PATH')
+            current[entry['path']] = now
+        summary = [{'path': e['path'], 'recorded_file_id': e['identity']['file_id'],
+                    'current_file_id': current[e['path']]['file_id'],
+                    'recorded_location': e['identity']['canonical'], 'current_location': current[e['path']]['canonical']}
+                   for e in drifted]
+        if not apply:
+            return {'status': 'NATIVE_RECONCILE_PREVIEW', 'writes_nothing': True, 'would_validate': True, 'drifted': summary}
+        with windows.routing_guard(install / 'bin' / 'route.lock'):
+            quiescent(install)
+            if windows.claude_profile_running(record['b_roots'][0]):
+                raise bridge.BridgeError('NATIVE_B_RUNNING_CLOSE_IT_FIRST')
+            receipt = record_path(install)
+            before = bridge.read_optional(receipt)
+            journal = install / ('reconcile-' + uuid.uuid4().hex + '.json')
+            state = {'schema': 1, 'phase': 'prepared', 'receipt_before': bridge.object_json(before), 'changes': summary}
+            tx.create_once(journal, tx.encode(state))
+            for entry in drifted:
+                entry['identity'] = current[entry['path']]
+            after = tx.encode(seal(record))
+            tx.replace_checked(receipt, after, before)
+            try:
+                load(install)
+            except bridge.BridgeError:
+                tx.replace_checked(receipt, before, after)
+                state['phase'] = 'restored'
+                tx.replace_checked(journal, tx.encode(state), bridge.read_optional(journal))
+                raise
+            state['phase'] = 'completed'
+            tx.replace_checked(journal, tx.encode(state), bridge.read_optional(journal))
+    return {'status': 'NATIVE_RECEIPT_RECONCILED', 'reconciled': summary, 'profiles_modified': False,
+            'registry_modified': False}

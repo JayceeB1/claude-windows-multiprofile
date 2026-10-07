@@ -128,7 +128,7 @@ try {
     $steadyLinks = '{"status":"PREVIEW","plan":[{"name":"agents","action":"already"}],"mcp_servers":{"action":"already","servers":["a"]}}'
     $pendingLinks = '{"status":"PREVIEW","plan":[{"name":"agents","action":"link"}],"mcp_servers":{"action":"skip","servers":[]}}'
     $routerOk = '{"real_registry_matches_desired":true,"real_registry_empty":false,"receipt_matches_desired":true}'
-    $script:python = @{ link = $steadyLinks; router = $routerOk; calls = @() }
+    $script:python = @{ link = $steadyLinks; router = $routerOk; calls = @(); reconcile = '{"status":"NATIVE_RECEIPT_RECONCILED"}' }
     function Test-ClaudeUnpackagedContext { param($Python) return $true }
     function Get-ClaudeReceiptState { param($Python, $InstallDir) return $script:receiptState }
     $script:receiptState = 'OK'
@@ -139,6 +139,7 @@ try {
         param([string]$Python, [string]$Script, [string[]]$Arguments)
         $script:python.calls += ($Script + ' ' + ($Arguments -join ' '))
         if ($Script -eq 'Apply-RouterRegistration.py') { return $script:python.router }
+        if ($Script -eq 'SharedWorkspace.py') { return $script:python.reconcile }
         if ($Arguments -contains '--apply') { return '{"status":"APPLIED","linked":9,"problems":[]}' }
         return $script:python.link
     }
@@ -202,6 +203,22 @@ try {
     Assert-Equal 'stale receipt names its reason' $true (($checks | Where-Object { $_.Name -eq 'Reçu d''installation' }).Detail -match 'NATIVE_OWNED_DIRECTORY_CHANGED')
     Assert-Equal 'shared scheduled tasks are flagged' 'INFO' (Pick $checks 'Tâches planifiées')
     Assert-Equal 'neither blocks the all-clear' 0 @($checks | Where-Object { $_.State -in 'TODO', 'BLOCKED' }).Count
+    # -Fix reconciles the stale receipt when B is closed; never while B runs; a refusal is reported, not fatal.
+    $script:python.calls = @()
+    $checks = Invoke-ClaudeRepair -InstallDir $fx -RepoDir $repo
+    Assert-Equal 'report-only run never reconciles' 0 @($script:python.calls | Where-Object { $_ -match 'native-reconcile' }).Count
+    $checks = Invoke-ClaudeRepair -InstallDir $fx -RepoDir $repo -Fix
+    Assert-Equal '-Fix reconciles the stale receipt' 'FIXED' (Pick $checks 'Reçu d''installation')
+    Assert-Equal 'reconcile is called once, approved, B closed' 1 @($script:python.calls | Where-Object { $_ -match 'SharedWorkspace.py native-reconcile --install-dir .* --approved --writers-closed' }).Count
+    function Get-ClaudeProfileProcessId { param($DataDir) if ($DataDir -eq $bData) { return [uint32]4242 } return $null }
+    $script:python.calls = @()
+    $checks = Invoke-ClaudeRepair -InstallDir $fx -RepoDir $repo -Fix
+    Assert-Equal 'no reconcile while B runs' 0 @($script:python.calls | Where-Object { $_ -match 'native-reconcile' }).Count
+    Assert-Equal 'running B leaves the receipt informational' 'INFO' (Pick $checks 'Reçu d''installation')
+    function Get-ClaudeProfileProcessId { param($DataDir) return $null }
+    $script:python.reconcile = '{"status":"REFUSED","reason":"NATIVE_B_ROOT_MOVED","apply_allowed":false}'
+    $checks = Invoke-ClaudeRepair -InstallDir $fx -RepoDir $repo -Fix
+    Assert-Equal 'a refused reconciliation is informational with its reason' $true ((Pick $checks 'Reçu d''installation') -eq 'INFO' -and (($checks | Where-Object { $_.Name -eq 'Reçu d''installation' }).Detail -match 'NATIVE_B_ROOT_MOVED'))
     Set-Content -LiteralPath (Join-Path $taskDir 'scheduled-tasks.json') -Value '{"scheduledTasks":[]}'
     $script:receiptState = 'OK'
     $checks = Invoke-ClaudeRepair -InstallDir $fx -RepoDir $repo

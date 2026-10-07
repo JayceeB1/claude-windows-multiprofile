@@ -286,6 +286,13 @@ function Invoke-ClaudeRepair {
     $receipt = Get-ClaudeReceiptState -Python $py -InstallDir $InstallDir
     if ($receipt -eq 'OK') {
         $checks.Add((New-Check 'Reçu d''installation' 'OK' 'valide'))
+    } elseif ($receipt -eq 'NATIVE_OWNED_DIRECTORY_CHANGED' -and $Fix -and -not $bRunning) {
+        # Approved operation: re-records only B's own folders' identity, journalled, validated, restored on failure.
+        $res = ConvertFrom-ClaudeToolJson (Invoke-ClaudePython -Python $py -Script 'SharedWorkspace.py' -Arguments @('native-reconcile', '--install-dir', $InstallDir, '--approved', '--writers-closed'))
+        $done = $res -and ((Get-ClaudeJsonField $res 'status') -eq 'NATIVE_RECEIPT_RECONCILED')
+        $checks.Add((New-Check 'Reçu d''installation' $(if ($done) { 'FIXED' } else { 'INFO' }) $(if ($done) { 'réconcilié (identité des dossiers de B ré-enregistrée)' } else { 'réconciliation refusée : ' + [string](Get-ClaudeJsonField $res 'reason') })))
+    } elseif ($receipt -eq 'NATIVE_OWNED_DIRECTORY_CHANGED' -and $Fix) {
+        $checks.Add((New-Check 'Reçu d''installation' 'INFO' 'à réconcilier, B est ouverte' 'Ferme B puis relance « Réparer ».'))
     } else {
         $checks.Add((New-Check 'Reçu d''installation' 'INFO' "à réconcilier ($receipt)" 'Sans effet au quotidien. Le retrait et la restauration natifs de B restent indisponibles tant qu''il ne l''est pas.'))
     }

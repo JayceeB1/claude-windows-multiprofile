@@ -11,6 +11,7 @@ from ctypes import wintypes
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import tempfile
 import winreg
@@ -123,6 +124,25 @@ def require_unpackaged_process():
     for _pid, _exe, rc in ancestor_package_rcs():
         if rc not in (None, NO_PACKAGE_IDENTITY):
             raise bridge.BridgeError('PACKAGED_PROCESS_REFUSED')
+
+
+def claude_profile_running(data_dir):
+    """True when the main Claude Desktop process using this --user-data-dir is alive; fails closed."""
+    script = ("[Console]::OutputEncoding=[Text.Encoding]::UTF8; "
+              "Get-CimInstance Win32_Process -Filter \"Name='Claude.exe'\" | ForEach-Object { $_.CommandLine }")
+    result = subprocess.run([str(windows_root() / 'System32/WindowsPowerShell/v1.0/powershell.exe'), '-NoProfile',
+                             '-NonInteractive', '-Command', script], capture_output=True, text=True, encoding='utf-8',
+                            timeout=60, creationflags=subprocess.CREATE_NO_WINDOW)
+    if result.returncode:
+        raise bridge.BridgeError('PROFILE_RUNNING_CHECK_FAILED')
+    wanted = os.path.normcase(str(data_dir)).rstrip('\\/')
+    for line in result.stdout.splitlines():
+        if re.search(r'(^|\s)--type=', line):
+            continue
+        for found in re.finditer(r'--user-data-dir=(?:"([^"]*)"|(\S+))', line):
+            if os.path.normcase(found.group(1) or found.group(2)).rstrip('\\/') == wanted:
+                return True
+    return False
 
 
 def windows_root():

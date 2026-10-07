@@ -8,9 +8,10 @@ add account B without migrating projects or requiring worktrees.
 **Delivery status (2026-10-07):** two Desktop accounts now run side by side on the operator's machine: the login router appears in
 the Windows `claude://` picker (the earlier invisibility was MSIX registry/AppData virtualization, now guarded against), B has its
 own taskbar button and icon, and B shares A's skills, plugins, mods, project memory, settings and Code sessions through links. Day-to-day
-use is the shortcuts in [docs/MODE-OPERATOIRE.md](docs/MODE-OPERATOIRE.md) (French). Still open: the historical ownership receipt
-needs a reconciliation before native removal/rollback of B is available, a real Claude update and a real guided re-login have not
-happened yet, and the default Setup/Uninstall invocation still refuses mutations. The per-subject table is the last block of the
+use is the shortcuts in [docs/MODE-OPERATOIRE.md](docs/MODE-OPERATOIRE.md) (French). The historical ownership receipt, which
+recorded B's data folder at Codex's private store, is reconciled by `native-reconcile` (run for you by the repair shortcut with B closed);
+native removal/rollback of B become available once that has been applied. Still open: a real Claude update and a real guided re-login
+have not happened yet, and the default Setup/Uninstall invocation still refuses mutations. The per-subject table is the last block of the
 [ledger](docs/SHARED-WORKSPACE-LEDGER.md); see also the [roadmap](docs/SHARED-WORKSPACE-ROADMAP.md) and
 [qualification receipts](docs/SHARED-WORKSPACE-QUALIFICATION.md).
 

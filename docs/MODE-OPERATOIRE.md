@@ -100,6 +100,7 @@ connexions sont dans `AppData`, que la mise à jour ne touche pas. La plupart du
 | Raccourci, icône et bouton séparé de B | oui, réinstallés à l'identique |
 | Routeur de connexion dans le registre réel | oui |
 | Liens de partage de la config | oui (B doit être fermée) ; un fichier remplacé par une copie est sauvegardé puis relié |
+| Reçu d'installation de base (utile seulement pour retirer ou restaurer B de façon native) | oui, B fermée : l'identité du dossier de B est ré-enregistrée (journal, validation, retour arrière si elle échoue) |
 | Quelle application reçoit les liens `claude://` | non : se règle dans Windows |
 
 Une mise à jour peut remplacer le fichier `claude_desktop_config.json` de B par une copie ordinaire : le
@@ -185,6 +186,7 @@ Retirer un lien ne supprime jamais ce vers quoi il pointe : les fichiers de A re
 | « Routeur de connexion : absent du registre » | Routeur à réenregistrer | « Réparer » le refait |
 | Le routeur n'apparaît pas dans Paramètres | Registre à réenregistrer | « Réparer », puis rouvre Paramètres |
 | B n'est pas connectée | Session absente ou expirée | « Reconnecter B » |
+| « Reçu d'installation : à réconcilier » | Le reçu de l'installation de base garde l'ancien emplacement du dossier de B | « Réparer », B fermée : c'est corrigé et la ligne passe à OK |
 | Une fenêtre est restée sur l'ancienne version | Fenêtre ouverte avant la mise à jour | Ferme-la et relance-la |
 
 ## 9. Règles d'or

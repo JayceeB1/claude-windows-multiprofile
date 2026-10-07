@@ -109,6 +109,28 @@ function ConvertFrom-ClaudeToolJson {
     try { return $Text.Substring($start) | ConvertFrom-Json } catch { return $null }
 }
 
+function Get-ClaudeScheduledTaskCount {
+    <# Number of scheduled Code tasks in a scheduled-tasks.json (0 when absent or unreadable). #>
+    param([string]$Path)
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return 0 }
+    try { $json = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json } catch { return 0 }
+    $property = $json.PSObject.Properties['scheduledTasks']
+    if (-not $property -or $null -eq $property.Value) { return 0 }
+    return @($property.Value).Count
+}
+
+function Get-ClaudeReceiptState {
+    <# OK, or the closed reason code the base installation's ownership receipt is refused with. #>
+    param([string]$Python, [string]$InstallDir)
+    $ErrorActionPreference = 'Continue'
+    $code = "import sys; sys.path.insert(0, sys.argv[1]); from pathlib import Path; import NativeWorkspace as n, SharedMemoryPlan as b`n" +
+            "try:`n    n.load(Path(sys.argv[2])); print('OK')`nexcept b.BridgeError as e:`n    print(str(e))`nexcept Exception as e:`n    print('UNREADABLE')"
+    $out = & $Python -B -c $code $script:ScriptsDir $InstallDir 2>$null | Out-String
+    $state = $out.Trim()
+    if ($state -match '^[A-Z_]+$') { return $state }
+    return 'UNREADABLE'
+}
+
 function Get-ClaudePython {
     $ErrorActionPreference = 'Continue'
     foreach ($candidate in @(Get-Command python -All -ErrorAction SilentlyContinue)) {
@@ -247,6 +269,25 @@ function Invoke-ClaudeRepair {
         'router'   { $checks.Add((New-Check 'Liens claude://' 'INFO' 'routeur actif' 'Normal pendant une connexion de B ; ensuite remets « Claude » par défaut.')) }
         'none'     { $checks.Add((New-Check 'Liens claude://' 'INFO' 'aucun choix enregistré' 'Windows te le demandera à la prochaine connexion.')) }
         default    { $checks.Add((New-Check 'Liens claude://' 'TODO' 'une autre application les reçoit' 'Choisis « Claude » dans Paramètres > Applications par défaut.')) }
+    }
+
+    # 6b. Scheduled Code tasks live in the shared sessions folder: with tasks, both apps would fire them.
+    $taskFile = @(Get-ChildItem -Path (Join-Path $bData 'claude-code-sessions\*\*\scheduled-tasks.json') -ErrorAction SilentlyContinue) | Select-Object -First 1
+    if ($taskFile) {
+        $tasks = Get-ClaudeScheduledTaskCount -Path $taskFile.FullName
+        if ($tasks -gt 0) {
+            $checks.Add((New-Check 'Tâches planifiées' 'INFO' "$tasks tâche(s), communes à A et B" 'Si A et B sont ouvertes à l''heure prévue, la tâche peut se lancer deux fois : ferme l''une des deux.'))
+        } else {
+            $checks.Add((New-Check 'Tâches planifiées' 'OK' 'aucune tâche planifiée partagée'))
+        }
+    }
+
+    # 6c. The base installation's ownership receipt (needed only by the native removal/rollback of B).
+    $receipt = Get-ClaudeReceiptState -Python $py -InstallDir $InstallDir
+    if ($receipt -eq 'OK') {
+        $checks.Add((New-Check 'Reçu d''installation' 'OK' 'valide'))
+    } else {
+        $checks.Add((New-Check 'Reçu d''installation' 'INFO' "à réconcilier ($receipt)" 'Sans effet au quotidien. Le retrait et la restauration natifs de B restent indisponibles tant qu''il ne l''est pas.'))
     }
 
     # 7. Remember the package version we last saw healthy.

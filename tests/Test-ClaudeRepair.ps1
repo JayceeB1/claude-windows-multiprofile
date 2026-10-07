@@ -84,6 +84,16 @@ try {
     Assert-Equal 'apply with problems is not ok' $false (ConvertFrom-ClaudeLinkApply -Json '{"status":"APPLIED","linked":9,"problems":["x"]}').Ok
     Assert-Equal 'apply refusal reason' 'TARGET_PROFILE_RUNNING_CLOSE_IT_FIRST' (ConvertFrom-ClaudeLinkApply -Json '{"status":"REFUSED","reason":"TARGET_PROFILE_RUNNING_CLOSE_IT_FIRST"}').Reason
 
+    # --- Scheduled tasks counting, tolerant of absence and damage.
+    $taskFile = Join-Path $root 'tasks.json'
+    Assert-Equal 'absent file counts zero' 0 (Get-ClaudeScheduledTaskCount -Path $taskFile)
+    Set-Content -LiteralPath $taskFile -Value '{"scheduledTasks":[]}'
+    Assert-Equal 'empty list counts zero' 0 (Get-ClaudeScheduledTaskCount -Path $taskFile)
+    Set-Content -LiteralPath $taskFile -Value '{"scheduledTasks":[{"a":1},{"a":2},{"a":3}]}'
+    Assert-Equal 'three tasks count three' 3 (Get-ClaudeScheduledTaskCount -Path $taskFile)
+    Set-Content -LiteralPath $taskFile -Value '{ nope'
+    Assert-Equal 'damaged file counts zero' 0 (Get-ClaudeScheduledTaskCount -Path $taskFile)
+
     # --- Intent status and the wait helper.
     $install = Join-Path $root 'ClaudeProfiles'; $null = New-Item -ItemType Directory -Path (Join-Path $install 'bin') -Force
     Assert-Equal 'no intent file' 'none' (Get-ClaudeRouteIntentStatus -InstallDir $install)
@@ -120,6 +130,8 @@ try {
     $routerOk = '{"real_registry_matches_desired":true,"real_registry_empty":false,"receipt_matches_desired":true}'
     $script:python = @{ link = $steadyLinks; router = $routerOk; calls = @() }
     function Test-ClaudeUnpackagedContext { param($Python) return $true }
+    function Get-ClaudeReceiptState { param($Python, $InstallDir) return $script:receiptState }
+    $script:receiptState = 'OK'
     function Get-ClaudePython { return 'python.exe' }
     function Get-AppxPackage { param($Name) [pscustomobject]@{ Version = [version]'9.9.1.0' } }
     function Read-ClaudeLinkHandler { return 'official' }
@@ -179,6 +191,22 @@ try {
     $checks = Invoke-ClaudeRepair -InstallDir $fx -RepoDir $repo -Fix
     Assert-Equal 'shortcut is reinstalled by -Fix' 'FIXED' (Pick $checks 'Icône et bouton de B')
     Assert-Equal 'reinstalled shortcut carries the app id' 'ClaudeMultiprofile.B' ([ClaudeIdentityNative]::ShortcutAppId((Join-Path $fxDesktop 'Claude (B).lnk')))
+
+    # A stale ownership receipt is shown but never counts as a problem to fix; shared scheduled tasks are flagged.
+    $script:receiptState = 'NATIVE_OWNED_DIRECTORY_CHANGED'
+    $taskDir = Join-Path $bData 'claude-code-sessions\acct\org'; $null = New-Item -ItemType Directory -Path $taskDir -Force
+    Set-Content -LiteralPath (Join-Path $taskDir 'scheduled-tasks.json') -Value '{"scheduledTasks":[{"id":"a"},{"id":"b"}]}'
+    Set-Content -LiteralPath (Join-Path $bData 'config.json') -Value ('{"oauth:tokenCacheV2":"' + $long + '"}')
+    $checks = Invoke-ClaudeRepair -InstallDir $fx -RepoDir $repo
+    Assert-Equal 'stale receipt is informational' 'INFO' (Pick $checks 'Reçu d''installation')
+    Assert-Equal 'stale receipt names its reason' $true (($checks | Where-Object { $_.Name -eq 'Reçu d''installation' }).Detail -match 'NATIVE_OWNED_DIRECTORY_CHANGED')
+    Assert-Equal 'shared scheduled tasks are flagged' 'INFO' (Pick $checks 'Tâches planifiées')
+    Assert-Equal 'neither blocks the all-clear' 0 @($checks | Where-Object { $_.State -in 'TODO', 'BLOCKED' }).Count
+    Set-Content -LiteralPath (Join-Path $taskDir 'scheduled-tasks.json') -Value '{"scheduledTasks":[]}'
+    $script:receiptState = 'OK'
+    $checks = Invoke-ClaudeRepair -InstallDir $fx -RepoDir $repo
+    Assert-Equal 'no scheduled task is reported as fine' 'OK' (Pick $checks 'Tâches planifiées')
+    Assert-Equal 'valid receipt is reported' 'OK' (Pick $checks 'Reçu d''installation')
 
     # A packaged context stops everything before any helper runs.
     function Test-ClaudeUnpackagedContext { param($Python) return $false }

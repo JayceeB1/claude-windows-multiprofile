@@ -5,12 +5,14 @@ and Code configuration roots, using the same existing project folders and
 explicitly selected project memory. Preserve the working account A in place;
 add account B without migrating projects or requiring worktrees.
 
-**Delivery status:** routing/diagnostic, memory planner/transactions and additive install/removal are qualified on
-Windows fixtures. Desktop operator evidence is recorded for selected A memory. Native additive execution, B memory
-loading and two-Desktop acceptance remain unqualified. An explicit native adapter and command wrappers are
-qualified on isolated Windows fixtures (COM, locks and disposable registry APIs exercised). Real Desktop acceptance
-remains NOT_RUN. The default Setup/Uninstall invocation still refuses mutations. Follow the [ledger](docs/SHARED-WORKSPACE-LEDGER.md),
-[roadmap](docs/SHARED-WORKSPACE-ROADMAP.md) and [qualification receipts](docs/SHARED-WORKSPACE-QUALIFICATION.md).
+**Delivery status (2026-10-07):** two Desktop accounts now run side by side on the operator's machine: the login router appears in
+the Windows `claude://` picker (the earlier invisibility was MSIX registry/AppData virtualization, now guarded against), B has its
+own taskbar button and icon, and B shares A's skills, plugins, mods, project memory, settings and Code sessions through links. Day-to-day
+use is the shortcuts in [docs/MODE-OPERATOIRE.md](docs/MODE-OPERATOIRE.md) (French). Still open: the historical ownership receipt
+needs a reconciliation before native removal/rollback of B is available, a real Claude update and a real guided re-login have not
+happened yet, and the default Setup/Uninstall invocation still refuses mutations. The per-subject table is the last block of the
+[ledger](docs/SHARED-WORKSPACE-LEDGER.md); see also the [roadmap](docs/SHARED-WORKSPACE-ROADMAP.md) and
+[qualification receipts](docs/SHARED-WORKSPACE-QUALIFICATION.md).
 
 ## Preview-first shared workspace
 

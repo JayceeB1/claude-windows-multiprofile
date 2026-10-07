@@ -56,6 +56,16 @@ La **liste des sessions Claude Code** (la barre latérale « Récents » de l'on
 partagée : une session démarrée dans A se retrouve dans B et inversement, et se reprend depuis l'un ou l'autre compte
 (par exemple quand un compte a atteint sa limite). Ouvre la même session dans une seule fenêtre à la fois.
 
+**Les mods d'interface de Claude Code** (panneaux, bandeau au-dessus du prompt, ligne d'état, commandes) sont
+partagés par deux mécanismes déjà en place : leurs dossiers (`mods`, `dev-mods`) sont liés, et la liste des
+mods à charger (`CLAUDE_CODE_PLUGIN_DIRS`, dans le bloc `env` de `settings.json`) est lue par B à travers le
+même `settings.json`. Aujourd'hui : `F:\chatgpt-driver\mod` et `C:\Users\JC\.claude\mods\repo-link`. Un mod ajouté
+dans A, déclaré dans cette liste, se retrouve donc chez B au démarrage de sa prochaine session ; un plugin
+installé par le système de plugins (`enabledPlugins`) suit le même chemin. Ce qui reste propre à chaque session :
+la question « Activer le rechargement à chaud pour cette session ? », posée à chaque fois, et les mods de
+développement en cours (un dossier par session dans `dev-mods`). Pour vérifier dans B, ouvre une session Code
+et regarde si le panneau ou le bandeau du mod apparaît ; sinon tape `/reload-plugins`.
+
 **Copié une fois** : la liste de tes serveurs MCP de niveau utilisateur (lue dans `C:\Users\JC\.claude.json`,
 copiée dans `C:\Users\JC\.claude-b\.claude.json`). Si tu en ajoutes
 un dans A plus tard, lance « Réparer » ; si B en a déjà une liste différente, la réparation la laisse en

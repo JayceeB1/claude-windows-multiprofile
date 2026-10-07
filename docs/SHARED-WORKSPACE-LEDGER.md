@@ -530,14 +530,21 @@ set aside and restored on rollback; B's own `local_*` records refuse the link. S
 both windows are documented caveats. 20 fixture contracts; real-tree classification read-only (link, dir_backup). NOT_RUN on the
 real tree: applied by the operator through the repair shortcut.
 
-## NEXT SLICE
+## NEXT SLICE: consolidated status (2026-10-07)
 
-A/pilot marker matched; approved B provisioning retained, zero memory-key edits; B remains unlaunched.
-Router metadata/dedicated-host repairs read back; picker was blocked by MSIX redirection and now lists the router (see S5 entry above).
-Post-restart: versions/19 owned assets unchanged, picker still Claude only. Session renewal did not suffice.
-Read-only diagnostic: real claude scheme exists in HKCU/HKCR and MSIX manifest; effective default is Undecided.
-Approved manual Procmon: Settings enumerates 816 HKCU values without ClaudeShim; direct observer sees 817 including it.
-Settings HKCR claude opens fail while direct 32/64-bit reads succeed. Cause UNKNOWN; no router correction.
-Next: one independently launched neutral reader, read-only, proposed/NOT_RUN; [report](S5-ROUTER-DIAGNOSTIC-20261006.md).
-Verified embedded Code 2.1.288 -> Desktop -> Explorer; separate CLI PE 2.1.292. Claude-reported scheme command differs from our reads; neutral check pending.
-Native 8.3 stays NOT_RUN; optional REA-A2 follows #3. B config/loading and two-Desktop acceptance remain unqualified.
+Earlier entries are dated evidence and stay as written; this block is the current reading of them.
+
+| Subject | Observed on the operator's machine | Implemented, tested on disposable data only | Open |
+| --- | --- | --- | --- |
+| Router in the `claude` picker | "Claude Login Router" listed (marked new) after registration from a normal shell; choosing it stays manual | `Apply-RouterRegistration.py`, receipt-checked, read-back | none |
+| Cause of the earlier invisibility | Real registry lacked the keys; the private package store held them | Guard refusing packaged process trees, ancestor walk included | none |
+| Two accounts, two windows | B logged in as its own account next to A | Launch isolation, one-shot login routing | Re-login of B through the guided flow: NOT_RUN |
+| Separate taskbar button and icon for B | Second blue "B" button seen; shortcut-based pinning explained | `Install-ClaudeIdentity.ps1` (43 assertions, PS 5.1/7) | none |
+| Shared config, mods and Code sessions | Operator reports it works after the repair shortcut | `Link-SharedConfig.py` (20 contracts on real links) | B loading of the shared mods not observed; new sessions in both windows at once not exercised |
+| Repair after a Claude update | Shortcut run by the operator | `Repair-ClaudeProfiles.ps1` (69 assertions, orchestration with doubles) | A real update has not happened yet: NOT_RUN |
+| Installation ownership receipt | Refused with `NATIVE_OWNED_DIRECTORY_CHANGED` (the real B data folder differs from the redirected one it recorded) | none | Reconciliation transition NOT implemented; `native-remove-b` and `native-rollback` stay unavailable until it is |
+| Scheduled Code tasks | None exist | Repair flags shared tasks | Shared folder means a task would fire in both apps if both are open |
+| Native 8.3 path | NOT_RUN | explicit SKIP | unchanged |
+
+CI was green on the previous head `9913b07`; the final head is checked on the PR. PR #1 stays draft; nothing merged or released. Three subprocess-entry contracts skip with a reason
+inside a packaged process tree, so the full qualification must be run from a normal shell.

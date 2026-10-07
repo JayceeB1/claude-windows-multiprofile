@@ -30,18 +30,21 @@ Dans le dossier **« Claude multi-comptes »** du bureau :
 
 ## 2. Où se trouve quoi
 
+Les chemins ci-dessous sont les valeurs par défaut ; `%USERPROFILE%` désigne ton dossier utilisateur
+(`C:\Users\<toi>`). Si tu as choisi d'autres dossiers à l'installation, remplace-les.
+
 | Élément | Emplacement |
 | --- | --- |
-| Raccourcis | `C:\Users\JC\Desktop\` et `C:\Users\JC\Desktop\Claude multi-comptes\` |
-| Lanceur d'origine (ne pas modifier) | `C:\Users\JC\ClaudeProfiles\bin\` |
-| Bouton et icône de B | `C:\Users\JC\ClaudeProfiles\identity\` (fichier `identity.json` = ce qui a été installé) |
-| Journal du partage de config | `C:\Users\JC\ClaudeProfiles\shared-config\` (journal et sauvegardes) |
-| Dernière version vue en bon état | `C:\Users\JC\ClaudeProfiles\repair-state.json` |
-| Données du Desktop A (connexion) | `C:\Users\JC\AppData\Roaming\Claude\` |
-| Données du Desktop B (connexion) | `C:\Users\JC\AppData\Roaming\Claude-B\` |
-| Config Claude Code de A | `C:\Users\JC\.claude\` |
-| Config Claude Code de B | `C:\Users\JC\.claude-b\` |
-| Les outils (ce dépôt) | `F:\claude-windows-multiprofile\` |
+| Raccourcis | `%USERPROFILE%\Desktop\` et `%USERPROFILE%\Desktop\Claude multi-comptes\` |
+| Lanceur d'origine (ne pas modifier) | `%USERPROFILE%\ClaudeProfiles\bin\` |
+| Bouton et icône de B | `%USERPROFILE%\ClaudeProfiles\identity\` (fichier `identity.json` = ce qui a été installé) |
+| Journal du partage de config | `%USERPROFILE%\ClaudeProfiles\shared-config\` (journal et sauvegardes) |
+| Dernière version vue en bon état | `%USERPROFILE%\ClaudeProfiles\repair-state.json` |
+| Données du Desktop A (connexion) | `%APPDATA%\Claude\` |
+| Données du Desktop B (connexion) | `%APPDATA%\Claude-B\` |
+| Config Claude Code de A | `%USERPROFILE%\.claude\` |
+| Config Claude Code de B | `%USERPROFILE%\.claude-b\` |
+| Les outils (ce dépôt) | le dossier où tu as cloné le dépôt (appelé « le dépôt » plus bas) |
 | L'application Claude | gérée par Windows, `C:\Program Files\WindowsApps\Claude_<version>_…` : on ne s'en occupe pas |
 
 Les deux **connexions** sont dans les dossiers `Roaming\Claude` et `Roaming\Claude-B`. C'est ce qui garde
@@ -59,15 +62,16 @@ partagée : une session démarrée dans A se retrouve dans B et inversement, et 
 **Les mods d'interface de Claude Code** (panneaux, bandeau au-dessus du prompt, ligne d'état, commandes) sont
 partagés par deux mécanismes déjà en place : leurs dossiers (`mods`, `dev-mods`) sont liés, et la liste des
 mods à charger (`CLAUDE_CODE_PLUGIN_DIRS`, dans le bloc `env` de `settings.json`) est lue par B à travers le
-même `settings.json`. Aujourd'hui : `F:\chatgpt-driver\mod` et `C:\Users\JC\.claude\mods\repo-link`. Un mod ajouté
+même `settings.json` (par exemple un dossier de mod déclaré dans cette liste, ou un mod placé dans
+`%USERPROFILE%\.claude\mods`). Un mod ajouté
 dans A, déclaré dans cette liste, se retrouve donc chez B au démarrage de sa prochaine session ; un plugin
 installé par le système de plugins (`enabledPlugins`) suit le même chemin. Ce qui reste propre à chaque session :
 la question « Activer le rechargement à chaud pour cette session ? », posée à chaque fois, et les mods de
 développement en cours (un dossier par session dans `dev-mods`). Pour vérifier dans B, ouvre une session Code
 et regarde si le panneau ou le bandeau du mod apparaît ; sinon tape `/reload-plugins`.
 
-**Copié une fois** : la liste de tes serveurs MCP de niveau utilisateur (lue dans `C:\Users\JC\.claude.json`,
-copiée dans `C:\Users\JC\.claude-b\.claude.json`). Si tu en ajoutes
+**Copié une fois** : la liste de tes serveurs MCP de niveau utilisateur (lue dans `%USERPROFILE%\.claude.json`,
+copiée dans `%USERPROFILE%\.claude-b\.claude.json`). Si tu en ajoutes
 un dans A plus tard, lance « Réparer » ; si B en a déjà une liste différente, la réparation la laisse en
 l'état et te le signale (voir le dépannage).
 
@@ -144,9 +148,9 @@ Le script fait tout, sauf un clic que Windows réserve à toi.
 ## 6. Tout remettre en route (nouvelle machine, ou installation à refaire)
 
 À faire une fois, depuis un PowerShell ouvert **depuis le menu Démarrer** (pas depuis Codex ni depuis Claude
-Desktop : ces programmes redirigent leurs écritures, et les outils le refusent). Dans `F:\claude-windows-multiprofile` :
+Desktop : ces programmes redirigent leurs écritures, et les outils le refusent). Dans le dossier du dépôt :
 
-1. Le lanceur de base et le routeur : voir `README.md` et `docs/PROTOCOL-ROUTING.md`.
+1. Le lanceur de base et le routeur : voir `README.md`, `docs/reference/SHARED-WORKSPACE.md` et `docs/PROTOCOL-ROUTING.md`.
 2. Icône et bouton séparé de B (aperçu sans `-Apply`, puis avec) :
    ```powershell
    .\scripts\Install-ClaudeIdentity.ps1 -Name B -ProfileDir "$env:APPDATA\Claude-B" -ConfigDir "$env:USERPROFILE\.claude-b" -IconPath C:\chemin\claude-b.ico -Apply

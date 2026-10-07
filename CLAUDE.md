@@ -1,75 +1,48 @@
-# CLAUDE.md — claude-desktop-clone
+# CLAUDE.md
 
 Guidance for Claude Code (or any AI assistant) working in this repository.
 
 ## What this project is
 
-A small Windows tool to run **multiple isolated instances of the Claude Desktop
-app**, one per account. It does **not** modify or repackage the Claude app — it
-only launches the officially installed MSIX app with Chromium's
-`--user-data-dir` flag so each instance gets its own single-instance lock and
-its own login.
+**Claude Desktop multi-account (Windows)**: run several isolated instances of the official Claude Desktop app, one per
+account, side by side, sharing configuration and Claude Code sessions through links. It never modifies or repackages the
+Claude app: it launches the officially installed MSIX app with Chromium's `--user-data-dir`, and adds a separate taskbar
+identity, shared-config links, update repair and a guided re-login around it. See [NOTICE.md](NOTICE.md) for the lineage
+(vodongha, fredless, Zoltak-Dev); keep those credits and the MIT notices intact.
 
 ## Core mechanism (do not break this)
 
 1. **Resolve the exe dynamically.** The app is an MSIX package at
-   `C:\Program Files\WindowsApps\Claude_<version>_x64__<hash>\app\Claude.exe`.
-   The version segment changes on every update, and that folder is
-   permission-restricted for directory listing. Always resolve the path via
-   `Get-AppxPackage -Name '*Claude*'` and read `.InstallLocation`. Only fall
-   back to a `WindowsApps\Claude_*__*\app\Claude.exe` glob if the Appx query
-   fails. **Never hard-code the versioned path** — it will break on the next
-   update.
-
-2. **Isolation = a distinct `--user-data-dir`.** This is the entire trick. Two
-   shortcuts must point at two different data directories. Don't "optimize" by
-   sharing a directory — that re-merges the accounts and defeats the tool.
-
-3. **Launch directly via the exe**, not via MSIX shell activation. MSIX
-   activation (`shell:AppsFolder\...!Claude`) does not reliably forward the
-   `--user-data-dir` argument; launching the exe path does.
-
-4. **Icons must point at a stable path, never the versioned exe.** `Setup.ps1`
-   extracts the Claude icon once into `bin\claude.ico` and sets every shortcut's
-   `IconLocation` to that file. Setting `IconLocation` to the versioned
-   `WindowsApps\Claude_<version>\...\Claude.exe` makes icons go blank after the
-   next update deletes that folder. Extract via `PrivateExtractIcons` → render to
-   a `Bitmap` → write a 32-bit **PNG-based `.ico`** by hand. Do **not** use
-   `Icon.Save()`: saving an icon built from an `HICON` drops the colour plane and
-   writes only the 1-bit mask, producing a grey icon.
-
-## Optional second isolation layer (`CLAUDE_CONFIG_DIR`)
-
-`--user-data-dir` isolates the **Claude Desktop login** only. The embedded
-**Claude Code / Cowork** still reads the shared `~/.claude` store (memory,
-settings) regardless of which profile launched it. To isolate that too, a
-profile can point `CLAUDE_CONFIG_DIR` at a dedicated directory:
-
-- `Launch-Claude.ps1 -ConfigDir <path>` sets `$env:CLAUDE_CONFIG_DIR` before
-  `Start-Process`. The child app (and any `claude-code` it spawns) inherits it.
-- `launch.vbs` forwards an optional **2nd argument** as that config dir.
-- `Setup.ps1 -ConfigDir @{ Personal = '<path>' }` (a hashtable) wires a profile's
-  shortcut to pass the 3rd `wscript` argument.
-
-This is **additive and optional** — omitting it keeps the shared `~/.claude`
-store, which is the default. Don't make it mandatory or hard-code a path.
+   `C:\Program Files\WindowsApps\Claude_<version>_x64__<hash>\app\Claude.exe`. The version segment changes on every update
+   and that folder is permission-restricted. Resolve it with `Get-AppxPackage -Name '*Claude*'` and `.InstallLocation`;
+   fall back to a `WindowsApps\Claude_*__*\app\Claude.exe` glob only if the Appx query fails. **Never hard-code the
+   versioned path.**
+2. **Isolation = a distinct `--user-data-dir`.** Two shortcuts, two data directories. Never share one: that re-merges the
+   accounts.
+3. **Launch the exe directly**, not through MSIX shell activation, which does not reliably forward `--user-data-dir`.
+4. **Icons point at a stable path**, never at the versioned exe (`Setup.ps1` extracts one into `bin\claude.ico`; write a
+   32-bit PNG-based `.ico` by hand, never `Icon.Save()`, which drops the colour plane). The repository ships no Claude
+   artwork; the user supplies B's icon.
+5. **`CLAUDE_CONFIG_DIR` is optional and additive.** It isolates Claude Code's `~/.claude` store per profile; omitting it
+   keeps the shared default. Do not make it mandatory or hard-code a path.
 
 ## Layout
 
 ```
 scripts/
-  Launch-Claude.ps1   # resolve exe + Start-Process with --user-data-dir; optional -ConfigDir sets CLAUDE_CONFIG_DIR
-  launch.vbs          # run the .ps1 hidden (no console window); finds the .ps1 next to itself; optional 2nd arg = config dir
-  Setup.ps1           # installer: copies scripts to %USERPROFILE%\ClaudeProfiles\bin, extracts a stable bin\claude.ico, makes profiles + desktop shortcuts; -ConfigDir hashtable maps a profile to its own memory store
-  Uninstall.ps1       # removes shortcuts (and optionally profile data)
-  Build-Exe.ps1       # optional: wrap Launch-Claude.ps1 into an .exe via ps2exe
-  Set-ClaudeWindowIdentity.ps1 / Launch-ClaudeIdentity.ps1 / launch-identity.vbs / Install-ClaudeIdentity.ps1
+  Launch-Claude.ps1, launch.vbs, Setup.ps1, Uninstall.ps1, Build-Exe.ps1   # base launcher (legacy parameters are blocked)
+  Set-ClaudeWindowIdentity.ps1, Launch-ClaudeIdentity.ps1, launch-identity.vbs, Install-ClaudeIdentity.ps1
                       # separate taskbar button + icon for one profile (explicit AppUserModelID + WM_SETICON from a hidden watcher)
-  Repair-ClaudeProfiles.ps1 / Connect-ClaudeProfile.ps1 / Install-ClaudeTools.ps1
-                      # check + repair after an update, guided re-login of B, desktop shortcuts for both
+  Repair-ClaudeProfiles.ps1, Connect-ClaudeProfile.ps1, Install-ClaudeTools.ps1
+                      # check and repair after an update, guided re-login of B, desktop shortcuts
   Link-SharedConfig.py  # junction/symlink sharing of config between profiles; never credentials or identity
-  Apply-RouterRegistration.py, NativeWindowsIO.py, SharedWorkspace*.py, ...  # native shared-workspace candidate (see README)
-docs/MODE-OPERATOIRE.md  # French operator manual: shortcuts, locations, after an update, re-login, rollback
+  Arm-ClaudeLogin.ps1, ClaudeOpenShim.ps1, ClaudeLoginRouter.cs, Apply-RouterRegistration.py   # claude:// login router
+  SharedWorkspace*.py, SharedMemory*.py, NativeWorkspace.py, NativeWindowsIO.py, Inspect-SharedWorkspace.py
+                      # preview-first shared workspace, ownership receipt, native Windows IO
+tests/                # Python and PowerShell fixture suites (synthetic accounts, owned TEMP folders)
+docs/MANUAL.md, docs/fr/MODE-OPERATOIRE.md   # operator manuals (English, French)
+docs/reference/       # technical reference; docs/PROTOCOL-ROUTING.md is the routing contract
+docs/dev-log/         # dated reports, ledger, roadmap, qualification receipts (history, not user documentation)
 ```
 
 ## Gotchas learned the hard way
@@ -77,85 +50,62 @@ docs/MODE-OPERATOIRE.md  # French operator manual: shortcuts, locations, after a
 - **MSIX virtualization.** HKCU and AppData writes made by a packaged process (Codex, Claude Desktop) and by *all its
   descendants* are redirected to a private per-package store that Windows Settings never reads. Descendants report no
   package identity themselves, so `NativeWindowsIO.require_unpackaged_process()` walks the ancestor chain. Native writes and
-  the Python helpers must run from a normal shell or a shortcut; from inside Claude Code they refuse by design (and three
-  subprocess-entry tests skip with an explicit reason, so run `tests/Run-SharedWorkspaceTests.py` from a normal shell).
-- **PowerShell 5.1 and accents.** Scripts containing non-ASCII text must be saved as UTF-8 **with BOM**; without it 5.1 reads
-  them as ANSI and mangles text and shortcut names. Native stderr inside `$ErrorActionPreference = 'Stop'` aborts 5.1: wrap
-  native calls with a local `Continue`.
+  the Python helpers must run from a normal shell or a shortcut; from inside Claude Code they refuse by design, and three
+  subprocess-entry tests skip with an explicit reason. Run `tests/Run-SharedWorkspaceTests.py` from a normal shell.
+- **PowerShell 5.1 and accents.** Scripts containing non-ASCII text must be saved as UTF-8 **with BOM**, otherwise 5.1
+  reads them as ANSI and mangles text and shortcut names. Native stderr inside `$ErrorActionPreference = 'Stop'` aborts
+  5.1: wrap native calls with a local `Continue`. Under strict mode, read optional JSON properties through a helper.
 - **Pinning.** Pinning a running window's button creates a generic pin with the app icon. Pin the shortcut created by
-  `Install-ClaudeIdentity.ps1` instead. A pinned shortcut owns the button only if its AppUserModelID equals the window's.
-- **Commits.** Follow the user's global instruction: no AI attribution in commits or PRs.
+  `Install-ClaudeIdentity.ps1`. A pinned shortcut owns the button only if its AppUserModelID equals the window's.
+- **Links.** Directory junctions need no admin; file symlinks need Developer Mode. An atomic rename-write by an app breaks
+  a file link silently (the repair re-links and keeps a backup). Removing a link never follows it.
+- **Routing marker.** `bin\target.txt` is a v2 JSON record: only `armed` (or a legacy/unreadable file) blocks a native
+  transition; `consumed` and `disarmed` are quiet.
+- **Paths from the runner.** CI temp folders are 8.3 short names (`RUNNER~1`); compare canonical paths, never raw strings.
+- **Editing.** Keep CRLF/BOM as the file already has them. When writing Windows paths through scripts, avoid escape
+  sequences in the shell (`\f`, `\U`): prefer the Edit tool.
 
 ## Conventions
 
-- **PowerShell** is the primary language. Keep scripts dependency-free — only
-  built-in cmdlets and `WScript.Shell` COM. The only optional external piece is
-  `ps2exe` in `Build-Exe.ps1`.
-- Scripts must run **without admin rights**.
-- Keep everything **idempotent**: re-running `Setup.ps1` should just refresh.
-- Resolve user paths via `$env:USERPROFILE`, `$env:APPDATA`, and
-  `[Environment]::GetFolderPath('Desktop')` — never hard-code `C:\Users\<name>`.
-- Use comment-based help (`.SYNOPSIS` / `.PARAMETER`) on every script.
+- **PowerShell** is the primary language for launching and repair; **Python 3.12+ (standard library only)** for the
+  shared-workspace tooling. No dependencies are installed by any script.
+- Everything runs **without admin rights**, is **idempotent**, and is **preview-first**: a mutating command needs explicit
+  approval flags, records a journal, and can be rolled back.
+- Resolve user paths from `$env:USERPROFILE`, `$env:APPDATA`, `[Environment]::GetFolderPath('Desktop')`; never hard-code
+  `C:\Users\<name>` or a drive letter, and never commit personal paths. Machine-specific notes go in `*.local.md`, which
+  is git-ignored.
+- Never read, log, copy or print credentials, tokens or the contents of a login store; compare hashes only.
+- Comment-based help (`.SYNOPSIS` / `.PARAMETER`) on every PowerShell script.
 
 ## Testing changes
 
-There is no automated test suite (it's OS/GUI integration). To verify by hand:
-
 ```powershell
-# 1) Resolve + launch an isolated instance:
-.\scripts\Launch-Claude.ps1 -ProfileDir "$env:TEMP\claude-test"
-
-# 2) Confirm it launched with the right flag:
-Get-CimInstance Win32_Process -Filter "Name='Claude.exe'" |
-    Where-Object { $_.CommandLine -like '*claude-test*' } |
-    Select-Object ProcessId, CommandLine
+python -B tests/Run-SharedWorkspaceTests.py          # full Python qualification (fixtures, TEMP only)
+powershell -NoProfile -File tests\Test-ClaudeRepair.ps1
+powershell -NoProfile -File tests\Test-ClaudeIdentity.ps1   # interactive desktop required
 ```
 
-A successful run shows `Claude.exe --user-data-dir=...\claude-test` and creates
-a populated `claude-test` folder (Local Storage, lockfile, etc.).
-
-To verify config isolation, add `-ConfigDir` and confirm the env var reaches the
-child process:
+To check a real launch by hand, start a profile and confirm the flag reached the process:
 
 ```powershell
-.\scripts\Launch-Claude.ps1 -ProfileDir "$env:TEMP\claude-test" -ConfigDir "$env:TEMP\claude-cfg-test"
-# The launched process inherits CLAUDE_CONFIG_DIR=...\claude-cfg-test;
-# the directory is created if missing.
+.\scripts\Launch-Claude.ps1 -ProfileDir "$env:TEMP\claude-test"
+Get-CimInstance Win32_Process -Filter "Name='Claude.exe'" |
+    Where-Object { $_.CommandLine -like '*claude-test*' } | Select-Object ProcessId, CommandLine
 ```
 
 ## Git workflow
 
-Two long-lived branches, mirroring the `vodongha-personal` setup.
-
-```
-feature/* ──┐
-bug/*    ──→  develop  →  PR → develop (merged)  →  PR → master
-hotfix/* ──────────────────────────────────────→  PR → master
-                                                        ↓
-                                          develop ← auto-synced by sync-develop.yml
-```
-
-| Branch type | Base branch | PR target | When to use |
-|---|---|---|---|
-| `feature/short-description` | `develop` | `develop` | New feature |
-| `bug/short-description` | `develop` | `develop` | Non-urgent fix |
-| `hotfix/short-description` | `master` | `master` | Urgent fix |
-
-- **`master` is the stable branch — never commit directly.** Feature/bug work goes through
-  `develop`; merge `develop → master` to release. Hotfixes branch from `master` and PR straight to
-  it; `develop` picks them up via `sync-develop.yml` (merges `master → develop` after every push to
-  `master`). There is no deploy — `master` is just the published, stable state.
-- `ci.yml` runs **PSScriptAnalyzer** (errors only) on pushes to `develop` and PRs to `master`.
-- Merge with **merge commits** (no squash/rebase). Personal repo — set the identity locally
-  (`git config --local user.email "vodongha@hotmail.com"`). AI-assisted commits are **authored by
-  `vodongha`** with **Claude as the committer**:
-  ```bash
-  GIT_COMMITTER_NAME="Claude Opus 4.8" GIT_COMMITTER_EMAIL="noreply@anthropic.com" \
-    git commit --author="vodongha <vodongha@hotmail.com>" -m "..."
-  ```
+- Single trunk: **`master`** is the stable branch and is never committed to directly. Work on `feature/*`, `fix/*`,
+  `docs/*` or `chore/*` branches and merge by pull request with a merge commit (no squash, no rebase).
+- CI (`ci.yml`) runs PSScriptAnalyzer and the fixture matrix on Windows PowerShell 5.1 and PowerShell 7; it must be green
+  before merging.
+- **No AI attribution** in commits or pull requests: no `Co-Authored-By` for an assistant, no "generated with" footer, no
+  session link. Messages describe the change only.
+- Releases are tagged `vX.Y.Z` with a `CHANGELOG.md` entry and an archive whose SHA-256 is published alongside it.
 
 ## Out of scope
 
-- Codex / other apps (this repo is Claude-only by design).
-- Modifying the Claude app's files or signing/repackaging it.
+- Codex or other apps (this project is Claude Desktop only).
+- Modifying the Claude app's files, signing or repackaging it, or shipping Claude artwork.
 - Anything requiring admin elevation.
+- Merging claude.ai chat history between accounts (it lives on Anthropic's servers).

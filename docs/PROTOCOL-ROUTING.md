@@ -2,7 +2,7 @@
 
 This guide describes the source contract qualified on synthetic Windows fixtures,
 not proof of the current user's Desktop/account installation. The authoritative
-[ledger](SHARED-WORKSPACE-LEDGER.md) separates implementation, synthetic evidence
+[ledger](dev-log/SHARED-WORKSPACE-LEDGER.md) separates implementation, synthetic evidence
 and actual installation acceptance. Preserve upstream [MIT](../LICENSE) credits.
 
 ## Explicit intent and account selection

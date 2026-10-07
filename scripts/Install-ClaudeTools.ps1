@@ -6,7 +6,7 @@
     scripts directly (no copy, so a repository update is picked up at once):
       - Réparer Claude (A+B)   : Repair-ClaudeProfiles.ps1 -Fix -Pause
       - Reconnecter B          : Connect-ClaudeProfile.ps1 -Profile B -Pause
-      - Mode opératoire        : docs\MODE-OPERATOIRE.md
+      - Mode opératoire        : docs\fr\MODE-OPERATOIRE.md
     Preview by default; nothing is written without -Apply. Shortcuts it did not create are
     refused, never overwritten; -Remove deletes only its own. If you move the repository,
     run this again with -Apply.
@@ -52,7 +52,7 @@ $items = @(
        Arguments = "$common `"$(Join-Path $RepoDir 'scripts\Repair-ClaudeProfiles.ps1')`" -InstallDir `"$InstallDir`" -Fix -Pause" },
     @{ Name = 'Reconnecter B'; Target = $powershell; Icon = $IconPath
        Arguments = "$common `"$(Join-Path $RepoDir 'scripts\Connect-ClaudeProfile.ps1')`" -Profile B -InstallDir `"$InstallDir`" -Pause" },
-    @{ Name = 'Mode opératoire'; Target = (Join-Path $RepoDir 'docs\MODE-OPERATOIRE.md'); Icon = ''; Arguments = '' }
+    @{ Name = 'Mode opératoire'; Target = (Join-Path $RepoDir 'docs\fr\MODE-OPERATOIRE.md'); Icon = ''; Arguments = '' }
 )
 
 function Get-ShortcutState {

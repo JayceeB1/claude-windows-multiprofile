@@ -15,3 +15,8 @@ ClaudeProfiles/
 # Machine-specific local notes and the private handoff (never pushed)
 *.local.md
 HANDOFF-claude-desktop-clone-fork.md
+
+# Local tooling indexes
+.gitnexus/
+.engineering-highway/
+.claude/

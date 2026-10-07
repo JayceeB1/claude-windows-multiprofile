@@ -2,7 +2,7 @@
 
 This checklist is a future separately authorized native trial, not instructions to run the blocked legacy installer.
 The native adapter is VERIFIED_SYNTHETIC on owned TEMP fixtures. Real Claude associations and Desktop acceptance remain NOT_RUN.
-The sole [ledger](docs/SHARED-WORKSPACE-LEDGER.md) governs status; fixtures cannot establish native acceptance.
+The sole [ledger](docs/dev-log/SHARED-WORKSPACE-LEDGER.md) governs status; fixtures cannot establish native acceptance.
 
 ## Evidence already available
 
@@ -27,7 +27,7 @@ The sole [ledger](docs/SHARED-WORKSPACE-LEDGER.md) governs status; fixtures cann
 ## Native candidate fixture qualification — real Desktop still NOT_RUN
 
 The user's subsequent test authorization supersedes the implementation-only stop. New receipts are in
-[qualification](docs/SHARED-WORKSPACE-QUALIFICATION.md); checkmarks below refer exclusively to isolated fixtures.
+[qualification](docs/dev-log/SHARED-WORKSPACE-QUALIFICATION.md); checkmarks below refer exclusively to isolated fixtures.
 
 - [x] Preview: exclusive private capsule, no profile/memory creation, stale spec/settings refused; prior planner guards retained.
 - [x] Isolated install/recovery: shortcut failure recovery, interrupted manifest write refused for review, unrelated settings/additions retained.

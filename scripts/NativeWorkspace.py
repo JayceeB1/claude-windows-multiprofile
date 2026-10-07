@@ -251,7 +251,7 @@ def installed_again(install, capsule_record, spec, *, approved, writers_closed):
 
 
 def quiescent(install):
-    if bridge.safe_path(install / 'bin' / 'target.txt').exists():
+    if windows.route_intent_pending(install / 'bin' / 'target.txt'):
         raise bridge.BridgeError('NATIVE_ROUTING_INTENT_REQUIRES_DISARM')
 
 

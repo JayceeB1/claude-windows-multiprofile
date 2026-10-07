@@ -182,6 +182,23 @@ class ReconcileTests(NativeTests):
         self.assertEqual(self.receipt_bytes(), before)
         self.assertEqual(json.loads(next(self.install.glob('reconcile-*.json')).read_bytes())['phase'], 'restored')
 
+    def test_a_consumed_routing_marker_is_quiet_but_an_armed_or_unreadable_one_blocks(self):
+        marker = self.install / 'bin' / 'target.txt'
+        self.recreate(self.b_data)
+        for text in (b'{"version":2,"status":"armed"}', b'SYNTHETIC_INTENT', b'{"version":1,"status":"consumed"}'):
+            marker.write_bytes(text)
+            before = self.receipt_bytes()
+            with self.assertRaisesRegex(bridge.BridgeError, 'NATIVE_ROUTING_INTENT_REQUIRES_DISARM'):
+                native.reconcile(self.install, approved=True, writers_closed=True)
+            self.assertEqual((self.receipt_bytes(), marker.read_bytes()), (before, text))
+        for text in (b'{"version":2,"status":"consumed"}', b'{"version":2,"status":"disarmed"}'):
+            marker.write_bytes(text)
+            self.assertFalse(windows.route_intent_pending(marker))
+        marker.write_bytes(b'{"version":2,"status":"consumed"}')
+        self.assertEqual(native.reconcile(self.install, approved=True, writers_closed=True)['status'],
+                         'NATIVE_RECEIPT_RECONCILED')
+        self.assertEqual(marker.read_bytes(), b'{"version":2,"status":"consumed"}')
+
     def test_a_non_installed_phase_is_refused(self):
         self.remove()                                # a healthy receipt moves to b_removed first
         self.assertEqual(json.loads(self.receipt_bytes())['record']['phase'], 'b_removed')

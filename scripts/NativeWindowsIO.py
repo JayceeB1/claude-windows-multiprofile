@@ -503,6 +503,18 @@ if (-not [NativeLinks.Link]::SaveRead($s.path, $s.target, $s.arguments, $s.direc
         return raw
 
 
+def route_intent_pending(target):
+    """True unless the routing marker is absent or a v2 consumed/disarmed record (anything else may still dispatch)."""
+    target = bridge.safe_path(target)
+    if not target.exists():
+        return False
+    try:
+        record = json.loads(target.read_bytes()[:65537].decode('utf-8-sig'))
+    except (OSError, ValueError):
+        return True
+    return not (isinstance(record, dict) and record.get('version') == 2 and record.get('status') in ('consumed', 'disarmed'))
+
+
 @contextmanager
 def routing_guard(path):
     """Interop with the PowerShell router's FileShare.None; never unlink its lock."""

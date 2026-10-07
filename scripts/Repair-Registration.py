@@ -30,7 +30,7 @@ def repair(install):
         if record['phase'] != 'installed' or record['registry_phase'] != 'applied':
             raise bridge.BridgeError('REGISTRATION_REPAIR_PHASE_REFUSED')
         with windows.routing_guard(install / 'bin' / 'route.lock'):
-            if bridge.safe_path(install / 'bin' / 'target.txt').exists():
+            if windows.route_intent_pending(install / 'bin' / 'target.txt'):
                 raise bridge.BridgeError('REGISTRATION_REPAIR_REQUIRES_DISARM')
             before = record['registry_after']
             desired = windows.desired_registry(install)

@@ -395,7 +395,11 @@ def reconcile(install, *, approved, writers_closed):
             now = bridge.identity(bridge.safe_path(entry['path'], directory=True))
             # The recorded location may be a private redirected store; what must hold now is that the directory
             # really sits at its declared path (no redirection, alias or link between the path and the disk).
-            if not now['directory'] or now['canonical'] != ntpath.normpath(entry['path']).casefold():
+            # The parent is canonicalised first so a short (8.3) or aliased prefix does not read as a redirection.
+            declared = ntpath.normpath(entry['path'])
+            expected = ntpath.join(bridge.identity(bridge.safe_path(ntpath.dirname(declared), directory=True))['canonical'],
+                                   ntpath.basename(declared)).casefold()
+            if not now['directory'] or now['canonical'] != expected:
                 raise bridge.BridgeError('NATIVE_B_ROOT_NOT_AT_ITS_DECLARED_PATH')
             current[entry['path']] = now
         summary = [{'path': e['path'], 'recorded_file_id': e['identity']['file_id'],

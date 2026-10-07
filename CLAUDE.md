@@ -33,6 +33,7 @@ scripts/
   Launch-Claude.ps1, launch.vbs, Setup.ps1, Uninstall.ps1, Build-Exe.ps1   # base launcher (legacy parameters are blocked)
   Set-ClaudeWindowIdentity.ps1, Launch-ClaudeIdentity.ps1, launch-identity.vbs, Install-ClaudeIdentity.ps1
                       # separate taskbar button + icon for one profile (explicit AppUserModelID + WM_SETICON from a hidden watcher)
+  Install-ClaudeMultiAccount.ps1   # single entry installer: checks, base, identity, tools, sharing, verify (preview first)
   Repair-ClaudeProfiles.ps1, Connect-ClaudeProfile.ps1, Install-ClaudeTools.ps1
                       # check and repair after an update, guided re-login of B, desktop shortcuts
   Link-SharedConfig.py  # junction/symlink sharing of config between profiles; never credentials or identity

@@ -137,12 +137,40 @@ Good to know:
 
 ## 6. Installing from scratch
 
-Do this once, from a PowerShell opened **from the Start menu** (not from Codex nor Claude Desktop: those programs redirect
-their writes and the tools refuse to run there). In the repository folder:
+Prerequisites: Claude Desktop installed from the Microsoft Store and signed in to account A once; Python 3.12+;
+Windows Developer Mode on; your own `.ico` for account B (none is shipped).
+
+Run everything from a PowerShell opened **from the Start menu** (not from Codex nor Claude Desktop: those programs redirect
+their writes and the tools refuse to run there), in the repository folder, with **every Claude window closed**.
+
+**One entry point, in three runs:**
+
+```powershell
+# 1. Write a specification template (detected paths, placeholders); it is never overwritten.
+.\scripts\Install-ClaudeMultiAccount.ps1 -WriteSpecTemplate
+#    Complete every REPLACE_WITH value in %USERPROFILE%\ClaudeProfiles\setup\claude.workspace.local.json.
+#    The four "evidence" flags are your own confirmations: set each to true only once you checked it.
+#    Set protocol.consent to true to allow the login router (needed to sign account B in).
+
+# 2. Preview: nothing is written; every step says what it would do or what is missing.
+.\scripts\Install-ClaudeMultiAccount.ps1 -Spec "$env:USERPROFILE\ClaudeProfiles\setup\claude.workspace.local.json" -IconPath C:\path\claude-b.ico
+
+# 3. Install. It saves the approval capsule, shows where it is, and waits until you type INSTALL.
+.\scripts\Install-ClaudeMultiAccount.ps1 -Spec "$env:USERPROFILE\ClaudeProfiles\setup\claude.workspace.local.json" -IconPath C:\path\claude-b.ico -ApproveProtocol -Apply
+```
+
+The steps run in this order, each idempotent and safe to rerun after a failure: checks, base installation (launcher, login
+router, ownership receipt), B's taskbar identity and shortcut, the "Claude multi-comptes" shortcuts, the shared-config
+links, then the read-only repair check. When it finishes: pin **"Claude (B)"** to the taskbar, then double-click
+**"Reconnecter B"** to sign account B in (section 5).
+
+If one step needs attention, the installer says which, why, and what to do; fix it and run the same command again.
+
+**Step by step instead**, if you prefer to run each part yourself (all preview-first; add `-Apply` to write):
 
 1. The base launcher and the router: see the [technical reference](reference/SHARED-WORKSPACE.md) and the
-   [routing guide](PROTOCOL-ROUTING.md). This step is preview-first and needs a private specification file.
-2. B's icon and separate button (preview without `-Apply`, then with it; supply your own `.ico`, none is shipped):
+   [routing guide](PROTOCOL-ROUTING.md).
+2. B's icon and separate button:
    ```powershell
    .\scripts\Install-ClaudeIdentity.ps1 -Name B -ProfileDir "$env:APPDATA\Claude-B" -ConfigDir "$env:USERPROFILE\.claude-b" -IconPath C:\path\claude-b.ico -Apply
    ```

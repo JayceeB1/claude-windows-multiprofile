@@ -147,11 +147,37 @@ Le script fait tout, sauf un clic que Windows réserve à toi.
 
 ## 6. Tout remettre en route (nouvelle machine, ou installation à refaire)
 
-À faire une fois, depuis un PowerShell ouvert **depuis le menu Démarrer** (pas depuis Codex ni depuis Claude
-Desktop : ces programmes redirigent leurs écritures, et les outils le refusent). Dans le dossier du dépôt :
+Prérequis : Claude Desktop installé depuis le Microsoft Store et connecté une fois au compte A ; Python 3.12+ ; le Mode
+développeur de Windows activé ; ta propre icône `.ico` pour B (aucune n'est fournie).
+
+À faire depuis un PowerShell ouvert **depuis le menu Démarrer** (pas depuis Codex ni depuis Claude Desktop : ces programmes
+redirigent leurs écritures, et les outils le refusent), dans le dossier du dépôt, **toutes les fenêtres Claude fermées**.
+
+**Un seul point d'entrée, en trois passages :**
+
+```powershell
+# 1. Écrit un modèle de spécification (chemins détectés, valeurs à remplacer) ; jamais écrasé.
+.\scripts\Install-ClaudeMultiAccount.ps1 -WriteSpecTemplate
+#    Remplace chaque REPLACE_WITH dans %USERPROFILE%\ClaudeProfiles\setup\claude.workspace.local.json.
+#    Les quatre drapeaux « evidence » sont tes propres confirmations : mets-les à true seulement après vérification.
+#    Mets protocol.consent à true pour autoriser le routeur de connexion (nécessaire pour connecter B).
+
+# 2. Aperçu : rien n'est écrit ; chaque étape dit ce qu'elle ferait ou ce qui manque.
+.\scripts\Install-ClaudeMultiAccount.ps1 -Spec "$env:USERPROFILE\ClaudeProfiles\setup\claude.workspace.local.json" -IconPath C:\chemin\claude-b.ico
+
+# 3. Installation. Elle enregistre la capsule d'approbation, indique où elle est et attend que tu tapes INSTALL.
+.\scripts\Install-ClaudeMultiAccount.ps1 -Spec "$env:USERPROFILE\ClaudeProfiles\setup\claude.workspace.local.json" -IconPath C:\chemin\claude-b.ico -ApproveProtocol -Apply
+```
+
+Les étapes s'enchaînent dans cet ordre, chacune rejouable sans risque après un échec : contrôles, installation de base
+(lanceur, routeur de connexion, reçu), bouton et icône de B, raccourcis « Claude multi-comptes », liens de partage, puis
+contrôle en lecture seule. À la fin : épingle **« Claude (B) »** à la barre des tâches, puis double-clique sur
+**« Reconnecter B »** pour connecter le compte B (section 5).
+
+**Pas à pas à la place**, si tu préfères lancer chaque partie toi-même (tout est en aperçu d'abord ; `-Apply` pour écrire) :
 
 1. Le lanceur de base et le routeur : voir `README.md`, `docs/reference/SHARED-WORKSPACE.md` et `docs/PROTOCOL-ROUTING.md`.
-2. Icône et bouton séparé de B (aperçu sans `-Apply`, puis avec) :
+2. Icône et bouton séparé de B :
    ```powershell
    .\scripts\Install-ClaudeIdentity.ps1 -Name B -ProfileDir "$env:APPDATA\Claude-B" -ConfigDir "$env:USERPROFILE\.claude-b" -IconPath C:\chemin\claude-b.ico -Apply
    ```

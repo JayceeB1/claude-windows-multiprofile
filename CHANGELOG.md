@@ -5,6 +5,9 @@ All notable changes. Format based on [Keep a Changelog](https://keepachangelog.c
 
 ## [Unreleased]
 
+### Added
+- `scripts/Install-ClaudeMultiAccount.ps1`, the single installer: checks, base native install (typed confirmation of the approval capsule), B's identity, desktop shortcuts, shared links, then a read-only verification. Preview by default; `-WriteSpecTemplate` writes the private specification to complete. `tests/Test-ClaudeInstall.ps1` covers it.
+
 ### Changed
 - Project presented as a standalone fork: new README, `NOTICE.md` crediting the lineage, English manual
   ([docs/MANUAL.md](docs/MANUAL.md)), French manual moved to `docs/fr/` with generic paths, technical reference moved to
@@ -34,4 +37,4 @@ First experimental release of this fork's feature set, validated on one machine 
 - English and French manuals, fixture test suites and CI on Windows PowerShell 5.1 and PowerShell 7.
 
 Known gaps: a real Claude update and a real guided re-login have not been exercised yet (fixtures only); the base install
-is still a multi-step, preview-first procedure rather than a single installer.
+needs a private specification completed by the user (the installer writes the template); the installer is tested on fixtures and in preview only, not yet end to end on a clean machine.

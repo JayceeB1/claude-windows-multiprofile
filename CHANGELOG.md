@@ -13,6 +13,7 @@ All notable changes. Format based on [Keep a Changelog](https://keepachangelog.c
 - `AUTHORS.md` added; Fred Nielsen is credited in `LICENSE`, `NOTICE.md`, the README and AUTHORS for the `claude://` routing design.
 
 ### Fixed
+- The repair check words a detected Claude package update as information ("Claude was updated since the last check, 2.26454.0.0 -> 2.26454.2.0"), no longer as if an update were pending. It compares the Windows package version, not the version in Claude's About box and not Claude Code.
 - Receipt reconciliation compares B's root to its canonical parent plus its name, so 8.3 short or aliased path prefixes
   (as on CI runners) are no longer read as a redirection.
 - A routing marker that is `consumed` or `disarmed` no longer blocks receipt reconciliation, B removal or registration

@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "kind": "SYNTHETIC_PACKAGED_FIXTURE",
+  "encoding": "utf-8",
+  "asar_builder": "@electron/asar@4.2.0",
+  "versions": {
+    "old": {
+      "files": {
+        "legacy.txt": {
+          "text": "old RESOURCE\r\n",
+          "sha256": "b2b0b74f947f0bdbc49293ea0a3175903ab46e3483e0d0a9c94b4e392cc6831b"
+        },
+        "main.cjs": {
+          "text": "const fs = require('node:fs');\r\nfs.writeFileSync(__dirname + '/EXECUTION_FORBIDDEN', 'TRAP');\r\nconst {app} = require('electron');\r\nconst CONFIG_DIR = 'profile-a';\r\nfunction configuredPath() { return app.getPath('userData') + '/' + CONFIG_DIR; }\r\nmodule.exports = {configuredPath};\r\n",
+          "sha256": "6718980806dc37bb941eadeb02be8e3fc06a626b09cb30e0a787959bfdbc6fc5"
+        },
+        "package.json": {
+          "text": "{\"name\": \"rea-ground-truth-fixture\", \"version\": \"1.0.0\", \"main\": \"main.cjs\"}\r\n",
+          "sha256": "9c75d00f12094c4031bc88b307fa8316f2fa202e45da341f6b1aba68b2b64a52"
+        },
+        "stable.txt": {
+          "text": "IDENTICAL_RESOURCE\r\n",
+          "sha256": "e438607ec2e4c0b708bc477b316dfcc5929f38fa0aedcc286aac77be6cd459b1"
+        }
+      },
+      "asar_sha256": "c24bcca69f6744212c92003cf18d43508a04844a0d805e262859e7d17cea09c4"
+    },
+    "new": {
+      "files": {
+        "added.txt": {
+          "text": "new RESOURCE\r\n",
+          "sha256": "bca790d0bbfd5cdcc890a261382a84620e378b472c3774e68a6bd7e581fdc26a"
+        },
+        "main.cjs": {
+          "text": "const fs = require('node:fs');\r\nfs.writeFileSync(__dirname + '/EXECUTION_FORBIDDEN', 'TRAP');\r\nconst {app} = require('electron');\r\nconst CONFIG_DIR = 'profile-b';\r\nfunction configuredPath() { return app.getPath('userData') + '/' + CONFIG_DIR; }\r\nmodule.exports = {configuredPath};\r\n",
+          "sha256": "007201a38518a34162ed97340d365b0c2a43d298d97469ecea0eed6aef8eaace"
+        },
+        "package.json": {
+          "text": "{\"name\": \"rea-ground-truth-fixture\", \"version\": \"1.0.0\", \"main\": \"main.cjs\"}\r\n",
+          "sha256": "9c75d00f12094c4031bc88b307fa8316f2fa202e45da341f6b1aba68b2b64a52"
+        },
+        "stable.txt": {
+          "text": "IDENTICAL_RESOURCE\r\n",
+          "sha256": "e438607ec2e4c0b708bc477b316dfcc5929f38fa0aedcc286aac77be6cd459b1"
+        }
+      },
+      "asar_sha256": "c029cfd70389cd57af153926b89603e3632c40b28fe4fc807e63ddd1f2add05f"
+    }
+  }
+}

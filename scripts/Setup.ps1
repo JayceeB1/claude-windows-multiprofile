@@ -1,80 +1,13 @@
 <#
 .SYNOPSIS
-    Installs "clones" of the Claude Desktop app: one isolated profile + one
-    desktop shortcut per account, and (optionally) a claude:// login router so
-    browser-SSO callbacks land in the profile you intend.
-
+    Explicit native workspace candidate wrapper (IMPLEMENTED_NOT_TESTED).
 .DESCRIPTION
-    For each profile name you pass, this script:
-      * binds it to a data directory (and optional Claude Code config dir):
-          - the profile named by -DefaultProfile (if any) reuses the STOCK paths
-            (%APPDATA%\Claude + the default ~\.claude), i.e. the account the
-            normally-installed app is already signed into;
-          - every other profile gets a fresh, isolated %APPDATA%\Claude-<name>
-            data dir (kept under %APPDATA% so the Cowork VM works -- see the note
-            in the loop below) and a ~\.claude-<name> config dir.
-        Both are overridable per profile via -DataDir / -ConfigDir hashtables.
-      * copies the launcher + router scripts into -InstallDir\bin (so the
-        shortcuts keep working even if you delete this repo),
-      * writes profiles.json into bin\ so Arm-ClaudeLogin.ps1 and
-        Test-ClaudeRouting.ps1 know each profile's directories,
-      * creates a "Claude (<Name>)" shortcut on your Desktop that opens the app
-        with that profile, using the real Claude icon,
-      * unless -NoProtocolRouting: registers a chooseable claude:// handler (the
-        shim), then prints the ONE manual Settings step needed to activate it.
-
-    No baked-in assumption about which profile owns the stock paths: pass
-    -DefaultProfile None (the default) and every profile is isolated, or name any
-    profile to bind it to the stock login.
-
-.PARAMETER Profile
-    One or more profile names. Default: Work, Personal.
-
-.PARAMETER DefaultProfile
-    Which declared profile (if any) binds to the STOCK paths (%APPDATA%\Claude +
-    default ~\.claude). Use 'None' (default) for no such binding -- every profile
-    gets its own isolated dirs. Example: -DefaultProfile Personal makes Personal
-    reuse the already-signed-in account and isolates the rest.
-
-.PARAMETER ReuseDefaultForWork
-    DEPRECATED compatibility alias for -DefaultProfile Work. Ignored if
-    -DefaultProfile is given explicitly.
-
-.PARAMETER InstallDir
-    Where the launcher scripts (bin\) live. Default: %USERPROFILE%\ClaudeProfiles.
-    NOTE: profile *data* always lives under %APPDATA%\<...>, not here -- this is
-    required for the Cowork VM to start (the native VM service resolves rootfs.vhdx
-    under %APPDATA% regardless of --user-data-dir).
-
-.PARAMETER ConfigDir
-    Optional hashtable mapping a profile name to a Claude Code / Cowork config
-    directory (CLAUDE_CONFIG_DIR), overriding the derived ~\.claude-<name>.
-
-.PARAMETER DataDir
-    Optional hashtable mapping a profile name to a data directory, overriding the
-    derived %APPDATA%\Claude-<name>. MUST stay directly under %APPDATA% or Cowork
-    breaks (see the Cowork note below).
-
-.PARAMETER NoProtocolRouting
-    Skip installing/registering the claude:// login router. Use this if you
-    prefer to sequence logins manually (log in one account at a time with the
-    others closed).
-
-.PARAMETER LoginShortcuts
-    Also create a "Claude (<name>) - Sign in" desktop shortcut per profile that
-    arms the router for that profile and opens it, ready for a browser login.
-
-.EXAMPLE
-    .\Setup.ps1
-    # Creates "Claude (Work)" and "Claude (Personal)"; no stock binding.
-
-.EXAMPLE
-    .\Setup.ps1 -Profile Personal,Work -DefaultProfile Personal
-    # Personal reuses the stock login; Work is isolated (data + config).
-
-.EXAMPLE
-    .\Setup.ps1 -Profile Personal,Client -DefaultProfile Personal `
-        -ConfigDir @{ Client = "$env:USERPROFILE\.claude-client" }
+    Default invocation refuses mutations. NativeSpec supplies a reviewed private
+    specification; NativePreview saves a new private approval capsule. Installation
+    requires NativeApproval, Approved and WritersClosed. ApproveProtocol is separate.
+    Legacy profile/path switches cannot be combined with this native branch.
+    No dependency installation, login/restart or official package removal.
+    Qualify on isolated fixtures before separately authorized real-profile use.
 #>
 [CmdletBinding()]
 param(
@@ -85,11 +18,45 @@ param(
     [hashtable]$ConfigDir = @{},
     [hashtable]$DataDir = @{},
     [switch]$NoProtocolRouting,
-    [switch]$LoginShortcuts
+    [switch]$LoginShortcuts,
+    [string]$NativeSpec,
+    [string]$NativePreview,
+    [string]$NativeApproval,
+    [switch]$Approved,
+    [switch]$WritersClosed,
+    [switch]$ApproveProtocol,
+    [string]$PythonExecutable = 'python'
 )
 
 $ErrorActionPreference = 'Stop'
 $scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+
+if ($NativeSpec) {
+    foreach ($legacy in @('Profile', 'DefaultProfile', 'ReuseDefaultForWork', 'InstallDir', 'ConfigDir', 'DataDir', 'NoProtocolRouting', 'LoginShortcuts')) {
+        if ($PSBoundParameters.ContainsKey($legacy)) { throw 'NATIVE_SPEC_CONTROLS_PATHS' }
+    }
+    $python = Get-Command $PythonExecutable -CommandType Application -ErrorAction Stop
+    if ($python.Source -like '*\Microsoft\WindowsApps\*') { throw 'PYTHON_RUNTIME_REQUIRED' }
+    $entry = Join-Path $scriptRoot 'SharedWorkspace.py'
+    if ($NativePreview) {
+        if ($Approved -or $NativeApproval -or $WritersClosed -or $ApproveProtocol) { throw 'NATIVE_PREVIEW_ARGUMENTS' }
+        & $python.Source -B $entry native-preview --spec $NativeSpec --output $NativePreview
+    } else {
+        if (-not $NativeApproval -or -not $Approved -or -not $WritersClosed) {
+            throw 'NATIVE_APPROVAL_AND_CLOSED_WRITERS_REQUIRED'
+        }
+        $arguments = @('-B', $entry, 'native-install', '--spec', $NativeSpec,
+                       '--approval', $NativeApproval, '--approved', '--writers-closed')
+        if ($ApproveProtocol) { $arguments += '--approve-protocol' }
+        & $python.Source @arguments
+    }
+    if ($LASTEXITCODE -ne 0) { throw 'NATIVE_WORKSPACE_OPERATION_REFUSED' }
+    return
+}
+
+# The legacy installer below force-copies assets and cannot prove additive ownership.
+# Keep its fragments for regression tests, but refuse full invocation before any OS IO.
+throw 'NATIVE_INSTALL_NOT_ADMITTED: use python -B scripts/SharedWorkspace.py preview --spec <private-spec.json>.'
 
 # --- resolve the effective "default" (stock-paths) profile -----------------
 # -DefaultProfile wins; -ReuseDefaultForWork is a deprecated alias for 'Work'.
@@ -220,9 +187,9 @@ foreach ($name in $Profile) {
     $isDefault = ($DefaultProfile -ne 'None' -and $name -ieq $DefaultProfile)
 
     if ($isDefault) {
-        $dataDir   = Join-Path $env:APPDATA 'Claude'
-        $configDir = ''   # stock ~\.claude; do NOT set CLAUDE_CONFIG_DIR
-        Write-Host "  [$name] reuses the stock login at $dataDir"
+        $profileDataDir   = Join-Path $env:APPDATA 'Claude'
+        $profileConfigDir = ''   # stock ~\.claude; do NOT set CLAUDE_CONFIG_DIR
+        Write-Host "  [$name] reuses the stock login at $profileDataDir"
     } else {
         # IMPORTANT: isolated profiles must live directly under %APPDATA% (NOT an
         # arbitrary folder such as -InstallDir). Claude Desktop's "Cowork" feature
@@ -232,24 +199,26 @@ foreach ($name in $Profile) {
         # provisions the VM under the data dir but the VM service looks under
         # %APPDATA% and dies with "VHDX file not found". Deriving
         # %APPDATA%\Claude-<name> satisfies this by construction.
-        $dataDir   = Join-Path $env:APPDATA "Claude-$name"
-        $configDir = Join-Path $env:USERPROFILE (".claude-" + $name.ToLower())
-        Write-Host "  [$name] isolated profile at $dataDir"
+        $profileDataDir   = Join-Path $env:APPDATA "Claude-$name"
+        $profileConfigDir = Join-Path $env:USERPROFILE (".claude-" + $name.ToLower())
+        Write-Host "  [$name] isolated profile at $profileDataDir"
     }
 
-    # Per-profile overrides.
-    if ($DataDir.ContainsKey($name))   { $dataDir   = $DataDir[$name] }
-    if ($ConfigDir.ContainsKey($name)) { $configDir = $ConfigDir[$name] }
+    # Keep per-profile paths distinct from the hashtable parameters: PowerShell
+    # variable names are case-insensitive ($DataDir and $dataDir are the same).
+    # Per-profile overrides; never overwrite the caller-supplied maps.
+    if ($DataDir.ContainsKey($name))   { $profileDataDir   = $DataDir[$name] }
+    if ($ConfigDir.ContainsKey($name)) { $profileConfigDir = $ConfigDir[$name] }
 
-    New-Item -ItemType Directory -Force -Path $dataDir | Out-Null
-    if ($configDir) {
-        New-Item -ItemType Directory -Force -Path $configDir | Out-Null
-        Write-Host "      memory/config dir: $configDir"
+    New-Item -ItemType Directory -Force -Path $profileDataDir | Out-Null
+    if ($profileConfigDir) {
+        New-Item -ItemType Directory -Force -Path $profileConfigDir | Out-Null
+        Write-Host "      memory/config dir: $profileConfigDir"
     }
 
     $profileMap[$name] = [ordered]@{
-        dataDir   = $dataDir
-        configDir = $configDir
+        dataDir   = $profileDataDir
+        configDir = $profileConfigDir
         isDefault = [bool]$isDefault
     }
 
@@ -257,10 +226,10 @@ foreach ($name in $Profile) {
     $lnkPath = Join-Path $desktop "Claude ($name).lnk"
     $sc = $wsh.CreateShortcut($lnkPath)
     $sc.TargetPath = Join-Path $env:WINDIR 'System32\wscript.exe'
-    if ($configDir) {
-        $sc.Arguments = '"{0}" "{1}" "{2}"' -f $vbs, $dataDir, $configDir
+    if ($profileConfigDir) {
+        $sc.Arguments = '"{0}" "{1}" "{2}"' -f $vbs, $profileDataDir, $profileConfigDir
     } else {
-        $sc.Arguments = '"{0}" "{1}"' -f $vbs, $dataDir
+        $sc.Arguments = '"{0}" "{1}"' -f $vbs, $profileDataDir
     }
     $sc.IconLocation = $iconLocation
     $sc.Description = "Claude Desktop - $name profile"
@@ -303,7 +272,7 @@ if ($NoProtocolRouting) {
     $cmd = "conhost --headless powershell -NoProfile -ExecutionPolicy Bypass -File `"$shimPath`" -Url `"%1`""
 
     # Back up any pre-existing classic-key command ONCE, before it can be
-    # overwritten later by Arm-ClaudeLogin.ps1. This preserves (e.g.) a leftover
+    # overwritten by a later Setup run. This preserves (e.g.) a leftover
     # Squirrel registration so Uninstall.ps1 can restore it. Idempotent: only
     # writes 'backup' if it isn't already present.
     $classicCmdKey = 'HKCU:\Software\Classes\claude\shell\open\command'
@@ -349,10 +318,15 @@ if ($NoProtocolRouting) {
     Write-Host " If 'claude' doesn't appear, close and reopen Settings"
     Write-Host " (it caches the registered-applications list)."
     Write-Host ""
-    Write-Host " Then verify with:  scripts\Test-ClaudeRouting.ps1" -ForegroundColor Cyan
+    Write-Host " Passive observations only: scripts\Test-ClaudeRouting.ps1" -ForegroundColor Cyan
+    Write-Host " It does not activate a link or prove Desktop delivery/login."
+    Write-Host " Missing/busy metadata remains unknown; do not publish old logs."
     Write-Host "============================================================" -ForegroundColor Yellow
     Write-Host ""
     Write-Host " To route a login:  bin\Arm-ClaudeLogin.ps1 -Profile <name> -Launch"
+    Write-Host " Choose the explicit A/B name for one login; verify the browser account."
+    Write-Host " Five-minute intent; consumed before launch; no fallback account."
+    Write-Host " -Profile default disarms only. Arming does not change registration."
 }
 
 Write-Host ""

@@ -1,0 +1,189 @@
+{
+  "schema": 1,
+  "qualification": "REA-A1_PACKAGED_ONLY",
+  "verdict": "EXPERIMENTAL",
+  "date": "2026-10-06",
+  "rea_version": "4.0.1",
+  "node_version": "26.7.0",
+  "platform": "Windows",
+  "providers": [
+    {
+      "id": "rea-javascript-application",
+      "name": "REA JavaScript application analyzer",
+      "version": "1"
+    },
+    {
+      "id": "rea-javascript-application-workflows",
+      "name": "REA JavaScript application workflows",
+      "version": "1"
+    }
+  ],
+  "operations": [
+    "inspect-artifact",
+    "analyze-javascript-application",
+    "compare-application-versions",
+    "compare"
+  ],
+  "targets": {
+    "old": "c24bcca69f6744212c92003cf18d43508a04844a0d805e262859e7d17cea09c4",
+    "new": "c029cfd70389cd57af153926b89603e3632c40b28fe4fc807e63ddd1f2add05f"
+  },
+  "analysis_runs": {
+    "old": {
+      "exit": 0,
+      "duration_ms": 1426,
+      "stdout_bytes": 207818
+    },
+    "new": {
+      "exit": 0,
+      "duration_ms": 1480,
+      "stdout_bytes": 207818
+    }
+  },
+  "questions": [
+    {
+      "question_id": "PKG-IDENTITY",
+      "classification": "CORRECT",
+      "expected": "exact input SHA256",
+      "observed": {
+        "old": "c24bcca69f6744212c92003cf18d43508a04844a0d805e262859e7d17cea09c4",
+        "new": "c029cfd70389cd57af153926b89603e3632c40b28fe4fc807e63ddd1f2add05f"
+      },
+      "evidence_refs": [
+        "ev_638afe729ae9ac80ec01f43d3db8a5bf3c7cab720ad1f62acaa4b7ee6aeed576",
+        "ev_24897712a28c14e487020e168046600eed486d8b4726c1d66a6a1f08ce485f80"
+      ]
+    },
+    {
+      "question_id": "FILE-DELTA",
+      "classification": "CORRECT",
+      "expected": {
+        "added": [
+          "added.txt"
+        ],
+        "removed": [
+          "legacy.txt"
+        ],
+        "changed": [
+          "main.cjs"
+        ],
+        "unchanged": [
+          "package.json",
+          "stable.txt"
+        ]
+      },
+      "observed": {
+        "added": [
+          "added.txt"
+        ],
+        "removed": [
+          "legacy.txt"
+        ],
+        "changed": [
+          "main.cjs"
+        ],
+        "unchanged": [
+          "package.json",
+          "stable.txt"
+        ]
+      },
+      "derivation": "mechanical join of REA inspect_artifact occurrence paths and node hashes; not an automatic semantic claim",
+      "evidence_refs": [
+        "ev_9c89e201609c858f1717ee3627070745af7a946f887d8cbc274e813627d7980a",
+        "ev_fd214025f084c1c29aea5b7e32b8d6ef068f3e8d74085b033e40fde48c0ea017"
+      ]
+    },
+    {
+      "question_id": "CODE-CHANGE",
+      "classification": "CORRECT",
+      "expected": "main.cjs asset/ASAR entry changed",
+      "observed": {
+        "changed_main_nodes": 2
+      },
+      "evidence_refs": [
+        "ev_2f49cc2dbb058d5a467656ded1352aadd70b8f12b4b0e27dd6fdc3d81229caa7"
+      ]
+    },
+    {
+      "question_id": "UNCHANGED-PACKAGE",
+      "classification": "CORRECT",
+      "expected": "package.json unchanged",
+      "observed": "exact-content-digest/semantic-key matches retain unchanged metadata",
+      "evidence_refs": [
+        "ev_2f49cc2dbb058d5a467656ded1352aadd70b8f12b4b0e27dd6fdc3d81229caa7"
+      ]
+    },
+    {
+      "question_id": "RUNTIME-PATH",
+      "classification": "UNKNOWN_CORRECTLY_REPORTED",
+      "expected": "static artifact cannot prove executed profile path",
+      "observed": "explicit static/runtime limitations; no runtime evidence supplied",
+      "evidence_refs": [
+        "ev_638afe729ae9ac80ec01f43d3db8a5bf3c7cab720ad1f62acaa4b7ee6aeed576",
+        "ev_24897712a28c14e487020e168046600eed486d8b4726c1d66a6a1f08ce485f80"
+      ]
+    },
+    {
+      "question_id": "GENERIC-BUNDLE-COMPARE",
+      "classification": "UNKNOWN_CORRECTLY_REPORTED",
+      "expected": "unmatched artifact membership alone does not prove a semantic delta",
+      "observed": {
+        "status": "unknown",
+        "unresolved": 2
+      },
+      "evidence_refs": []
+    },
+    {
+      "question_id": "SEMANTIC-STABILITY",
+      "classification": "PARTIAL",
+      "expected": "avoid presenting unchanged dependency labels as independently changed runtime dependencies",
+      "observed": {
+        "unchanged": 4,
+        "added": 7,
+        "removed": 7,
+        "changed": 2,
+        "unknown": 0
+      },
+      "notes": "14 added/removed graph nodes include artifact-version-scoped module identities. This is graph churn, not 14 changed files. No performance/general precision claim.",
+      "evidence_refs": [
+        "ev_2f49cc2dbb058d5a467656ded1352aadd70b8f12b4b0e27dd6fdc3d81229caa7"
+      ]
+    }
+  ],
+  "raw_outputs_sha256": {
+    "application-compare.json": "99b77de8c704b9e69b234f2a3c22648c246cabebe54d8a6cb72126f2ac0b7a3a",
+    "application-compare.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "compare.json": "97a56c3ebc6a7fed0243cc72221ba7105227a04dcf48f71b7c9f726ca33cb1cc",
+    "compare.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "comparison-input.json": "5029607209f47578ed3e74dc50d408c594812b376e3709204472e7ea6862fe6c",
+    "inspect-new.json": "590516165647495b9f4882f645c54ffa3e05a85f079e5a09e01c56fb74381de1",
+    "inspect.json": "f86aff2d2ac251fb223f48977667b575d9a47accfc243dbdb84daca266a166b7",
+    "inspect.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "new.bundle.json": "460068db97107472cedbe112febc6d4743c71f3a9e13ed38deb07dfcf67cd51f",
+    "new.json": "cbf0c2fa3ee2509316f14bcb5c40de2a2fab410ec4512d589589a5a414939df3",
+    "new.run.json": "34e7d8b6d55fc2458d469e71c6a36c9225e5b5314de532c132c09de376c492ff",
+    "new.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "old.bundle.json": "a9a1728963f9a2d765508952c1df734cd23cb660fb8baef8611534cc21875084",
+    "old.json": "2f44f6de8cb97aed888b89c8487ab4386a2f55604267436098243c5664f04493",
+    "old.run.json": "feaaf2a53de98176d417eb76d68608f3459ef97cfd96d4f6c14c7380dcea275b",
+    "old.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "version.json": "cd6321af37482f49efc326524a9fcd7fc86902a48da8d4bbd3dc718d290c3fea",
+    "version.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "startup_probe": {
+    "first_version_probe": "TIMEOUT_30S",
+    "later_version_probe": "4.0.1_EXIT_0",
+    "cause": "UNKNOWN"
+  },
+  "scope": {
+    "claude_artifacts_read": false,
+    "profiles_read": false,
+    "runtime_observation": false,
+    "global_setup": false,
+    "package_install": "owned TEMP prefix; lifecycle scripts disabled",
+    "native_elf": "NOT_RUN",
+    "native_pe": "NOT_RUN",
+    "claude_package_pair": "NOT_RUN",
+    "native_8_3": "NOT_RUN"
+  }
+}

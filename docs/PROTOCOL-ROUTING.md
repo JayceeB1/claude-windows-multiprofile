@@ -1,317 +1,149 @@
-# claude:// login routing on Windows
+# claude:// routing: current v2 contract
 
-How the Claude Desktop app receives `claude://` deep links on Windows, why
-browser-SSO callbacks land in the wrong profile when you run more than one
-instance, and how this repo's login router fixes it.
+This guide describes the source contract qualified on synthetic Windows fixtures,
+not proof of the current user's Desktop/account installation. The authoritative
+[ledger](dev-log/SHARED-WORKSPACE-LEDGER.md) separates implementation, synthetic evidence
+and actual installation acceptance. Preserve upstream [MIT](../LICENSE) credits.
 
-Written for a technically capable Windows admin. Everything below was verified
-empirically against a real multi-profile setup; where behaviour is inferred
-rather than observed, it says so.
+## Explicit intent and account selection
 
-> **Scope note.** This is built on *undocumented* Windows + app behaviour. A
-> future Claude Desktop release (or native multi-account support) can change or
-> obsolete all of it at any time. See [Obsolescence](#obsolescence) at the end.
+A declared named profile in profiles.json supplies data/config paths. A is the
+existing session to preserve; B is an addition. Names do not establish physical
+ownership or identity. Inventory actual A before installation or protocol edits.
+Do not assume stock paths, terminal environment or `isDefault` identifies A.
 
----
-
-## The problem in one paragraph
-
-Enterprise (SSO) login happens in your browser and returns to the app through a
-`claude://…` deep link. Windows delivers that link to **whichever single
-application currently owns the `claude://` protocol** — not to the instance that
-started the login. With two profiles running (say *Personal* and a work
-profile), the callback repeatedly lands in the default profile, so the **work**
-token ends up in the **personal** profile. Most multi-instance guides work
-around this by telling you to "close everything and log in one account at a
-time." This repo instead routes the callback to a profile you choose.
-
----
-
-## 1. The claude:// delivery chain
-
-When something activates `claude://…`, Windows resolves the handler in this
-priority order (highest wins):
-
-| # | Layer | Where | Notes |
-|---|-------|-------|-------|
-| 1 | **UserChoice** | `HKCU\…\Explorer\UrlAssociations\claude\UserChoice` | Wins over everything when present. Hash-protected: can only be set legitimately by the user picking a default app in Settings. |
-| 2 | **MSIX package manifest** | the installed Claude package's `AppxManifest.xml` | When no UserChoice exists, activation goes here and **completely bypasses** the classic registry key below. Delivery goes to the running package process if one exists. |
-| 3 | **Classic key** | `HKCU\Software\Classes\claude\shell\open\command` | Only consulted when neither of the above applies. Frequently a **leftover** from an older Squirrel-style install (see §2). |
-
-The counter-intuitive part is layer 2 **bypassing** layer 3. Registering a
-custom handler in the classic key does *nothing* while the MSIX manifest
-registration is in force — which it is, out of the box, on any machine with the
-Store/`claude.ai` app installed.
-
-### How to prove which layer is handling your activations
-
-The router logs every activation to `route.log` (`<install>\bin\route.log`).
-Use it as a tripwire together with process inspection:
+For an already qualified installation declaring A and B:
 
 ```powershell
-# 1) Fire a real OS-level activation (exercises the whole chain — not the same
-#    as invoking the shim script directly):
-Start-Process "claude://test/ping"
-
-# 2) Did the shim get it?
-Get-Content "$env:USERPROFILE\ClaudeProfiles\bin\route.log" -Tail 3
-
-# 3) What actually launched, and with which profile?
-Get-CimInstance Win32_Process -Filter "Name='Claude.exe'" |
-    Select-Object ProcessId, CommandLine
+# Arm B for one login and optionally open its configured window.
+& "$env:USERPROFILE\ClaudeProfiles\bin\Arm-ClaudeLogin.ps1" -Profile B -Launch
+# For a deliberate A login, choose its explicit declared name.
+& "$env:USERPROFILE\ClaudeProfiles\bin\Arm-ClaudeLogin.ps1" -Profile A
+# Disarm explicitly. No account is selected or launched.
+& "$env:USERPROFILE\ClaudeProfiles\bin\Arm-ClaudeLogin.ps1" -Profile default
 ```
 
-- **A fresh `route.log` line** ⇒ your activation reached the shim ⇒ UserChoice
-  points at the router (layer 1). Good.
-- **No new line, but Claude opened** ⇒ the activation resolved at layer 2 or 3
-  (MSIX manifest / classic key), never touching the router ⇒ the router is not
-  the chosen handler. Fix the registration (re-pick in Settings, see §5).
+These are alternatives, not a sequence of login attempts. Initiate one browser
+login flow at a time; verify its account and close stale login tabs before a new
+attempt. `-Launch` opens a profile without changing a running process's environment.
+`-Profile default -Launch` is invalid. Arming/disarming does not rewrite registration.
 
-`scripts\Test-ClaudeRouting.ps1` automates all three checks.
+## Versioned one-shot metadata
 
-**Empirical proof of the layer-2 bypass:** with the router registered only in
-the classic key, *all* instances closed, and the router "armed," a `claude://`
-activation still launched the default MSIX profile and never touched the shim
-(no log line, marker file unconsumed). Only after registering the router as a
-*chooseable application* and selecting it in Settings — which creates a valid
-UserChoice — did activations start reaching it.
+The armer, disarmer and dispatcher share a nonblocking exclusive route.lock.
+The lock file is retained after release; never delete a held lock. target.txt is
+v2 JSON. Armed state records a declared profile, exact manifest SHA-256 and numeric
+created/expires milliseconds with a five-minute interval. It contains no callback.
+Missing or old default/path markers, malformed/inconsistent metadata and expired
+intents refuse dispatch without fallback A. Changing manifest text invalidates
+its binding, even if the parsed map would be equivalent.
 
----
+The dispatcher writes a consumed tombstone BEFORE package discovery, argument
+building or process launch, holding the lock through dispatch. Consumption does
+not prove launch. A crash or failed discovery/launch keeps consumption; replay
+refuses. An expired outstanding armed record blocks re-arm until explicit disarm.
+Consumed state permits a deliberate new named arm; disarm is also available.
+Recovery never automatically retries or silently changes the account.
 
-## 2. The Squirrel-leftover trap
+Before-consumption death may leave a valid old intent. After-consumption death
+leaves no replayable intent. If launch happens but its acknowledgment is lost,
+consumption alone cannot distinguish launched from not launched. Fixture receipts
+qualify that ambiguity; they do not promise exactly-once Desktop activation.
+Mid-write power loss, noncooperating mutation and physical aliases need separate
+qualification. Orphan sidecars require ownership-aware handling, not blanket deletion.
 
-Older Claude installs used a **Squirrel** installer under
-`%LOCALAPPDATA%\AnthropicClaude\` (e.g. `app-1.x.y\claude.exe`, plus
-`Update.exe`). Migrating to the MSIX/Store build does **not** always remove it,
-and it leaves two hazards behind:
+The marker is not correlated to the outgoing OAuth request. A delayed old callback
+can consume a newly armed intent. Browser focus does not establish the outgoing
+or returning account; state/PKCE belongs to the supported authentication flow.
+Do not claim arbitrary simultaneous-login safety or automatic account rotation.
 
-1. **A stale classic-key registration** (`HKCU\Software\Classes\claude\…command`)
-   pointing at a versioned `…\AnthropicClaude\app-<old>\claude.exe` path that no
-   longer exists.
-2. **A `claude.exe` stub + `Update.exe`** that can *re-register* protocol
-   handlers if ever run (e.g. by a leftover scheduled task or shortcut).
-
-### The failure it causes
-
-When the classic key is the layer that resolves (no UserChoice, and depending on
-how the app registered the manifest), a `claude://` login callback is handed to
-a **dead or downgrade-era exe**, producing a login loop: SSO completes in the
-browser, the callback fires, nothing usable receives it, the app re-prompts.
-This is not multi-profile-specific — single-account users hit it too. See
-[`anthropics/claude-code#31476`](https://github.com/anthropics/claude-code/issues/31476),
-which documents exactly this classic-key/MSIX interaction causing login loops.
-
-### Detect and clean
+## Passive diagnostic
 
 ```powershell
-# Detect:
-Test-Path "$env:LOCALAPPDATA\AnthropicClaude"      # $true = leftover present
-Get-Item "HKCU:\Software\Classes\claude\shell\open\command" |
-    ForEach-Object { $_.GetValue('') }              # inspect the classic command
-
-# Clean (safe once UserChoice owns the protocol, i.e. the router is chosen):
-Remove-Item "$env:LOCALAPPDATA\AnthropicClaude" -Recurse -Force
+powershell -NoProfile -File scripts\Test-ClaudeRouting.ps1
+# -NoPing is compatible and has the same passive behavior.
+powershell -NoProfile -File scripts\Test-ClaudeRouting.ps1 -NoPing
 ```
 
-`Test-ClaudeRouting.ps1` reports the leftover automatically.
+An optional `-InstallDir` names the metadata parent containing bin. Review the
+script and inventory that path first. D1 tests have not invoked the user's
+installed diagnostic. Default output is one JSON event with this closed schema:
 
-> **Uninstall-order caveat.** If you uninstall the *old* Squirrel app through
-> Windows, its uninstaller may delete the **shared** classic `claude` key —
-> including a router command you put there. Re-run the router registration
-> (`Setup.ps1`) afterwards, or re-arm (`Arm-ClaudeLogin.ps1` reasserts the
-> classic key). Because UserChoice (layer 1) is the operative registration once
-> chosen, this is usually cosmetic — but reassert to keep the state coherent.
+| Field | Values / interpretation |
+| --- | --- |
+| version / event / mode | 1 / DIAGNOSTIC_PASSIVE / passive |
+| snapshot | locked (read snapshot under an existing lock) or unavailable |
+| reason | none, path_unavailable, lock_missing, lock_unavailable |
+| manifest | readable (syntactic map only), missing, invalid, unknown |
+| intent | armed, consumed, disarmed, missing, invalid, unknown |
+| expiration | active, expired, invalid, not_applicable, unknown |
+| binding | match, mismatch, not_applicable, unknown |
+| protocolChoice | router, other, missing, unknown; only UserChoice observation |
+| package | present, missing, unknown; only package-query observation |
+| dispatch | not_probed, always |
 
----
+No lock is created, no metadata written, no link activated, no process queried
+or launched, no installed routing script imported and no route.log read.
+The existing lock is opened read-only/exclusively for a short snapshot; this can
+briefly contend with cooperating writers. Missing/busy locks are unknown, not
+proof of handler failure. Metadata reads are bounded and reject reparse ancestors.
+File access timestamps may change; fixture bytes and last-write times are preserved.
+There is no live-probe option. A separately scoped future probe must refuse any
+outstanding or uncertain intent before activation; it is not implemented here.
 
-## 3. The PowerShell 5.1 quoting trap
+Package presence, router UserChoice, active expiration and hash match do not
+prove OS delivery, a valid complete path plan, actual Desktop identity/config,
+authentication or memory loading. No delay/new log line establishes those gates.
 
-Windows PowerShell 5.1's `Start-Process -ArgumentList` joins array elements with
-spaces **but does not quote them**. A profile path with spaces therefore
-splinters into several argv entries; Chromium reads `--user-data-dir` as ending
-at the first space and silently creates a profile at the *truncated* path — so
-the token lands in a **third** profile nobody intended.
+## New-log meanings and exposure boundaries
 
-```powershell
-# BROKEN — array elements are space-joined, unquoted:
-Start-Process $exe -ArgumentList @("--user-data-dir=$target", $Url)
-#   target = C:\Users\John Doe\…\Claude-Client A
-#   -> Chromium sees --user-data-dir=C:\Users\John   (truncated at first space!)
+New lines follow `YYYY-MM-DDTHH:mm:ss event=CODE target=KIND`; CODE and KIND
+come from closed lists. They do not include URL, profile name, path or exception.
 
-# FIXED — build ONE pre-quoted string yourself:
-$argStr = "--user-data-dir=`"$target`" `"$Url`""
-Start-Process $exe -ArgumentList $argStr
-#   -> --user-data-dir="C:\Users\John Doe\…\Claude-Client A" "claude://…"
-```
+| Event | Meaning |
+| --- | --- |
+| MISSING_URL / INVALID_URL | Callback input refused |
+| ROUTE_BUSY | Exclusive lock unavailable; no dispatch |
+| TARGET_READ_FAILED | Intent/manifest missing, invalid, expired, consumed or inconsistent; no fallback |
+| RESET_FAILED | Consumption write failed; no launch |
+| APP_DISCOVERY_FAILED / APP_NOT_FOUND | Discovery failed after consumption |
+| ARGUMENT_BUILD_FAILED | Start-info construction failed after consumption |
+| LAUNCH_REQUESTED | Launch about to be attempted, not confirmation |
+| LAUNCH_FAILED | Launch boundary failed; consumption retained |
+| DISPATCH_COMPLETE | Launch boundary returned and completion log succeeded; not authentication proof |
 
-This repo factors the builder into `Get-ClaudeLaunchArgString`
-(in `ClaudeOpenShim.ps1`) and unit-tests it in `tests\Test-ArgBuilder.ps1`,
-including the spaces-in-path case, so a regression fails CI-style locally rather
-than silently misrouting a token. Any code in this repo that launches Claude
-with a path must use the same single-pre-quoted-string pattern.
+Target kinds are unknown/stock/profile in the logger's allowed schema; current
+named dispatch uses profile and refusal before selection uses unknown. No default
+account selection is implied by the legacy stock enum. A log write itself may
+fail; absence of a line is inconclusive. Do not publish old logs: historical
+URL/path logs, PowerShell debugging, OS command-line telemetry and Claude's own
+logs are outside this sanitizer. The callback remains in the child command line.
 
----
+## Registration, historical observations and installation gates
 
-## 4. The arm / disarm model
+Setup currently writes router ProgId/Capabilities/RegisteredApplications and may
+back up an existing classic command. Selecting the protocol handler in Windows
+Settings is separate from arming. The upstream guide reported UserChoice, MSIX
+and classic-key interactions and a chooser label of Console Window Host. Treat
+that label and precedence behavior as historical observations to requalify on
+the installed Windows/Claude build; a passive UserChoice read is not activation proof.
+Do not compute or bypass a UserChoice hash as a repair, run a ping while armed,
+print command lines, remove Squirrel folders or rerun Setup/Uninstall as a shortcut.
 
-The router reads a one-line marker file, `target.txt`:
+Safe additive Setup/Uninstall, actual A provenance, physical path identity,
+selected memory and rollback are still pending. Protocol changes require an
+explicitly scoped local trial with ownership and conflict-aware restoration.
+Keep A's entry point, projects and session intact. Two simultaneous Cowork VMs
+are outside scope. Historical VM-placement/shared-HOME observations are not
+current-build proof. Nothing here promises provider-side session permanence.
 
-- `default` → launch with **no** `--user-data-dir` (the stock `%APPDATA%\Claude`
-  profile).
-- any path → launch with `--user-data-dir="<path>"`.
+## Credits
 
-You set it with `Arm-ClaudeLogin.ps1 -Profile <name>` **immediately before** a
-login. After the shim fires once, it **resets the marker to `default`**.
-
-### Why explicit one-shot arming (not "last-launched")
-
-Zoltak's prior art (see §8) routes callbacks to the *last-launched* profile —
-implicit and zero-touch. This repo deliberately chooses **explicit, one-shot**
-arming instead:
-
-- **Last-launched misroutes a real case.** Launch work, then later re-auth your
-  *personal* account: the personal callback routes to *work* because work was
-  launched more recently. Explicit arming states intent per login.
-- **The resting state must be safe.** The dangerous failure mode is a *sticky*
-  marker: a personal re-auth landing in the work profile weeks later
-  "succeeds," so it's invisible. Resetting to `default` after every fire makes
-  the safe (stock/personal) profile the resting state — an un-armed activation
-  can only ever land somewhere harmless.
-
-### route.log triage table
-
-`route.log` lines look like: `2026-07-23T09:15:04  <target> <- <url>`.
-
-| Symptom during a login | Meaning | Fix |
-|---|---|---|
-| **No new line at all** | Activation never reached the shim → handler chain resolved at MSIX manifest / classic key. Registration problem. | Re-pick the router in Settings (§5); verify with `Test-ClaudeRouting.ps1`. |
-| **Line with the *wrong* target** | Shim ran, but the marker held the wrong profile. Arming-state problem. | You forgot to arm, or armed the wrong profile. Re-arm before retrying. |
-| **Line with the right target, but token still wrong** | Delivery reached the right profile dir, but Chromium may have received a truncated path. | Check the running process's `--user-data-dir` (§3 quoting). |
-| **Line reads `ERROR: Claude.exe not found`** | MSIX package not resolvable. | Confirm the app is installed (`Get-AppxPackage *Claude*`). |
-
----
-
-## 5. Operational realities
-
-- **"Console Window Host" in Settings.** The Settings link-type picker labels a
-  candidate handler after the **first executable in its registered command**,
-  not after its Capabilities `ApplicationName`. The router's command begins with
-  `conhost --headless …`, so it appears as **"Console Window Host."** This is
-  cosmetic. It is *not* fixed (the fix — a renamed copy of `powershell.exe` — has
-  EDR/SmartScreen/servicing downsides). Pick "Console Window Host"; that is the
-  router.
-- **Windows occasionally resets UserChoice.** Feature updates and app
-  re-registration can clear your choice (usually surfaced as a dismissable "how
-  do you want to open this?" toast). The fix is simply to re-pick the router in
-  **Settings → Apps → Default apps → Choose defaults by link type → `claude`**,
-  then re-run the ping check. If the entry doesn't appear, close and reopen
-  Settings (it caches the registered-applications list).
-- **The router is now in the critical path for ALL `claude://` activations.** A
-  broken router = silently dead deep links (logins, "open in app" links). The
-  tell is **absence** of a `route.log` line. If routing ever misbehaves and you
-  need stock behaviour back immediately, run `Uninstall.ps1` (or
-  `Uninstall.ps1 -KeepRouting:$false`) — Windows falls back to the MSIX manifest
-  registration automatically.
-- **Registry values must be literal expanded paths.** `Set-ItemProperty` writes
-  `REG_SZ`, which does **not** expand `%USERPROFILE%`-style variables. The setup
-  scripts always write fully-resolved paths.
-
----
-
-## 6. Cowork VM constraints
-
-Claude Desktop's **Cowork** feature (agentic workspace, scheduled tasks,
-artifact storage) runs inside a per-machine **Hyper-V VM**, not just an Electron
-window. Two consequences for multi-profile use:
-
-1. **Profile data must live directly under `%APPDATA%`.** The native VM service
-   resolves the VM image (`rootfs.vhdx`) at `%APPDATA%\<dir-name>\vm_bundles`,
-   **ignoring** `--user-data-dir`. `Setup.ps1` therefore derives isolated
-   profiles as `%APPDATA%\Claude-<name>`. A data dir anywhere else makes Cowork
-   fail with **"VHDX file not found."**
-   - **No junctions/symlinks** for `vm_bundles` — the VM service refuses to open
-     reparse points.
-2. **Only one Cowork VM can run at a time.** The Hyper-V compute system is *not*
-   scoped per profile, so launching Cowork in a second profile while another's
-   VM is running fails with `HYPERVISOR_SERVICE_ERROR` / *"a virtual machine …
-   with the specified identifier already exists."* You can keep both chat
-   windows open; the VM-backed workspace only runs in one profile at a time.
-
----
-
-## 7. Anti-patterns
-
-### Cloud-synced profile locations (OneDrive / Dropbox / etc.)
-
-**Don't** put a profile data dir inside a cloud-synced folder.
-
-- Electron profiles are constantly churning **LevelDB and lock-file** state;
-  sync engines produce conflict copies and Files-On-Demand *dehydration*
-  silently breaks a live profile.
-- OAuth tokens are **DPAPI-encrypted and machine-bound**, so syncing them buys
-  nothing — they won't decrypt on another machine.
-- Worst case, a work account's `.credentials.json` ends up in cloud **version
-  history**, and two machines refreshing the same token invalidate each other.
-
-**Correct pattern:** keep profile *data* local; if you want to share anything,
-selectively sync only `skills/`, `agents/`, and `CLAUDE.md`.
-
-### Shared HOME + `CLAUDE_CONFIG_DIR`
-
-`CLAUDE_CONFIG_DIR` isolates a profile's Claude Code config/memory store. But two
-Claude Code instances sharing one real `HOME` may still collide on
-`~\.claude.json` (global state that lives *outside* the config dir). This was
-reported (Josh Grossman, Feb 2026) and may since be fixed — **verify on your
-build** before relying on full isolation. It does not affect Claude Desktop login
-isolation (that's the `--user-data-dir` layer).
-
----
-
-## 8. Alternatives & prior art
-
-| Project / approach | What it does | When to prefer it |
-|---|---|---|
-| **[Zoltak-Dev/ai-multi-instance](https://github.com/Zoltak-Dev/ai-multi-instance)** (MIT) | Python TUI profile manager for Claude + Codex. Its "OAuth login patch" registers itself under `UrlAssociations` **with a computed valid UserChoice hash**, routing callbacks to the **last-launched** profile. | If you want a full TUI manager and implicit last-launched routing, and don't mind Python. **Also the source of the `--user-data-dir` technique this repo builds on**, and the prior art for the deferred UserChoice-hash automation (§ Future work). |
-| **[sypnose-cloud/claude-desktop-multi](https://github.com/sypnose-cloud/claude-desktop-multi)** | Portable-copy approach: robocopies the app out of `WindowsApps`; SSO handled by **sequencing** only. | When in-place MSIX activation is undesirable and you're OK copying the app. |
-| **Surface split (browser profile)** | Do the enterprise account entirely in a **browser profile** (claude.ai in a dedicated Chrome/Edge profile); keep the desktop app for the personal account. | The **zero-maintenance baseline**. No protocol hacking, survives every app update. Worth recommending to anyone who doesn't need the *desktop* app for both accounts. |
-
-**Design difference vs. Zoltak (worth internalising):** last-launched routing is
-frictionless but misroutes the "personal re-auth while work was launched more
-recently" case; explicit one-shot arming trades a small manual step for a safe
-resting state. See §4.
-
----
-
-## Future work
-
-**Automate the UserChoice pick (currently the one manual step).** Windows lets
-only a *user* set a protocol default, protected by a per-user hash on the
-`UserChoice` key. Zoltak's `_userchoice.py` computes a valid hash and writes
-`UserChoice` directly. Porting that algorithm to PowerShell would let `Setup.ps1`
-register the router with **no** Settings visit, and re-assert it automatically
-after Windows resets it. Requirements when this is done:
-
-- Port from the MIT-licensed source with credit retained.
-- Verify **UCPD** (User Choice Protection Driver) does not guard custom schemes
-  like `claude` — it protects `http`/`https` and some file types; custom
-  protocols appeared writable-with-valid-hash in Zoltak's working implementation,
-  but confirm on a current Windows build.
-
-Until then, the one Settings pick (§5) is the only manual step.
-
----
-
-## Obsolescence
-
-This tool relies on undocumented interactions between Windows protocol handling
-and the Claude Desktop MSIX package. Any of the following can obsolete it:
-
-- Native multi-account support in Claude Desktop.
-- Changes to how the app registers/handles `claude://` (see `#31476` — Anthropic
-  is actively touching this area).
-- Windows hardening of `UserChoice` / protocol activation.
-
-It's an **unofficial community tool**. It does not modify, repackage, or
-redistribute the Claude app — it only launches the officially installed app with
-a standard Chromium flag and registers an HKCU protocol handler. Use in
-accordance with Anthropic's terms.
+Fork lineage: [vodongha/claude-desktop-clone](https://github.com/vodongha/claude-desktop-clone).
+The data-directory technique and prior UserChoice-hash work originate in
+[Zoltak-Dev/ai-multi-instance](https://github.com/Zoltak-Dev/ai-multi-instance).
+Other upstream prior art included
+[sypnose-cloud/claude-desktop-multi](https://github.com/sypnose-cloud/claude-desktop-multi).
+This unofficial fork launches the official installed app; it does not copy,
+modify, repackage or redistribute it. Native multi-account support or changed
+protocol handling may supersede this approach; requalify before delivery.

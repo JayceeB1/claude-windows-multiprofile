@@ -56,9 +56,13 @@ one day to the next.
 
 **Shared live** (what one does is seen by the other): skills, agents, plugins, mods, **projects with their memory**, your
 global `CLAUDE.md`, your settings (`settings.json`) and the Desktop MCP configuration. Your project folders are the same
-on disk anyway. The **Claude Code session list** (the "Recents" sidebar of the Code tab, with its projects) is shared too:
-a session started in A appears in B and the other way round, and can be resumed from either account (for example when one
-account hit its limit). Open a given session in one window at a time.
+on disk anyway. The **Claude Code session list** (the "Recents" sidebar of the Code tab, with its projects) is kept in step
+by copying, not by a link: the app refuses to save a session into a linked folder, so a linked profile loses what it
+starts. `scripts/SessionRecordSync.py` (also run by the repair shortcut) copies each profile's session records to the
+other: a session started in A appears in B after B is reopened, and the other way round, and can be resumed from either
+account (for example when one account hit its limit). Open a given session in one window at a time. The **Projects**
+(beta) of the app are per account and are not copied; a session filed in a Project that the other account does not have
+shows there as an ordinary folder session.
 
 **Interface mods** (panels, the band above the prompt, the status line, commands) follow two mechanisms already in place:
 their folders (`mods`, `dev-mods`) are linked, and the list of mods to load (`CLAUDE_CODE_PLUGIN_DIRS` in the `env` block

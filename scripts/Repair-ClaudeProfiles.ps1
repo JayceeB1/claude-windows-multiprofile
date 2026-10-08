@@ -263,6 +263,29 @@ function Invoke-ClaudeRepair {
         $checks.Add((New-Check 'Partage de la config' 'TODO' ("$($preview.Pending) à poser" + $(if ($preview.Refused.Count) { ', refusés : ' + ($preview.Refused -join ', ') } else { '' })) 'Ferme B puis relance avec -Fix.'))
     }
 
+    # 5b. Code sessions list: copied between the two profiles, never linked (the app refuses to save into a linked folder).
+    $syncPreview = ConvertFrom-ClaudeToolJson (Invoke-ClaudePython -Python $py -Script 'SessionRecordSync.py' -Arguments @('--install-dir', $InstallDir))
+    if (-not $syncPreview -or (Get-ClaudeJsonField $syncPreview 'status') -ne 'PREVIEW') {
+        $why = if ($syncPreview) { [string](Get-ClaudeJsonField $syncPreview 'reason') } else { 'sortie illisible' }
+        $checks.Add((New-Check 'Liste des sessions' 'INFO' "contrôle impossible ($why)"))
+    } else {
+        $legacy = [bool](Get-ClaudeJsonField $syncPreview 'replace_legacy_link')
+        $toCopy = 0
+        foreach ($side in 'copy_to_A', 'copy_to_B') { $n = Get-ClaudeJsonField $syncPreview $side; if ($n) { $toCopy += [int]$n } }
+        if (-not $legacy -and $toCopy -eq 0) {
+            $checks.Add((New-Check 'Liste des sessions' 'OK' 'A et B affichent les mêmes sessions'))
+        } elseif ($Fix -and $legacy -and $bRunning) {
+            $checks.Add((New-Check 'Liste des sessions' 'BLOCKED' 'B est ouvert, son dossier est encore un lien' 'Ferme B, puis relance la réparation.'))
+        } elseif ($Fix) {
+            $syncApply = ConvertFrom-ClaudeToolJson (Invoke-ClaudePython -Python $py -Script 'SessionRecordSync.py' -Arguments @('--install-dir', $InstallDir, '--apply', '--approved'))
+            $synced = $syncApply -and ((Get-ClaudeJsonField $syncApply 'status') -eq 'APPLIED')
+            $checks.Add((New-Check 'Liste des sessions' $(if ($synced) { 'FIXED' } else { 'TODO' }) $(if ($synced) { "$(Get-ClaudeJsonField $syncApply 'written') fiche(s) copiée(s)" + $(if ($legacy) { ', lien remplacé par un vrai dossier' } else { '' }) } else { 'refusé : ' + [string](Get-ClaudeJsonField $syncApply 'reason') }) $(if ($synced) { 'Rouvre Claude et Claude B pour voir la liste à jour.' } else { '' })))
+        } else {
+            $todoDetail = "$toCopy fiche(s) à copier" + $(if ($legacy) { ', lien à remplacer par un vrai dossier (B perd ses discussions tant qu''il existe)' } else { '' })
+            $checks.Add((New-Check 'Liste des sessions' 'TODO' $todoDetail 'Ferme B puis relance avec -Fix.'))
+        }
+    }
+
     # 6. Which app owns claude:// links right now.
     switch (Read-ClaudeLinkHandler) {
         'official' { $checks.Add((New-Check 'Liens claude://' 'OK' 'application Claude officielle (état normal)')) }

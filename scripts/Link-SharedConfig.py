@@ -2,8 +2,8 @@
 
 Directory junctions (no admin) and file symlinks (Windows Developer Mode) point profile B's
 config at profile A's, so both Desktop windows see the same skills, agents, plugins, mods,
-project memory, global instructions, settings and Desktop MCP configuration. B's Code sessions list (the sidebar) is
-pointed at A's local session records, so a session started in one account can be resumed from the other. Identity and
+project memory, global instructions, settings and Desktop MCP configuration. The Code sessions list (the sidebar) is NOT
+linked, because the app refuses to save into a linked folder: see SessionRecordSync.py. Identity and
 credentials (`.credentials.json`, `.claude.json`, `config.json`, remote/policy files) are never
 linked or copied; user-scope MCP servers are copied once into B's `.claude.json`.
 
@@ -114,8 +114,6 @@ def classify(kind, source, target, replace_files):
 
 
 SESSIONS_DIR = 'claude-code-sessions'
-# Only these files may sit in B's own sessions folder when it is replaced by a link (they are set aside, then restored).
-SESSIONS_DISPOSABLE = {'scheduled-tasks.json'}
 
 
 def session_store(data_dir):
@@ -132,32 +130,21 @@ def session_store(data_dir):
     return pairs[0], None
 
 
-def classify_sessions(source, target):
-    """B's <account>/<org> folder becomes a junction to A's: B then lists A's local Code sessions."""
-    if is_link(target):
-        return ('already', 'linked') if same(target, source) else ('refuse:TARGET_LINKS_ELSEWHERE', None)
-    if not Path(target).is_dir():
-        return 'refuse:TARGET_KIND_MISMATCH', None
-    names = {p.name for p in Path(target).iterdir()}
-    if any(n.startswith('local_') for n in names):
-        return 'refuse:TARGET_HAS_OWN_SESSIONS', None       # never hide B's own sessions behind a link
-    if names - SESSIONS_DISPOSABLE - {n for n in names if n.startswith('deleted_')}:
-        return 'refuse:TARGET_DIRECTORY_NOT_EMPTY', None
-    return 'link', 'dir_backup'
-
-
 def sessions_entry(src_desk, dst_desk):
+    """The Code sessions list is never linked: the app refuses to save a record into a linked folder, so a linked profile
+    lists the other's sessions but loses its own. SessionRecordSync.py copies the records instead."""
     source, reason_a = session_store(src_desk)
     target, reason_b = session_store(dst_desk)
-    base = {'role': 'sessions', 'kind': 'dir', 'name': SESSIONS_DIR}
+    base = {'role': 'sessions', 'kind': 'dir', 'name': SESSIONS_DIR,
+            'source': str(source or Path(src_desk) / SESSIONS_DIR), 'target': str(target or Path(dst_desk) / SESSIONS_DIR)}
     if source is None or target is None:
-        return {**base, 'source': str(Path(src_desk) / SESSIONS_DIR), 'target': str(Path(dst_desk) / SESSIONS_DIR),
-                'action': 'skip', 'previous': reason_a or reason_b}
-    action, previous = classify_sessions(source, target)
-    return {**base, 'source': str(source), 'target': str(target), 'action': action, 'previous': previous}
+        return {**base, 'action': 'skip', 'previous': reason_a or reason_b}
+    if is_link(target):
+        return {**base, 'action': 'skip', 'previous': 'legacy_junction_run_SessionRecordSync'}
+    return {**base, 'action': 'skip', 'previous': 'copied_by_SessionRecordSync'}
 
 
-def build_plan(src_cfg, dst_cfg, src_desk, dst_desk, replace_files, with_sessions=True):
+def build_plan(src_cfg, dst_cfg, src_desk, dst_desk, replace_files):
     plan = []
     for root_src, root_dst, items, role in ((src_cfg, dst_cfg, CONFIG_ITEMS, 'config'),
                                             (src_desk, dst_desk, DESKTOP_ITEMS, 'desktop')):
@@ -166,8 +153,7 @@ def build_plan(src_cfg, dst_cfg, src_desk, dst_desk, replace_files, with_session
             action, previous = classify(kind, source, target, replace_files)
             plan.append({'role': role, 'kind': kind, 'name': name, 'source': str(source), 'target': str(target),
                          'action': action, 'previous': previous})
-    if with_sessions:
-        plan.append(sessions_entry(src_desk, dst_desk))
+    plan.append(sessions_entry(src_desk, dst_desk))
     return plan
 
 
@@ -298,9 +284,16 @@ def apply(plan, mcp, install, src_cfg, dst_cfg, with_mcp):
     return verify(journal)
 
 
+def is_legacy_sessions_entry(entry):
+    """Journals written before 2026-10-08 hold a sessions junction; it is replaced by SessionRecordSync.py, not verified."""
+    return SESSIONS_DIR in Path(entry['target']).parts
+
+
 def verify(journal):
     problems = []
     for e in journal['entries']:
+        if is_legacy_sessions_entry(e):
+            continue
         t = Path(e['target'])
         if not is_link(t) or not same(t, e['source']):
             problems.append(e['target'])
@@ -340,7 +333,8 @@ def rollback(install):
                 continue
             remove_link(e['kind'], target)
         elif e['state'] == 'done':
-            notes.append('NOT_A_LINK_LEFT:' + e['target'])
+            if not is_legacy_sessions_entry(e):
+                notes.append('NOT_A_LINK_LEFT:' + e['target'])
             continue
         if e['previous'] == 'empty_dir' and not os.path.lexists(target):
             target.mkdir()
@@ -373,7 +367,6 @@ def main(argv=None):
     parser.add_argument('--replace-files', action='store_true', help='back up and replace differing target files')
     parser.add_argument('--replace-mcp', action='store_true', help='overwrite a different user-scope MCP list in B')
     parser.add_argument('--no-mcp', action='store_true')
-    parser.add_argument('--no-sessions', action='store_true', help='do not share the Code sessions list (sidebar)')
     args = parser.parse_args(argv)
     try:
         require_unpackaged()
@@ -395,7 +388,7 @@ def main(argv=None):
                 raise Refused('TARGET_PROFILE_RUNNING_CLOSE_IT_FIRST')
             result = {'status': 'ROLLED_BACK', **rollback(args.install_dir)}
         else:
-            plan = build_plan(src_cfg, dst_cfg, src_desk, dst_desk, args.replace_files, not args.no_sessions)
+            plan = build_plan(src_cfg, dst_cfg, src_desk, dst_desk, args.replace_files)
             mcp = {'action': 'skip', 'reason': 'disabled', 'servers': []} if args.no_mcp else \
                 mcp_plan(src_cfg, dst_cfg, args.replace_mcp)
             if not args.apply:

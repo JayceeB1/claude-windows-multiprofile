@@ -134,9 +134,10 @@ symlinks (Windows Developer Mode): `skills`, `agents`, `plugins`, `mods`, `dev-m
 transcripts), `CLAUDE.md`, `settings.json`, `keybindings.json`, and the Desktop `claude_desktop_config.json`. The user-level MCP
 server list is copied once into B's `.claude.json` (read from `~/.claude.json` when A uses the stock config dir). Credentials,
 the `.claude.json` identity and the Desktop `config.json` token cache are never linked or copied (`NEVER` in the script,
-asserted by a test). B's Code sessions folder (`claude-code-sessions\<account>\<organisation>`) is pointed at A's, so the Code
-sidebar lists the same local sessions (B's own scheduled-tasks file is set aside and restored on rollback; B's own local sessions
-are never hidden, the link is refused instead; `--no-sessions` skips it). claude.ai chat history stays with each account. Preview by default, `--apply --approved` writes, `--rollback --approved` restores; non-empty targets
+asserted by a test). The Code sessions folder (`claude-code-sessions\<account>\<organisation>`) is **not** linked: the app
+refuses to save a record into a linked folder (`Refusing non-directory at private dir path (symlink/file plant)`, checked with
+`lstat` on that leaf), so a linked B listed A's sessions but lost its own on every close. `scripts/SessionRecordSync.py` copies the
+`local_*.json` records between the two real folders instead (see below). claude.ai chat history stays with each account. Preview by default, `--apply --approved` writes, `--rollback --approved` restores; non-empty targets
 are refused, differing files are replaced only with `--replace-files` after a recorded backup, and removing a link never follows
 it. It refuses from a packaged process tree and while B's Desktop is running.
 
@@ -144,6 +145,22 @@ it. It refuses from a packaged process tree and while B's Desktop is running.
 python -B scripts\Link-SharedConfig.py                                    # preview, writes nothing
 python -B scripts\Link-SharedConfig.py --apply --approved --replace-files  # B closed
 python -B scripts\Link-SharedConfig.py --rollback --approved               # B closed
+```
+
+### Code sessions list: copied, never linked
+
+`scripts/SessionRecordSync.py` keeps A's and B's records in step. A record on one side only is copied to the other; on both
+sides and different, the later `lastActivityAt` wins and the other version is kept under `shared-config\backups\sessions-<time>`;
+a session with a `deleted_<id>` marker on either side is never copied back; a record filed in a Project (Space) the destination
+does not have loses `spaceId`/`spaceIdSetBy` on arrival (Projects are per account, `local-agent-mode-sessions\<account>\<org>\spaces.json`,
+and are never linked or copied; the comparison ignores those two fields so the sync never loops). Nothing is deleted. A legacy
+junction from the 2026-10-07 layout is replaced by a real directory first (needs B closed). Each app reads its list at start, so a
+copy shows after the window is reopened. Preview by default; `--apply --approved` writes; refuses from a packaged process tree.
+`scripts/Restore-CodeSessionRecords.py` recreates the record of a session whose transcript survived but whose record is missing.
+
+```powershell
+python -B scripts\SessionRecordSync.py                      # preview, writes nothing
+python -B scripts\SessionRecordSync.py --apply --approved   # B closed when a legacy link must be replaced
 ```
 
 ## After a Claude update, and when a login is requested again

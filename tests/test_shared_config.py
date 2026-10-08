@@ -161,30 +161,27 @@ class SharedConfigTests(unittest.TestCase):
         restored = json.loads((self.dst_cfg / '.claude.json').read_text(encoding='utf-8'))
         self.assertEqual(restored, {'oauthAccount': {'email': 'b@example.invalid'}, 'theme': 'x'})
 
-    def test_code_sessions_of_a_become_visible_in_b_and_roll_back(self):
+    def test_code_sessions_list_is_never_linked(self):
+        # The app refuses to save a record into a linked folder, so B keeps a real directory and its own records.
         code, result = self.run_main('--apply', '--approved', '--replace-files')
         self.assertEqual((code, result['problems']), (0, []))
-        self.assertTrue(links.is_link(self.sess_b))
-        self.assertEqual((self.sess_b / 'local_one.json').read_text(encoding='utf-8'), '{"title":"session-A"}')
-        # A new session created through B lands in the shared store and is visible to A.
-        (self.sess_b / 'local_two.json').write_text('{"title":"session-from-B"}', encoding='utf-8')
-        self.assertTrue((self.sess_a / 'local_two.json').exists())
-        # The account/organisation folders themselves are untouched siblings.
-        self.assertTrue(self.sess_b.parent.is_dir() and not links.is_link(self.sess_b.parent))
-        code, result = self.run_main('--rollback', '--approved')
-        self.assertEqual(code, 0)
         self.assertFalse(links.is_link(self.sess_b))
+        self.assertTrue(self.sess_b.is_dir())
         self.assertEqual((self.sess_b / 'scheduled-tasks.json').read_text(encoding='utf-8'), '{"scheduledTasks":[],"b":true}')
-        self.assertFalse((self.sess_b / 'local_one.json').exists())
-        self.assertTrue((self.sess_a / 'local_one.json').exists())            # A's records survive
-        self.assertTrue((self.sess_a / 'local_two.json').exists())            # and so does what B added while linked
+        self.assertFalse((self.sess_b / 'local_one.json').exists())           # copying is SessionRecordSync's job
+        entry = links.sessions_entry(self.src_desk, self.dst_desk)
+        self.assertEqual((entry['action'], entry['previous']), ('skip', 'copied_by_SessionRecordSync'))
 
-    def test_b_own_local_sessions_are_never_hidden(self):
-        (self.sess_b / 'local_own.json').write_text('{"title":"B-own"}', encoding='utf-8')
-        code, result = self.run_main('--apply', '--approved', '--replace-files')
-        self.assertEqual((code, result['reason']), (2, 'TARGET_HAS_OWN_SESSIONS'))
-        self.assertTrue((self.sess_b / 'local_own.json').exists())
-        self.assertFalse(links.is_link(self.dst_cfg / 'agents'))              # nothing else was linked either
+    def test_legacy_sessions_junction_is_reported_not_verified_or_rolled_back_as_a_problem(self):
+        shutil.rmtree(self.sess_b)
+        links.make_link('dir', self.sess_a, self.sess_b)                      # the old layout
+        entry = links.sessions_entry(self.src_desk, self.dst_desk)
+        self.assertEqual((entry['action'], entry['previous']), ('skip', 'legacy_junction_run_SessionRecordSync'))
+        journal = {'entries': [{'kind': 'dir', 'source': str(self.sess_a), 'target': str(self.sess_b), 'state': 'done'}], 'mcp': None}
+        self.assertEqual(links.verify(journal)['problems'], [])
+        os.rmdir(self.sess_b)                                                 # junction replaced by SessionRecordSync
+        self.sess_b.mkdir()
+        self.assertEqual(links.verify(journal)['problems'], [])
 
     def test_sessions_skip_when_a_store_is_missing_or_ambiguous(self):
         shutil.rmtree(self.dst_desk / 'claude-code-sessions')
@@ -194,12 +191,6 @@ class SharedConfigTests(unittest.TestCase):
         (self.dst_desk / 'claude-code-sessions' / 'acct-b' / 'org-b2').mkdir()
         entry = links.sessions_entry(self.src_desk, self.dst_desk)
         self.assertEqual((entry['action'], entry['previous']), ('skip', 'several_accounts_or_organisations'))
-
-    def test_no_sessions_flag_leaves_the_store_alone(self):
-        code, result = self.run_main('--apply', '--approved', '--replace-files', '--no-sessions')
-        self.assertEqual(code, 0)
-        self.assertFalse(links.is_link(self.sess_b))
-        self.assertEqual((self.sess_b / 'scheduled-tasks.json').read_text(encoding='utf-8'), '{"scheduledTasks":[],"b":true}')
 
     def test_stock_source_uses_the_home_claude_json_when_its_own_has_no_servers(self):
         home = self.root / 'home'

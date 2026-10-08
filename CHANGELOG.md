@@ -8,6 +8,8 @@ All notable changes. Format based on [Keep a Changelog](https://keepachangelog.c
 ### Added
 - `scripts/Install-ClaudeMultiAccount.ps1`, the single installer: checks, base native install (typed confirmation of the approval capsule), B's identity, desktop shortcuts, shared links, then a read-only verification. Preview by default; `-WriteSpecTemplate` writes the private specification to complete. `tests/Test-ClaudeInstall.ps1` covers it.
 
+- `scripts/SessionRecordSync.py`: keeps the Code sessions lists of A and B in step by copying records between two real folders (later activity wins, backups, deleted sessions never resurrected, Projects stay per account). The repair check runs it. `scripts/Restore-CodeSessionRecords.py` recreates a missing record when its transcript survived.
+
 ### Changed
 - Project presented as a standalone fork: new README, `NOTICE.md` crediting the lineage, English manual
   ([docs/MANUAL.md](docs/MANUAL.md)), French manual moved to `docs/fr/` with generic paths, technical reference moved to
@@ -16,6 +18,7 @@ All notable changes. Format based on [Keep a Changelog](https://keepachangelog.c
 - `AUTHORS.md` added; Fred Nielsen is credited in `LICENSE`, `NOTICE.md`, the README and AUTHORS for the `claude://` routing design.
 
 ### Fixed
+- Conversations started in Claude B disappeared from the list at the next opening. The Code sessions folder of B was a junction to A's, and the app refuses to save a session record into a linked folder (`Refusing non-directory at private dir path`), so B listed A's sessions but registered none of its own. The folder is no longer linked (`Link-SharedConfig.py` skips it and reports a legacy junction); `SessionRecordSync.py` replaces the junction with a real directory and copies the records.
 - The repair check words a detected Claude package update as information ("Claude was updated since the last check, 2.26454.0.0 -> 2.26454.2.0"), no longer as if an update were pending. It compares the Windows package version, not the version in Claude's About box and not Claude Code.
 - Receipt reconciliation compares B's root to its canonical parent plus its name, so 8.3 short or aliased path prefixes
   (as on CI runners) are no longer read as a redirection.

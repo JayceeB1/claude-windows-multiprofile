@@ -55,9 +55,13 @@ tes deux comptes ouverts d'un jour à l'autre.
 **Partagé en direct** (ce que fait l'un se voit chez l'autre) : tes skills, agents, plugins, mods,
 les **projets avec leur mémoire**, ton `CLAUDE.md` global, tes réglages (`settings.json`) et la configuration
 des serveurs MCP du Desktop. Tes dossiers de projets sont de toute façon les mêmes sur le disque.
-La **liste des sessions Claude Code** (la barre latérale « Récents » de l'onglet Code, avec ses projets) est aussi
-partagée : une session démarrée dans A se retrouve dans B et inversement, et se reprend depuis l'un ou l'autre compte
-(par exemple quand un compte a atteint sa limite). Ouvre la même session dans une seule fenêtre à la fois.
+La **liste des sessions Claude Code** (la barre latérale « Récents » de l'onglet Code, avec ses projets) est tenue à
+jour par copie, pas par un lien : l'application refuse d'enregistrer une session dans un dossier lié, et un profil lié
+perd donc ce qu'il démarre. `scripts/SessionRecordSync.py` (lancé aussi par le raccourci « Réparer ») copie les fiches de
+chaque profil vers l'autre : une session démarrée dans A se retrouve dans B après réouverture de B, et inversement, et se
+reprend depuis l'un ou l'autre compte (par exemple quand un compte a atteint sa limite). Ouvre la même session dans une
+seule fenêtre à la fois. Les **Projets** (bêta) de l'application sont propres à chaque compte et ne sont pas copiés : une
+session rangée dans un Projet que l'autre compte n'a pas s'y affiche comme une session de dossier ordinaire.
 
 **Les mods d'interface de Claude Code** (panneaux, bandeau au-dessus du prompt, ligne d'état, commandes) sont
 partagés par deux mécanismes déjà en place : leurs dossiers (`mods`, `dev-mods`) sont liés, et la liste des
